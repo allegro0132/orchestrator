@@ -1,0 +1,23 @@
+{
+  "name": "arco-violin",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "test": "node --test src/*.test.js",
+    "format": "prettier --write . ../.github ../README.md",
+    "format:check": "prettier --check . ../.github ../README.md",
+    "preview": "vite preview --host 127.0.0.1"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "lucide-react": "^0.468.0"
+  },
+  "devDependencies": {
+    "vite": "^6.3.0",
+    "prettier": "3.6.2"
+  }
+}
