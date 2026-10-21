@@ -2396,3 +2396,275 @@ header {
     font-size: 9px;
   }
 }
+
+.beginner-workspace {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.beginner-selector {
+  padding: 24px 26px;
+  border: 1px solid #e2e5d7;
+  border-radius: 14px;
+  background: #f4f5eb;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  align-items: flex-end;
+}
+.beginner-selector > div:first-child {
+  flex: 1 1 240px;
+}
+.beginner-eyebrow {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  font-size: 9px;
+  color: #85936e;
+  letter-spacing: 1.3px;
+}
+.beginner-selector h2 {
+  margin: 10px 0;
+  font-family: Georgia, serif;
+  font-size: 25px;
+  color: #526244;
+}
+.beginner-selector p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.7;
+  color: #8b947c;
+  max-width: 390px;
+}
+.beginner-selector > label {
+  flex: 1 1 200px;
+  display: grid;
+  gap: 9px;
+  font-size: 11px;
+  color: #839072;
+}
+.beginner-selector select {
+  padding: 11px 10px;
+  border: 1px solid #d9decb;
+  border-radius: 7px;
+  background: #fcfcf7;
+  color: #59664b;
+  width: 100%;
+  font: inherit;
+}
+.beginner-navigation {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 11px;
+  color: #8c977e;
+}
+.beginner-navigation button {
+  display: grid;
+  place-items: center;
+  background: #fcfcf7;
+  color: #7b8b65;
+  border: 1px solid #d9decb;
+  border-radius: 7px;
+  width: 30px;
+  height: 34px;
+  cursor: pointer;
+}
+.beginner-navigation button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.beginner-guide {
+  margin: 20px 0 24px;
+}
+.beginner-goal {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  color: #84916d;
+}
+.beginner-goal svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.beginner-goal p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.7;
+  flex: 1;
+}
+.beginner-goal > span {
+  white-space: nowrap;
+  color: #a58b62;
+  font-size: 10px;
+  background: #f6f0e2;
+  padding: 5px 8px;
+  border-radius: 5px;
+}
+.beginner-cue {
+  margin: 17px 0;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 18px;
+  background: linear-gradient(120deg, #eff2e4, #f8f7ee);
+  border: 1px solid #e0e6d0;
+  border-radius: 10px;
+}
+.beginner-bow {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 50px;
+  border-radius: 9px;
+  background: #e1e8ce;
+  color: #6e8350;
+  font-size: 38px;
+  font-family: Georgia, serif;
+  flex-shrink: 0;
+}
+.beginner-cue > div:nth-child(2) {
+  display: grid;
+  gap: 7px;
+  flex: 1;
+}
+.beginner-cue small {
+  color: #8f9c7a;
+  font-size: 9px;
+  letter-spacing: 1.2px;
+}
+.beginner-cue strong {
+  color: #596c42;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.beginner-cue div > span {
+  font-size: 11px;
+  color: #899674;
+}
+.beginner-cue.resting {
+  background: linear-gradient(120deg, #f5f0e3, #faf7ef);
+  border-color: #e8ddc7;
+}
+.beginner-cue.resting .beginner-bow {
+  background: #ebe0c8;
+  color: #a58a57;
+}
+.beginner-beats {
+  display: flex;
+  gap: 5px;
+}
+.beginner-beats span {
+  display: grid;
+  place-items: center;
+  height: 25px;
+  width: 25px;
+  border-radius: 50%;
+  border: 1px solid #dbe2cc;
+  color: #a6af99;
+  font-size: 11px;
+}
+.beginner-beats span.active {
+  background: #879b65;
+  border-color: #879b65;
+  color: #fffef6;
+  box-shadow: 0 0 0 3px #8da46b14;
+}
+.beginner-instructions {
+  font-size: 12px;
+  color: #8c967c;
+  line-height: 1.8;
+}
+.beginner-instructions summary {
+  cursor: pointer;
+  color: #788765;
+  font-size: 11px;
+}
+.beginner-instructions summary span {
+  float: right;
+  font-variant-numeric: tabular-nums;
+}
+.beginner-instructions p {
+  margin: 12px 0;
+}
+.beginner-instructions ol {
+  padding-left: 20px;
+}
+.beginner-instructions li {
+  padding-left: 4px;
+  margin: 5px 0;
+}
+.beginner-checklist {
+  display: grid;
+  gap: 9px;
+  border-top: 1px solid #e6e9dc;
+  padding-top: 14px;
+}
+.beginner-checklist label {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  cursor: pointer;
+}
+.beginner-checklist input {
+  accent-color: #859b62;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+.beginner-time-note,
+.beginner-observation {
+  font-size: 10px;
+  color: #a1a992;
+}
+.score-next em {
+  display: block;
+  padding-top: 5px;
+  color: #9b865f;
+  font-size: 9px;
+  font-style: normal;
+}
+@media (max-width: 600px) {
+  .beginner-mode {
+    grid-column: 1/-1;
+  }
+  .beginner-selector {
+    padding: 20px 16px;
+    gap: 14px;
+  }
+  .beginner-selector h2 {
+    font-size: 23px;
+  }
+  .beginner-selector > label {
+    flex-basis: calc(100% - 115px);
+  }
+  .beginner-selector > div:first-child {
+    flex-basis: 100%;
+  }
+  .beginner-goal {
+    flex-wrap: wrap;
+  }
+  .beginner-goal p {
+    flex-basis: calc(100% - 30px);
+  }
+  .beginner-goal > span {
+    margin-left: 26px;
+  }
+  .beginner-cue {
+    gap: 11px;
+    padding: 14px 12px;
+    flex-wrap: wrap;
+  }
+  .beginner-cue strong {
+    font-size: 14px;
+  }
+  .beginner-beats {
+    margin-left: 59px;
+  }
+  .beginner-bow {
+    width: 42px;
+    height: 46px;
+    font-size: 33px;
+  }
+}

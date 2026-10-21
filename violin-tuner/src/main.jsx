@@ -13,6 +13,7 @@ import {
   X,
   Play,
   Square,
+  Sprout,
 } from 'lucide-react';
 import { STRINGS, PATTERNS, frequency, centsOff, noteName, detectPitch } from './pitch';
 import { emptyTracking, trackPitch, ACCURACY_CENTS } from './tuning.js';
@@ -29,6 +30,7 @@ import {
 } from './audioConfig.js';
 import './style.css';
 const ScorePractice = React.lazy(() => import('./ScorePractice.jsx'));
+const BeginnerPractice = React.lazy(() => import('./BeginnerPractice.jsx'));
 function App() {
   const { lang, setLang, t } = useLanguage();
   const [mode, setMode] = useState('open'),
@@ -118,7 +120,7 @@ function App() {
     stopTone();
     setHz(null);
     resetTracking();
-    if (mode === 'metronome' || mode === 'score') stop();
+    if (['metronome', 'score', 'beginner'].includes(mode)) stop();
   }, [string, mode, pattern, position, finger, reference]);
   async function context() {
     if (!audio.current)
@@ -148,7 +150,7 @@ function App() {
           autoGainControl: false,
         },
       });
-      if (['metronome', 'score'].includes(config.current.mode)) {
+      if (['metronome', 'score', 'beginner'].includes(config.current.mode)) {
         media.getTracks().forEach((track) => track.stop());
         return;
       }
@@ -304,7 +306,13 @@ function App() {
               <span /> YOUR DAILY VIOLIN COMPANION
             </div>
             <h1>
-              {t(mode === 'metronome' ? '让每一拍，都稳稳落下' : '从每一根弦，找到好声音')}
+              {t(
+                mode === 'beginner'
+                  ? '从慢练开始，打好基础'
+                  : mode === 'metronome'
+                    ? '让每一拍，都稳稳落下'
+                    : '从每一根弦，找到好声音',
+              )}
               <span>{lang === 'zh' ? '。' : '.'}</span>
             </h1>
             <p>{t('安静地聆听，让每一次练习都从准确开始。')}</p>
@@ -322,7 +330,7 @@ function App() {
           <aside>
             <div className="section-label">
               {t('练习模式')}
-              <span>01 — 04</span>
+              <span>01 — 05</span>
             </div>
             <button
               className={'mode ' + (mode === 'open' ? 'active' : '')}
@@ -376,7 +384,20 @@ function App() {
               </span>
               {mode === 'score' && <span className="active-dot" />}
             </button>
-            {!['metronome', 'score'].includes(mode) && (
+            <button
+              className={'mode beginner-mode ' + (mode === 'beginner' ? 'active' : '')}
+              onClick={() => setMode('beginner')}
+            >
+              <span className="mode-icon">
+                <Sprout size={21} />
+              </span>
+              <span>
+                <b>{t('初学者练习')}</b>
+                <small>{t('长弓、换弦与左手入门')}</small>
+              </span>
+              {mode === 'beginner' && <span className="active-dot" />}
+            </button>
+            {!['metronome', 'score', 'beginner'].includes(mode) && (
               <>
                 <div className="string-head">
                   <span>{t('选择琴弦')}</span>
@@ -422,7 +443,15 @@ function App() {
               </div>
             </div>
           </aside>
-          {mode === 'score' ? (
+          {mode === 'beginner' ? (
+            <React.Suspense
+              fallback={
+                <section className="tuner score-loading">{t('正在加载初学者练习…')}</section>
+              }
+            >
+              <BeginnerPractice getAudioContext={context} reference={reference} />
+            </React.Suspense>
+          ) : mode === 'score' ? (
             <React.Suspense
               fallback={
                 <section className="tuner score-loading">
@@ -687,13 +716,17 @@ function App() {
             <div>
               <b>{t('每一次准确，都是进步。')}</b>
               <p>
-                {mode === 'score'
-                  ? t('导入曲谱，选择声部和速度，跟随预备拍开始演奏。')
-                  : mode === 'metronome'
-                    ? t('先把速度放慢，准确完成每个节奏，再逐渐提速。')
-                    : mode === 'open'
-                      ? t('建议按 A → D → G → E 的顺序调弦，再复查一次。')
-                      : t('相邻手指相距 1 个半音时靠拢，2 个半音时分开。各手型以当前把位为基准。')}
+                {mode === 'beginner'
+                  ? t('先练准确，再练连续。对镜观察弓直和接触点。')
+                  : mode === 'score'
+                    ? t('导入曲谱，选择声部和速度，跟随预备拍开始演奏。')
+                    : mode === 'metronome'
+                      ? t('先把速度放慢，准确完成每个节奏，再逐渐提速。')
+                      : mode === 'open'
+                        ? t('建议按 A → D → G → E 的顺序调弦，再复查一次。')
+                        : t(
+                            '相邻手指相距 1 个半音时靠拢，2 个半音时分开。各手型以当前把位为基准。',
+                          )}
               </p>
             </div>
           </div>
@@ -769,6 +802,12 @@ function App() {
                       {t(
                         '选择节拍器模式，设置速度和拍号后开始。首拍可加重音，切换模式或隐藏页面时会自动停止。',
                       )}
+                    </p>
+                  </li>
+                  <li>
+                    <b>{t('初学者练习')}</b>
+                    <p>
+                      {t('选择内置练习，跟随弓向、拍数与手指提示；每一轮结束后对照检查点自检。')}
                     </p>
                   </li>
                   <li>

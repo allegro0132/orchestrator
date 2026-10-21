@@ -1,4 +1,13 @@
 export const english = {
+  初学者练习: 'Beginner practice',
+  '长弓、换弦与左手入门': 'Bowing, crossings, and first fingers',
+  '正在加载初学者练习…': 'Loading beginner practice…',
+  '从慢练开始，打好基础': 'Build a foundation, one slow bow at a time',
+  '先练准确，再练连续。对镜观察弓直和接触点。':
+    'Accuracy first, continuity next. Use a mirror to check bow travel and contact point.',
+  '选择内置练习，跟随弓向、拍数与手指提示；每一轮结束后对照检查点自检。':
+    'Choose a built-in exercise and follow the bow, beat, and finger cues. Review the checkpoints after each round.',
+
   '导入曲谱，选择声部和速度，跟随预备拍开始演奏。':
     'Import a score, choose a part and tempo, then start after the count-in.',
   曲谱练习: 'Score practice',

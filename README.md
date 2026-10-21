@@ -1,6 +1,6 @@
 # ARCO · Violin Tuning Studio
 
-A responsive React violin tuner with English and Chinese support, faster pitch tracking, a separate metronome practice mode, and local MusicXML/MXL/MIDI score practice with live pitch and timing analysis. The application source lives in [`violin-tuner`](violin-tuner).
+A responsive React violin tuner with English and Chinese support, faster pitch tracking, a separate metronome practice mode, and local MusicXML/MXL/MIDI score practice with live pitch and timing analysis, plus guided beginner bowing and fingering exercises. The application source lives in [`violin-tuner`](violin-tuner).
 
 ## Development
 

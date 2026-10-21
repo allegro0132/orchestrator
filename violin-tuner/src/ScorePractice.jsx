@@ -11,7 +11,15 @@ const nameOf = (e) => {
   const n = noteName(e.midi);
   return `${n.name}${n.octave}`;
 };
-export default function ScorePractice({ getAudioContext, reference, score, setScore }) {
+export default function ScorePractice({
+  getAudioContext,
+  reference,
+  score,
+  setScore,
+  lesson,
+  renderGuide,
+  onActivityChange,
+}) {
   const { lang } = useLanguage(),
     text = (zh, en) => (lang === 'zh' ? zh : en);
   const [showResults, setShowResults] = useState(false);
@@ -33,6 +41,7 @@ export default function ScorePractice({ getAudioContext, reference, score, setSc
     mounted = useRef(true),
     input = useRef(null),
     focusHeading = useRef(null),
+    guideHeading = useRef(null),
     importAttempt = useRef(0),
     position = useRef(0),
     initial = useRef(true);
@@ -78,6 +87,9 @@ export default function ScorePractice({ getAudioContext, reference, score, setSc
       window.removeEventListener('pagehide', hide);
     };
   }, []);
+  useEffect(() => {
+    onActivityChange?.(playing || busy);
+  }, [playing, busy, onActivityChange]);
   async function load(file) {
     if (!file) return;
     stop();
@@ -149,7 +161,10 @@ export default function ScorePractice({ getAudioContext, reference, score, setSc
       initial.current = false;
       setPlaying(true);
       setBusy(false);
-      focusHeading.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      (lesson ? guideHeading.current : focusHeading.current)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
       model.current.lastTime = null;
       model.current.lastHz = null;
       model.current.lastVoiced = -Infinity;
@@ -231,40 +246,58 @@ export default function ScorePractice({ getAudioContext, reference, score, setSc
   return (
     <section
       className={'tuner score-practice' + (playing ? ' is-playing' : '')}
-      aria-label={text('曲谱练习', 'Score practice')}
+      aria-label={
+        lesson ? text('初学者练习', 'Beginner practice') : text('曲谱练习', 'Score practice')
+      }
     >
       <div className="panel-top">
         <span className="panel-title">
           <span className="olive-dot" />
-          {text('曲谱练习', 'Score practice')}
-          <span className="tag">LIVE ANALYSIS</span>
+          {lesson ? text('初学者练习', 'Beginner practice') : text('曲谱练习', 'Score practice')}
+          <span className="tag">{lesson ? 'GUIDED PRACTICE' : 'LIVE ANALYSIS'}</span>
         </span>
         <span className="reference">A₄ = {reference} Hz</span>
       </div>
       <div className="score-body">
         <div className="score-heading">
           <div>
-            <h2>{score?.title || text('让曲谱带领下一步', 'Your next note, in view')}</h2>
+            <h2>
+              {lesson
+                ? lesson.title[lang]
+                : score?.title || text('让曲谱带领下一步', 'Your next note, in view')}
+            </h2>
             <p>
-              {text(
-                '导入曲谱，在演奏中查看音高与节奏。',
-                'Import a score. See your pitch and timing as you play.',
-              )}
+              {lesson
+                ? text(
+                    '跟随谱面和动作提示，慢慢练好每一步。',
+                    'Follow the score and action cues, one calm step at a time.',
+                  )
+                : text(
+                    '导入曲谱，在演奏中查看音高与节奏。',
+                    'Import a score. See your pitch and timing as you play.',
+                  )}
             </p>
           </div>
-          <label className={'score-import ' + (importing ? 'disabled' : '')}>
-            <Upload size={16} />
-            {importing ? text('正在导入…', 'Importing…') : text('导入曲谱', 'Import score')}
-            <input
-              ref={input}
-              disabled={importing || busy}
-              type="file"
-              accept=".musicxml,.xml,.mxl,.mid,.midi"
-              aria-label={text('导入曲谱文件', 'Import score file')}
-              onChange={(e) => load(e.target.files[0])}
-            />
-          </label>
+          {!lesson && (
+            <label className={'score-import ' + (importing ? 'disabled' : '')}>
+              <Upload size={16} />
+              {importing ? text('正在导入…', 'Importing…') : text('导入曲谱', 'Import score')}
+              <input
+                ref={input}
+                disabled={importing || busy}
+                type="file"
+                accept=".musicxml,.xml,.mxl,.mid,.midi"
+                aria-label={text('导入曲谱文件', 'Import score file')}
+                onChange={(e) => load(e.target.files[0])}
+              />
+            </label>
+          )}
         </div>
+        {renderGuide && (
+          <div ref={guideHeading}>
+            {renderGuide({ event, index, time, counting, done, playing })}
+          </div>
+        )}
         {error && (
           <div className="error" role="alert">
             {error}
@@ -294,20 +327,22 @@ export default function ScorePractice({ getAudioContext, reference, score, setSc
         ) : (
           <>
             <div className="score-controls">
-              <label>
-                {text('声部 / 声部编号', 'Part / voice')}
-                <select
-                  value={trackId}
-                  disabled={playing || busy}
-                  onChange={(e) => setTrackId(+e.target.value)}
-                >
-                  {score.tracks.map((tr, i) => (
-                    <option key={tr.id} value={i}>
-                      {tr.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              {!lesson && (
+                <label>
+                  {text('声部 / 声部编号', 'Part / voice')}
+                  <select
+                    value={trackId}
+                    disabled={playing || busy}
+                    onChange={(e) => setTrackId(+e.target.value)}
+                  >
+                    {score.tracks.map((tr, i) => (
+                      <option key={tr.id} value={i}>
+                        {tr.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
               <label>
                 {text('练习速度', 'Practice tempo')}
                 <select
@@ -315,8 +350,15 @@ export default function ScorePractice({ getAudioContext, reference, score, setSc
                   disabled={playing || busy}
                   onChange={(e) => setTempo(+e.target.value)}
                 >
-                  <option value={0}>{text('跟随谱面速度', 'Score tempo')}</option>
-                  {[40, 50, 60, 70, 80, 90, 100, 110, 120, 140, 160, 180, 200].map((n) => (
+                  <option value={0}>
+                    {lesson
+                      ? `${lesson.bpm} BPM · ${text('建议速度', 'Suggested')}`
+                      : text('跟随谱面速度', 'Score tempo')}
+                  </option>
+                  {(lesson
+                    ? [30, 40, 50, 60, 70, 80]
+                    : [40, 50, 60, 70, 80, 90, 100, 110, 120, 140, 160, 180, 200]
+                  ).map((n) => (
                     <option key={n} value={n}>
                       {n} BPM
                     </option>
@@ -429,6 +471,26 @@ export default function ScorePractice({ getAudioContext, reference, score, setSc
                   <b>{nameOf(e)}</b>
                   <span>
                     {text('小节', 'Bar')} {e.bar} · {e.duration} ♩
+                    {lesson && (
+                      <em>
+                        {lesson.cues[e.index]?.midi === null
+                          ? lesson.cues[e.index]?.phase === 'stop'
+                            ? text('停弓', 'Stop')
+                            : lesson.cues[e.index]?.phase === 'finish'
+                              ? text('结束', 'Finish')
+                              : text('放稳', 'Place')
+                          : lesson.cues[e.index]?.finger !== undefined
+                            ? lesson.cues[e.index].finger === 0
+                              ? text('空弦', 'Open string')
+                              : text(
+                                  `${lesson.cues[e.index].finger} 指`,
+                                  `Finger ${lesson.cues[e.index].finger}`,
+                                )
+                            : lesson.cues[e.index]?.bow === 'down'
+                              ? text('下弓', 'Down-bow')
+                              : text('上弓', 'Up-bow')}
+                      </em>
+                    )}
                   </span>
                 </div>
               ))}
@@ -457,7 +519,9 @@ export default function ScorePractice({ getAudioContext, reference, score, setSc
                     : done
                       ? text('再次演奏', 'Play again')
                       : initial.current
-                        ? text('开始演奏', 'Start playing')
+                        ? lesson
+                          ? text('开始练习', 'Start exercise')
+                          : text('开始演奏', 'Start playing')
                         : text('继续演奏', 'Resume')}
               </button>
               <button className="secondary-button" disabled={busy} onClick={() => reset(offset)}>

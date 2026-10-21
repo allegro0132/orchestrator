@@ -111,3 +111,21 @@ Phones support native horizontal swipes. Desktop users can drag with the primary
 Manual pointer, wheel, or keyboard navigation suspends automatic following, so playback never pulls the viewport away from the user's browsing position. The playhead and analysis continue updating. **Follow note** returns to the current note and resumes following; starting or resuming playback also restores it. Selecting a starting bar while paused navigates to that bar.
 
 The custom playhead uses compositor transforms with a tempo-aware easing duration. Cursor anchors are cached; ordinary forward playback advances the notation iterator rather than restarting it for every note. The system's reduced-motion preference disables cursor glides and smooth scrolling. Full-score engraving can take longer for large files, but it does not recur at bar boundaries.
+
+## Beginner practice mode
+
+Beginner practice is a fifth, independent mode with seven built-in exercises. It reuses the complete horizontal score, microphone analysis, tempo control, pause/resume, and starting-bar navigation from Score practice. No score import is needed. The selected exercise is saved locally under `arco-beginner-lesson`; imported scores in Score practice remain separate.
+
+- **Slow long bows on D:** eight down/up pairs, four quarter-note beats per bow, starting at 40 BPM.
+- **Four open strings:** D → A → G → E, four down/up pairs on each string, four beats per bow, with a four-beat placement rest before each new string.
+- **Stop, place, play crossings:** D–A–D–A, A–E–A–E, then D–G–D–G, four rounds per pattern at 50 BPM. Every played note lasts one beat, followed by one stopped beat and one placement beat. The final placement becomes a finishing rest.
+- **Left hand 1:** D–E–D–E–D.
+- **Left hand 2:** D–E–F♯–E–D.
+- **Left hand 3:** D–E–F♯–G–F♯–E–D.
+- **Left hand 4:** D–E–F♯–G–A–G–F♯–E–D.
+
+Left-hand exercises remain on the D string in first position, use fingers 0–4, and repeat each sequence four times with two beats per note at 50 BPM. The score includes bowing and fingering marks. Live action cards show down/up bow, the target string or finger, group/round number, beat indicators, and explicit stop/place instructions. Exercise selection is locked while starting or playing; pause before changing exercises. Beginner tempo options are 30–80 BPM.
+
+Suggested right-hand practice blocks are four, four, and three minutes, including setup, mirror checks, and rest. These are practice-planning suggestions, not exact score durations. For example, the sixteen four-beat D bows take 96 seconds at 40 BPM; changing tempo changes the active score time while preserving the requested bow counts.
+
+Instructions and manually checked checkpoints cover contact-point drift, bow straightness, even tone, smooth changes, arm level, thumb tension, neighboring strings, and a natural wrist. Audio feedback does not assess physical posture, contact point, or whether two strings were touched: those remain mirror/listening checks. Analysis remains monophonic and has the same onset-detection limits as Score practice. All exercise copy is available in English and Chinese, with English as the default interface language.
