@@ -16,8 +16,7 @@ export default function ScorePractice({ getAudioContext, reference, score, setSc
     text = (zh, en) => (lang === 'zh' ? zh : en);
   const [showResults, setShowResults] = useState(false);
   const [trackId, setTrackId] = useState(0),
-    [tempo, setTempo] = useState(0),
-    [full, setFull] = useState(false);
+    [tempo, setTempo] = useState(0);
   const [time, setTime] = useState(0),
     [playing, setPlaying] = useState(false),
     [busy, setBusy] = useState(false),
@@ -91,7 +90,6 @@ export default function ScorePractice({ getAudioContext, reference, score, setSc
       setTrackId(0);
       setTempo(0);
       setScore(parsed);
-      setFull(false);
     } catch (e) {
       if (mounted.current && token === importAttempt.current)
         setError(
@@ -151,7 +149,6 @@ export default function ScorePractice({ getAudioContext, reference, score, setSc
       initial.current = false;
       setPlaying(true);
       setBusy(false);
-      setFull(false);
       focusHeading.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       model.current.lastTime = null;
       model.current.lastHz = null;
@@ -361,16 +358,12 @@ export default function ScorePractice({ getAudioContext, reference, score, setSc
             <div className="score-view-heading" ref={focusHeading}>
               <span>
                 {text('当前小节', 'Current bar')} <b>{track.measures[focus]?.bar}</b>
-                {!full && ` · ${text('相邻小节', 'neighboring bars')}`}
               </span>
-              <button disabled={playing || busy} onClick={() => setFull(!full)}>
-                {full ? text('聚焦演奏区域', 'Focus view') : text('查看完整曲谱', 'Full score')}
-              </button>
+              <span>{text('完整曲谱 · 左右滑动', 'Full score · swipe to explore')}</span>
             </div>
             <ScoreNotation
               track={track}
               measure={focus || 0}
-              full={full}
               playing={playing}
               noteDuration={event ? event.end - event.start : 0.5}
               beat={Math.max(event?.beat ?? track.measures[focus].beat, track.measures[focus].beat)}

@@ -2018,8 +2018,8 @@ header {
   background: radial-gradient(ellipse at 35% 0%, #f7ecd1 0%, #f0dfbc 48%, #e8d2aa 100%);
   position: relative;
   min-height: 155px;
-  overflow: auto;
-  max-height: 460px;
+  overflow: hidden;
+  max-height: none;
   box-shadow:
     0 12px 28px #7b52200c,
     inset 0 1px 0 #fff8e6b0;
@@ -2029,14 +2029,11 @@ header {
   color-scheme: light;
 }
 .notation {
-  min-width: 280px;
-  padding: 8px;
+  padding: 40px 8px 24px;
   position: relative;
   min-height: 180px;
-  transition: height 280ms cubic-bezier(0.22, 1, 0.36, 1);
+  min-width: 100%;
   isolation: isolate;
-  overflow: clip;
-  mask-image: linear-gradient(90deg, transparent, #000 18px, #000 calc(100% - 42px), transparent);
 }
 .notation-message {
   position: absolute;
@@ -2233,20 +2230,11 @@ header {
   display: none;
 }
 @media (max-width: 600px) {
-  .score-practice.is-playing .notation-frame {
+  .score-practice.is-playing .notation-viewport {
     max-height: 230px;
   }
 }
 
-.notation-layer {
-  position: absolute;
-  top: 48px;
-  left: 8px;
-  right: 8px;
-  opacity: 0;
-  pointer-events: none;
-  will-change: transform;
-}
 .notation-native-cursor {
   opacity: 0 !important;
 }
@@ -2313,13 +2301,6 @@ header {
   color: #b1956d;
 }
 
-.notation-frame.is-full .notation {
-  mask-image: none;
-}
-.notation-frame.is-full .notation-layer {
-  top: 8px;
-}
-
 .notation-playhead::before {
   content: '';
   position: absolute;
@@ -2331,20 +2312,6 @@ header {
   background: #b77a3f;
   box-shadow: 0 0 9px #c18b3f25;
 }
-.notation-flow-rail {
-  height: 2px;
-  margin: 0 20px 15px;
-  background: #ac8d5920;
-  border-radius: 2px;
-  overflow: hidden;
-}
-.notation-flow-rail i {
-  display: block;
-  height: 100%;
-  background: linear-gradient(90deg, #d1b77d, #a77843);
-  border-radius: inherit;
-  transition: width 450ms cubic-bezier(0.25, 0.75, 0.25, 1);
-}
 @media (max-width: 600px) {
   .notation-toolbar {
     padding: 14px 14px 0;
@@ -2355,9 +2322,77 @@ header {
     gap: 5px;
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .notation-layer,
-  .notation-flow-rail i {
-    transition: none !important;
+
+.notation-viewport {
+  width: 100%;
+  max-height: 360px;
+  overflow: auto;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x pan-y;
+  cursor: grab;
+  user-select: none;
+  scrollbar-width: thin;
+  scrollbar-color: #b99a66 #e5d2aa55;
+}
+.notation-viewport.dragging {
+  cursor: grabbing;
+}
+.notation-viewport:focus-visible {
+  outline: 2px solid #b87a40;
+  outline-offset: -3px;
+}
+.notation-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 16px 14px;
+  color: #9d8059;
+  font-size: 10px;
+}
+.notation-navigation > div {
+  display: flex;
+  gap: 5px;
+}
+.notation-navigation button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 30px;
+  min-width: 30px;
+  padding: 5px 8px;
+  border: 1px solid #b3956340;
+  border-radius: 6px;
+  background: #fff5dc40;
+  color: #8b693f;
+  cursor: pointer;
+  font: inherit;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease;
+}
+.notation-navigation button:hover {
+  background: #fff5dc90;
+  border-color: #b3956380;
+}
+.notation-navigation button:focus-visible {
+  outline: 2px solid #b87a40;
+  outline-offset: 2px;
+}
+.notation-navigation .notation-follow.available {
+  background: #f7eac5;
+  border-color: #ba905a80;
+  color: #795126;
+}
+.notation-navigation button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+@media (max-width: 600px) {
+  .notation-navigation {
+    padding: 8px 12px 12px;
+    font-size: 9px;
   }
 }

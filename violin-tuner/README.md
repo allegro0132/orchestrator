@@ -84,7 +84,7 @@ The page title, HTML language attribute, practice guide, error messages, and tun
 
 Score practice is a separate mode. Import `.musicxml`, `.xml` (score-partwise MusicXML), compressed `.mxl`, or `.mid` / `.midi` files up to 10 MB. Scores and microphone samples are processed locally; no audio or score file is uploaded. A built-in melody lets you try the notation interface before selecting a file.
 
-Select a part and voice, a starting measure, and either the score's tempo map or a fixed practice tempo. The notation displays the current measure with its neighbors. A green cursor and a row of upcoming notes show what to play next. Before playback, the full-score toggle allows a broader review. A four-quarter-beat visual count-in precedes practice; pause, resume, and restart are available. Microphone analysis stops on mode changes, hidden pages, and navigation.
+Select a part and voice, a starting measure, and either the score's tempo map or a fixed practice tempo. The notation always retains the complete score as one horizontal ribbon. An amber cursor and a row of upcoming notes show what to play next. Swipe or drag the notation to explore any measure. A four-quarter-beat visual count-in precedes practice; pause, resume, and restart are available. Microphone analysis stops on mode changes, hidden pages, and navigation.
 
 Live analysis advances against the AudioContext clock at the selected tempo. It continues through mistakes rather than waiting for correct notes. Frequency detection targets 30 readings per second using the tuner's existing 48 kHz / 4,096-sample audio configuration and the saved A4 reference. It supports single-note violin input in the detector's approximate 170–2,400 Hz range.
 
@@ -102,8 +102,12 @@ MIDI is converted to simplified notation, using one monophonic line per track. S
 
 The score UI and engraving library load on demand, keeping their download out of the initial tuner screen.
 
-### Notation motion
+### Complete score and horizontal browsing
 
-The score view keeps the current engraving visible while preparing the following neighborhood in a hidden layer. Bar changes crossfade the prepared layers instead of clearing and reloading the viewport. A bounded cache retains only the active view, its outgoing transition, and the next neighborhood. Width changes rebuild the layout after a short debounce; height changes do not trigger re-engraving.
+The complete selected part is engraved once as a single horizontal ribbon on a warm champagne background, with cocoa notation and an amber playhead. Every measure remains in the scrollable document; changing the current measure does not replace, crop, or re-engrave the score. Changing the viewport width preserves the same engraving and updates the follow position.
 
-The custom playhead uses compositor transforms with a tempo-aware easing duration. Focused practice uses a single horizontal staff ribbon on a warm champagne background, with cocoa notation and an amber playhead. The score scrolls left as notes advance, keeping the current note near the first third of the viewport. Full-score review retains the vertical layout. Cursor anchors are cached, and note changes do not re-render the notation. Scrolling stays inside the score viewport. The system's reduced-motion preference disables glides, crossfades, and smooth scrolling.
+Phones support native horizontal swipes. Desktop users can drag with the primary mouse button, use horizontal trackpad scrolling or Shift + wheel, or use the left/right controls. The focused score region also supports Left/Right arrow keys and Home/End. The scrollbar remains available for direct navigation.
+
+Manual pointer, wheel, or keyboard navigation suspends automatic following, so playback never pulls the viewport away from the user's browsing position. The playhead and analysis continue updating. **Follow note** returns to the current note and resumes following; starting or resuming playback also restores it. Selecting a starting bar while paused navigates to that bar.
+
+The custom playhead uses compositor transforms with a tempo-aware easing duration. Cursor anchors are cached; ordinary forward playback advances the notation iterator rather than restarting it for every note. The system's reduced-motion preference disables cursor glides and smooth scrolling. Full-score engraving can take longer for large files, but it does not recur at bar boundaries.
