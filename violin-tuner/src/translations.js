@@ -1,4 +1,35 @@
 export const english = {
+  节拍练习: 'Practice with the metronome',
+  '选择节拍器模式，设置速度和拍号后开始。首拍可加重音，切换模式或隐藏页面时会自动停止。':
+    'Choose Metronome mode, set the tempo and time signature, then start. You can accent the first beat. Playback stops when you switch modes or hide the page.',
+
+  节拍器: 'Metronome',
+  '找到节奏，稳住每一拍': 'Find a steady pulse',
+  '让每一拍，都稳稳落下': 'Find your rhythm, one beat at a time',
+  从慢速开始练习: 'Start slowly',
+  '先把速度放慢，准确完成每个节奏，再逐渐提速。':
+    'Start at a comfortable tempo. Play each rhythm accurately, then increase the pace.',
+  '跟随节拍，保持稳定': 'Follow the pulse. Keep it steady.',
+  '准备好，找到你的节奏': 'Ready to find your rhythm',
+  降低速度: 'Decrease tempo',
+  提高速度: 'Increase tempo',
+  '速度 BPM': 'Tempo BPM',
+  速度滑块: 'Tempo slider',
+  节拍指示: 'Beat indicator',
+  当前拍: 'Current beat',
+  拍号: 'Time signature',
+  首拍重音: 'Accent first beat',
+  音量: 'Volume',
+  节拍器音量: 'Metronome volume',
+  停止节拍器: 'Stop metronome',
+  开始节拍器: 'Start metronome',
+  无需麦克风: 'No microphone needed',
+  声音在设备本地生成: 'Sound is generated on your device',
+  'BPM 对应每次点击；6/8 每小节点击六次。切换模式或离开页面时自动停止。':
+    'BPM counts each click; 6/8 has six clicks per bar. Stops when you switch modes or hide the page.',
+  '无法启动节拍器，请检查声音设置后重试。':
+    'Could not start the metronome. Check your audio settings and try again.',
+
   '自动识别保持当前把位与手型，同音优先保留当前琴弦。手动选择会锁定目标，可用下方开关恢复自动。':
     'Auto detection keeps your position and pattern. Unisons prefer the current string. Manual selection locks the target; use the switch below to resume auto detection.',
   弦准: 'ARCO',

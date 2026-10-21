@@ -31,6 +31,6 @@ export function advanceTarget(pending, candidate, current, time) {
   const next =
     pending?.key === key && time - pending.last <= 250
       ? { ...pending, count: pending.count + 1, last: time }
-      : { key, count: 1, last: time };
-  return { pending: next, target: next.count >= 3 ? candidate : null };
+      : { key, count: 1, last: time, since: time };
+  return { pending: next, target: next.count >= 3 && time - next.since >= 180 ? candidate : null };
 }

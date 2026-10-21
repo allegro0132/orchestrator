@@ -5,9 +5,7 @@ import {
   Mic,
   Volume2,
   ArrowUpRight,
-  ChevronDown,
   Check,
-  ArrowLeft,
   SlidersHorizontal,
   Music2,
   BookOpen,
@@ -15,7 +13,6 @@ import {
   X,
   Play,
   Square,
-  Info,
 } from 'lucide-react';
 import { STRINGS, PATTERNS, frequency, centsOff, noteName, detectPitch } from './pitch';
 import { emptyTracking, trackPitch, ACCURACY_CENTS } from './tuning.js';
@@ -23,6 +20,13 @@ import PitchHistory from './PitchHistory.jsx';
 import { findTarget, advanceTarget } from './autoTarget.js';
 import { playSuccessSound } from './successSound.js';
 import { LanguageProvider, useLanguage } from './i18n.jsx';
+import Metronome from './Metronome.jsx';
+import {
+  createAudioContext,
+  AUDIO_SAMPLE_RATE,
+  ANALYSIS_INTERVAL_MS,
+  ANALYSIS_BUFFER_SIZE,
+} from './audioConfig.js';
 import './style.css';
 function App() {
   const { lang, setLang, t } = useLanguage();
@@ -112,9 +116,11 @@ function App() {
     stopTone();
     setHz(null);
     resetTracking();
+    if (mode === 'metronome') stop();
   }, [string, mode, pattern, position, finger, reference]);
   async function context() {
-    if (!audio.current) audio.current = new (window.AudioContext || window.webkitAudioContext)();
+    if (!audio.current)
+      audio.current = createAudioContext(window.AudioContext || window.webkitAudioContext);
     await audio.current.resume();
     return audio.current;
   }
@@ -133,12 +139,21 @@ function App() {
     try {
       const ctx = await context();
       const media = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+        audio: {
+          sampleRate: { ideal: AUDIO_SAMPLE_RATE },
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+        },
       });
+      if (config.current.mode === 'metronome') {
+        media.getTracks().forEach((track) => track.stop());
+        return;
+      }
       stream.current = media;
       const source = ctx.createMediaStreamSource(media),
         analyser = ctx.createAnalyser();
-      analyser.fftSize = 4096;
+      analyser.fftSize = ANALYSIS_BUFFER_SIZE;
       source.connect(analyser);
       const buffer = new Float32Array(analyser.fftSize);
       running.current = true;
@@ -146,8 +161,8 @@ function App() {
       let last = 0;
       function tick(time) {
         if (!running.current) return;
-        if (time - last > 95) {
-          last = time;
+        if (time - last >= ANALYSIS_INTERVAL_MS) {
+          last = time - ((time - last) % ANALYSIS_INTERVAL_MS);
           analyser.getFloatTimeDomainData(buffer);
           const raw = detectPitch(buffer, ctx.sampleRate);
           let f = raw;
@@ -287,7 +302,7 @@ function App() {
               <span /> YOUR DAILY VIOLIN COMPANION
             </div>
             <h1>
-              {t('从每一根弦，找到好声音')}
+              {t(mode === 'metronome' ? '让每一拍，都稳稳落下' : '从每一根弦，找到好声音')}
               <span>{lang === 'zh' ? '。' : '.'}</span>
             </h1>
             <p>{t('安静地聆听，让每一次练习都从准确开始。')}</p>
@@ -305,7 +320,7 @@ function App() {
           <aside>
             <div className="section-label">
               {t('练习模式')}
-              <span>01 — 02</span>
+              <span>01 — 03</span>
             </div>
             <button
               className={'mode ' + (mode === 'open' ? 'active' : '')}
@@ -333,242 +348,271 @@ function App() {
               </span>
               {mode === 'finger' && <span className="active-dot" />}
             </button>
-            <div className="string-head">
-              <span>{t('选择琴弦')}</span>
-              <span>{t('低音 → 高音')}</span>
-            </div>
-            <div className="strings">
-              {STRINGS.map((s, i) => (
-                <button
-                  key={s.name}
-                  className={string === i ? 'selected' : ''}
-                  onClick={() => {
-                    setString(i);
-                    setAuto(false);
-                    setFingerAuto(false);
-                  }}
-                >
-                  <span>
-                    {s.name}
-                    <sub>{noteName(s.midi).octave}</sub>
-                  </span>
-                  <small>{t(s.label)}</small>
-                  {string === i ? <Check size={16} /> : <span className="tiny-line" />}
-                </button>
-              ))}
-            </div>
+            <button
+              className={'mode ' + (mode === 'metronome' ? 'active' : '')}
+              onClick={() => setMode('metronome')}
+            >
+              <span className="mode-icon">
+                <Play size={21} />
+              </span>
+              <span>
+                <b>{t('节拍器')}</b>
+                <small>{t('找到节奏，稳住每一拍')}</small>
+              </span>
+              {mode === 'metronome' && <span className="active-dot" />}
+            </button>
+            {mode !== 'metronome' && (
+              <>
+                <div className="string-head">
+                  <span>{t('选择琴弦')}</span>
+                  <span>{t('低音 → 高音')}</span>
+                </div>
+                <div className="strings">
+                  {STRINGS.map((s, i) => (
+                    <button
+                      key={s.name}
+                      className={string === i ? 'selected' : ''}
+                      onClick={() => {
+                        setString(i);
+                        setAuto(false);
+                        setFingerAuto(false);
+                      }}
+                    >
+                      <span>
+                        {s.name}
+                        <sub>{noteName(s.midi).octave}</sub>
+                      </span>
+                      <small>{t(s.label)}</small>
+                      {string === i ? <Check size={16} /> : <span className="tiny-line" />}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
             <div className="tip">
               <span className="tip-icon">
                 <Headphones size={19} />
               </span>
-              <b>{t('给自己一点安静')}</b>
-              <p>{t('在安静的环境中，持续拉奏一根弦，音准读数会更稳定。')}</p>
+              <b>{t(mode === 'metronome' ? '从慢速开始练习' : '给自己一点安静')}</b>
+              <p>
+                {t(
+                  mode === 'metronome'
+                    ? '先把速度放慢，准确完成每个节奏，再逐渐提速。'
+                    : '在安静的环境中，持续拉奏一根弦，音准读数会更稳定。',
+                )}
+              </p>
               <div>
-                {t('声音仅在设备本地分析')}
+                {t(mode === 'metronome' ? '声音在设备本地生成' : '声音仅在设备本地分析')}
                 <span>↗</span>
               </div>
             </div>
           </aside>
-          <section className="tuner">
-            <div className="panel-top">
-              <span className="panel-title">
-                <span className="olive-dot" />
-                {mode === 'open' || finger === 0 ? t('空弦调音') : t('指位调音')}
-                <span className="tag">{mode === 'open' ? 'OPEN STRINGS' : 'FINGER PRACTICE'}</span>
-              </span>
-              <span className="reference">A₄ = {reference} Hz</span>
-            </div>
-            {mode === 'finger' && (
-              <div className="finger-controls">
-                <label>
-                  {t('把位')}
-                  <select
-                    value={position}
-                    onChange={(e) => {
-                      setPosition(+e.target.value);
-                      setFingerAuto(true);
-                    }}
-                  >
-                    {['第一把位', '第二把位', '第三把位', '第四把位', '第五把位'].map((p, i) => (
-                      <option value={i} key={p}>
-                        {t(p)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  {t('手型')}
-                  <select
-                    value={pattern}
-                    onChange={(e) => {
-                      setPattern(+e.target.value);
-                      setFingerAuto(true);
-                    }}
-                  >
-                    {PATTERNS.map((p, i) => (
-                      <option value={i} key={t(p.name)}>
-                        {t(p.name)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <div className="fingers">
-                  {[1, 2, 3, 4].map((f) => (
-                    <button
-                      className={finger === f ? 'on' : ''}
-                      aria-pressed={finger === f}
-                      onClick={() => {
-                        setFinger((current) => (current === f ? 0 : f));
-                        setFingerAuto(false);
-                      }}
-                      key={f}
-                    >
-                      {lang === 'zh' ? `${f} 指` : `Finger ${f}`}
-                    </button>
-                  ))}
-                </div>
-                <p className="auto-hint">
-                  {t(
-                    '自动识别保持当前把位与手型，同音优先保留当前琴弦。手动选择会锁定目标，可用下方开关恢复自动。',
-                  )}
-                </p>
-              </div>
-            )}
-            <div className={'tuner-body ' + (mode === 'finger' ? 'compact' : '')}>
-              <div
-                className={
-                  'live-status ' + (tracking.success ? 'success' : listening ? 'live' : '')
-                }
-              >
-                <span />
-                {tracking.success
-                  ? t('本次调音成功 · 已稳定保持 0.5 秒')
-                  : listening
-                    ? hz
-                      ? t('正在聆听琴声')
-                      : t('等待琴声…')
-                    : t('准备好，开始聆听')}
-              </div>
-              <div className="note-display">
-                <span>{note.name}</span>
-                <sub>{note.octave}</sub>
-              </div>
-              <div className="note-caption">
-                {STRINGS[string].name} {lang === 'zh' ? '弦' : 'string'} ·{' '}
-                {mode === 'open' || finger === 0
-                  ? t('空弦')
-                  : lang === 'zh'
-                    ? `${position + 1} 把位 · ${finger} 指`
-                    : `Position ${position + 1} · Finger ${finger}`}
-                <span>
-                  {lang === 'zh' ? '目标' : 'Target'} {target.toFixed(2)} Hz
+          {mode === 'metronome' ? (
+            <Metronome getAudioContext={context} />
+          ) : (
+            <section className="tuner">
+              <div className="panel-top">
+                <span className="panel-title">
+                  <span className="olive-dot" />
+                  {mode === 'open' || finger === 0 ? t('空弦调音') : t('指位调音')}
+                  <span className="tag">
+                    {mode === 'open' ? 'OPEN STRINGS' : 'FINGER PRACTICE'}
+                  </span>
                 </span>
+                <span className="reference">A₄ = {reference} Hz</span>
               </div>
-              <div className="meter">
-                <div className="meter-labels">
-                  <span>{t('偏低 ♭')}</span>
-                  <span className={inTune ? 'good' : ''}>
-                    {hz
-                      ? inTune
-                        ? t('当前接近标准音')
-                        : `${cents > 0 ? '+' : ''}${Math.round(cents)} ${t('音分')}`
-                      : t('让指针回到中央')}
-                  </span>
-                  <span>{t('偏高 ♯')}</span>
-                </div>
-                <div className="scale">
-                  <div
-                    className="sweet-spot"
-                    style={{
-                      left: `${50 - ACCURACY_CENTS * 0.9}%`,
-                      width: `${ACCURACY_CENTS * 1.8}%`,
-                    }}
-                  />
-                  {Array.from({ length: 41 }, (_, i) => (
-                    <i key={i} className={i % 10 === 0 ? 'major' : i % 5 === 0 ? 'medium' : ''} />
-                  ))}
-                  <div
-                    className={'needle ' + (inTune ? 'tuned' : '')}
-                    style={{ left: `${50 + Math.max(-50, Math.min(50, cents)) * 0.9}%` }}
-                  >
-                    <span />
+              {mode === 'finger' && (
+                <div className="finger-controls">
+                  <label>
+                    {t('把位')}
+                    <select
+                      value={position}
+                      onChange={(e) => {
+                        setPosition(+e.target.value);
+                        setFingerAuto(true);
+                      }}
+                    >
+                      {['第一把位', '第二把位', '第三把位', '第四把位', '第五把位'].map((p, i) => (
+                        <option value={i} key={p}>
+                          {t(p)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    {t('手型')}
+                    <select
+                      value={pattern}
+                      onChange={(e) => {
+                        setPattern(+e.target.value);
+                        setFingerAuto(true);
+                      }}
+                    >
+                      {PATTERNS.map((p, i) => (
+                        <option value={i} key={t(p.name)}>
+                          {t(p.name)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <div className="fingers">
+                    {[1, 2, 3, 4].map((f) => (
+                      <button
+                        className={finger === f ? 'on' : ''}
+                        aria-pressed={finger === f}
+                        onClick={() => {
+                          setFinger((current) => (current === f ? 0 : f));
+                          setFingerAuto(false);
+                        }}
+                        key={f}
+                      >
+                        {lang === 'zh' ? `${f} 指` : `Finger ${f}`}
+                      </button>
+                    ))}
                   </div>
-                </div>
-                <div className="scale-labels">
-                  <span>−50</span>
-                  <span>−25</span>
-                  <span>0</span>
-                  <span>+25</span>
-                  <span>+50</span>
-                </div>
-              </div>
-              <div className="reading">
-                <span className={'reading-dot ' + (inTune ? 'tuned' : '')} />
-                {hz ? (
-                  <>
-                    <b>
-                      {hz.toFixed(1)} <small>Hz</small>
-                    </b>
-                    <span>
-                      {inTune
-                        ? t('很好，保持这个音')
-                        : cents < 0
-                          ? t('音偏低，请稍微升高')
-                          : t('音偏高，请稍微降低')}
-                    </span>
-                  </>
-                ) : (
-                  <span>
-                    {listening ? t('缓慢、平稳地拉奏目标音') : t('开启麦克风，即可实时查看音准')}
-                  </span>
-                )}
-              </div>
-              <button
-                className={'mic-button ' + (listening ? 'listening' : '')}
-                disabled={starting}
-                onClick={listening ? stop : start}
-              >
-                {listening ? <Square size={17} /> : <Mic size={19} />}{' '}
-                {starting ? t('正在开启…') : listening ? t('停止调音') : t('开启麦克风')}{' '}
-                <span>{listening ? 'LISTENING' : 'START TUNING'}</span>
-              </button>
-              {error && (
-                <div className="error" role="alert">
-                  {t(error)}
+                  <p className="auto-hint">
+                    {t(
+                      '自动识别保持当前把位与手型，同音优先保留当前琴弦。手动选择会锁定目标，可用下方开关恢复自动。',
+                    )}
+                  </p>
                 </div>
               )}
-              <button className="play-tone" onClick={playTone}>
-                {playing ? <Square size={15} /> : <Volume2 size={17} />}{' '}
-                {playing ? t('停止标准音') : t('聆听标准音')}
-                <span>
-                  {note.name}
-                  {note.octave}
-                </span>
-              </button>
-              <PitchHistory tracking={tracking} listening={listening} onReset={resetTracking} />
-            </div>
-            <div className="panel-bottom">
-              <label className="switch-label">
-                <button
-                  role="switch"
-                  aria-checked={mode === 'open' ? auto : fingerAuto}
-                  aria-label={t(mode === 'open' ? '自动识别琴弦' : '自动识别琴弦与指位')}
-                  className={'switch ' + ((mode === 'open' ? auto : fingerAuto) ? 'on' : '')}
-                  onClick={() => {
-                    pendingTarget.current = null;
-                    mode === 'open' ? setAuto(!auto) : setFingerAuto(!fingerAuto);
-                  }}
+              <div className={'tuner-body ' + (mode === 'finger' ? 'compact' : '')}>
+                <div
+                  className={
+                    'live-status ' + (tracking.success ? 'success' : listening ? 'live' : '')
+                  }
                 >
                   <span />
+                  {tracking.success
+                    ? t('本次调音成功 · 已稳定保持 0.5 秒')
+                    : listening
+                      ? hz
+                        ? t('正在聆听琴声')
+                        : t('等待琴声…')
+                      : t('准备好，开始聆听')}
+                </div>
+                <div className="note-display">
+                  <span>{note.name}</span>
+                  <sub>{note.octave}</sub>
+                </div>
+                <div className="note-caption">
+                  {STRINGS[string].name} {lang === 'zh' ? '弦' : 'string'} ·{' '}
+                  {mode === 'open' || finger === 0
+                    ? t('空弦')
+                    : lang === 'zh'
+                      ? `${position + 1} 把位 · ${finger} 指`
+                      : `Position ${position + 1} · Finger ${finger}`}
+                  <span>
+                    {lang === 'zh' ? '目标' : 'Target'} {target.toFixed(2)} Hz
+                  </span>
+                </div>
+                <div className="meter">
+                  <div className="meter-labels">
+                    <span>{t('偏低 ♭')}</span>
+                    <span className={inTune ? 'good' : ''}>
+                      {hz
+                        ? inTune
+                          ? t('当前接近标准音')
+                          : `${cents > 0 ? '+' : ''}${Math.round(cents)} ${t('音分')}`
+                        : t('让指针回到中央')}
+                    </span>
+                    <span>{t('偏高 ♯')}</span>
+                  </div>
+                  <div className="scale">
+                    <div
+                      className="sweet-spot"
+                      style={{
+                        left: `${50 - ACCURACY_CENTS * 0.9}%`,
+                        width: `${ACCURACY_CENTS * 1.8}%`,
+                      }}
+                    />
+                    {Array.from({ length: 41 }, (_, i) => (
+                      <i key={i} className={i % 10 === 0 ? 'major' : i % 5 === 0 ? 'medium' : ''} />
+                    ))}
+                    <div
+                      className={'needle ' + (inTune ? 'tuned' : '')}
+                      style={{ left: `${50 + Math.max(-50, Math.min(50, cents)) * 0.9}%` }}
+                    >
+                      <span />
+                    </div>
+                  </div>
+                  <div className="scale-labels">
+                    <span>−50</span>
+                    <span>−25</span>
+                    <span>0</span>
+                    <span>+25</span>
+                    <span>+50</span>
+                  </div>
+                </div>
+                <div className="reading">
+                  <span className={'reading-dot ' + (inTune ? 'tuned' : '')} />
+                  {hz ? (
+                    <>
+                      <b>
+                        {hz.toFixed(1)} <small>Hz</small>
+                      </b>
+                      <span>
+                        {inTune
+                          ? t('很好，保持这个音')
+                          : cents < 0
+                            ? t('音偏低，请稍微升高')
+                            : t('音偏高，请稍微降低')}
+                      </span>
+                    </>
+                  ) : (
+                    <span>
+                      {listening ? t('缓慢、平稳地拉奏目标音') : t('开启麦克风，即可实时查看音准')}
+                    </span>
+                  )}
+                </div>
+                <button
+                  className={'mic-button ' + (listening ? 'listening' : '')}
+                  disabled={starting}
+                  onClick={listening ? stop : start}
+                >
+                  {listening ? <Square size={17} /> : <Mic size={19} />}{' '}
+                  {starting ? t('正在开启…') : listening ? t('停止调音') : t('开启麦克风')}{' '}
+                  <span>{listening ? 'LISTENING' : 'START TUNING'}</span>
                 </button>
-                {t(mode === 'open' ? '自动识别琴弦' : '自动识别琴弦与指位')}
-              </label>
-              <span>
-                <span className="secure-dot" />
-                {t('音频不上传，安心练习')}
-              </span>
-            </div>
-          </section>
+                {error && (
+                  <div className="error" role="alert">
+                    {t(error)}
+                  </div>
+                )}
+                <button className="play-tone" onClick={playTone}>
+                  {playing ? <Square size={15} /> : <Volume2 size={17} />}{' '}
+                  {playing ? t('停止标准音') : t('聆听标准音')}
+                  <span>
+                    {note.name}
+                    {note.octave}
+                  </span>
+                </button>
+                <PitchHistory tracking={tracking} listening={listening} onReset={resetTracking} />
+              </div>
+              <div className="panel-bottom">
+                <label className="switch-label">
+                  <button
+                    role="switch"
+                    aria-checked={mode === 'open' ? auto : fingerAuto}
+                    aria-label={t(mode === 'open' ? '自动识别琴弦' : '自动识别琴弦与指位')}
+                    className={'switch ' + ((mode === 'open' ? auto : fingerAuto) ? 'on' : '')}
+                    onClick={() => {
+                      pendingTarget.current = null;
+                      mode === 'open' ? setAuto(!auto) : setFingerAuto(!fingerAuto);
+                    }}
+                  >
+                    <span />
+                  </button>
+                  {t(mode === 'open' ? '自动识别琴弦' : '自动识别琴弦与指位')}
+                </label>
+                <span>
+                  <span className="secure-dot" />
+                  {t('音频不上传，安心练习')}
+                </span>
+              </div>
+            </section>
+          )}
         </div>
         {mode === 'finger' && (
           <section className="fingerboard-card">
@@ -613,9 +657,11 @@ function App() {
             <div>
               <b>{t('每一次准确，都是进步。')}</b>
               <p>
-                {mode === 'open'
-                  ? t('建议按 A → D → G → E 的顺序调弦，再复查一次。')
-                  : t('相邻手指相距 1 个半音时靠拢，2 个半音时分开。各手型以当前把位为基准。')}
+                {mode === 'metronome'
+                  ? t('先把速度放慢，准确完成每个节奏，再逐渐提速。')
+                  : mode === 'open'
+                    ? t('建议按 A → D → G → E 的顺序调弦，再复查一次。')
+                    : t('相邻手指相距 1 个半音时靠拢，2 个半音时分开。各手型以当前把位为基准。')}
               </p>
             </div>
           </div>
@@ -682,6 +728,14 @@ function App() {
                     <p>
                       {t(
                         '切换手型练习，选择琴弦、把位、手型和手指。对照指板按弦，可先播放标准音再练习。',
+                      )}
+                    </p>
+                  </li>
+                  <li>
+                    <b>{t('节拍练习')}</b>
+                    <p>
+                      {t(
+                        '选择节拍器模式，设置速度和拍号后开始。首拍可加重音，切换模式或隐藏页面时会自动停止。',
                       )}
                     </p>
                   </li>
