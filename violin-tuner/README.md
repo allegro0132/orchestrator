@@ -101,3 +101,9 @@ MusicXML ties are merged for analysis, and score tempo changes are preserved. Pl
 MIDI is converted to simplified notation, using one monophonic line per track. Simultaneous notes prefer the highest pitch; overlapping later notes are skipped. The first time signature determines bar grouping, and subsequent meter changes are not expanded. Prefer MusicXML when original notation, multiple voices, or complex rhythms matter. PDF/image recognition and adaptive following of rubato are not included.
 
 The score UI and engraving library load on demand, keeping their download out of the initial tuner screen.
+
+### Notation motion
+
+The score view keeps the current engraving visible while preparing the following neighborhood in a hidden layer. Bar changes crossfade the prepared layers instead of clearing and reloading the viewport. A bounded cache retains only the active view, its outgoing transition, and the next neighborhood. Width changes rebuild the layout after a short debounce; height changes do not trigger re-engraving.
+
+The custom playhead uses compositor transforms with a tempo-aware easing duration. Focused practice uses a single horizontal staff ribbon on a warm champagne background, with cocoa notation and an amber playhead. The score scrolls left as notes advance, keeping the current note near the first third of the viewport. Full-score review retains the vertical layout. Cursor anchors are cached, and note changes do not re-render the notation. Scrolling stays inside the score viewport. The system's reduced-motion preference disables glides, crossfades, and smooth scrolling.

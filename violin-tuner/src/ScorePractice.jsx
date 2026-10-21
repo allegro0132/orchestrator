@@ -371,6 +371,8 @@ export default function ScorePractice({ getAudioContext, reference, score, setSc
               track={track}
               measure={focus || 0}
               full={full}
+              playing={playing}
+              noteDuration={event ? event.end - event.start : 0.5}
               beat={Math.max(event?.beat ?? track.measures[focus].beat, track.measures[focus].beat)}
             />
             <div className="score-now" aria-live="off">
