@@ -8,7 +8,7 @@ function BeginnerGuide({ lesson, event, index, time, counting, done, playing }) 
   const { lang } = useLanguage(),
     text = (zh, en) => (lang === 'zh' ? zh : en);
   const [checks, setChecks] = useState([]);
-  const cue = lesson.cues[Math.max(0, index)] || lesson.cues.at(-1);
+  const cue = done ? lesson.cues.at(-1) : lesson.cues[Math.max(0, index)] || lesson.cues.at(-1);
   const label = done
     ? text('本轮完成，休息并自检', 'Round complete. Rest and review.')
     : counting
