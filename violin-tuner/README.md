@@ -1,35 +1,67 @@
-# 弦准 ARCO
+# ARCO Violin Tuning Studio
 
-React + Vite 小提琴调音应用，适配桌面和手机。
+A responsive violin tuner built with React and Vite for desktop and mobile browsers.
+
+## Development
 
 ```sh
-npm install
+npm ci
 npm run dev
+```
+
+From this directory, run the following checks before pushing:
+
+```sh
+npm run format
+npm run format:check
 npm test
 npm run build
 ```
 
-- 麦克风本地测音、空弦自动识别、音分指针与标准音播放
-- 四根弦、第一至第五把位、四种常用手型、四个手指目标音
-- A4 标准音 430–450 Hz，可保存在本地
-- 十二平均律；第二至第五把位相对第一把位分别上移 2、4、5、7 半音，指位图展示相对把位基准的音程
+See the [repository README](../README.md) for GitHub Pages deployment instructions.
 
-麦克风需要 HTTPS 或 localhost；应在安静环境拉奏单音。合成音算法测试通过不代表所有真实琴声与设备均已验证。手机保持浏览器在前台。
+## Tuning features
 
-## 持续音准记录与成功判定
+- Local microphone pitch detection, automatic open-string recognition, a cents meter, and reference tones.
+- All four violin strings, first through fifth positions, four common finger patterns, and targets for fingers 1–4.
+- An A4 reference from 430 to 450 Hz, saved on the device.
+- Equal temperament. Positions 2–5 shift the first-position pattern up by 2, 4, 5, and 7 semitones, respectively. The fingerboard labels show intervals relative to the selected position.
 
-实时保存最近 6 秒原始音高读数，展示曲线、最近约 0.5 秒的平均音分偏差和标准差。主指针仍使用三帧中值平滑，成功判定直接使用原始读数，避免平滑掩盖波动。
+Microphone input requires HTTPS or localhost. Bow a single note in a quiet environment, and keep the browser in the foreground on mobile. Synthetic pitch tests do not guarantee performance with every real violin, microphone, or room.
 
-最近 0.7 秒内有效读数跨度达到 0.5 秒、至少 5 个有效读数、有效采样占比至少 85%，且平均偏差在 ±20 音分内、80% 以上读数在 ±20 音分内、标准差不超过 20 音分，判定为调音成功。有效读数间隔超过 300 ms 时重新累计，避免断音或后台停顿被算作保持时间。
+## Pitch history and success detection
 
-成功反馈在停止拉奏后保留；断音或偏离准确区持续 0.3 秒后，下一次拉奏自动开始新判定。重新开始、切换目标或点击“重新检测”也会清空。历史仅保存于当前页面内存，不录制音频，不跨目标混合记录。
+The app keeps six seconds of raw pitch measurements in memory and displays a pitch trace, a recent average cents deviation, and its standard deviation. The main needle uses a three-frame median filter; success detection uses raw measurements so smoothing cannot hide pitch variation.
 
-轻声测音的 RMS 门槛为 0.002；仍需通过周期相关性检查才接受音高，降低随机底噪误识别。
+Success requires readings spanning at least 0.5 seconds within a rolling 0.7-second window, with:
 
-## 语言
+- At least five valid readings and 85% valid sample coverage.
+- An average deviation within ±20 cents.
+- At least 80% of readings within ±20 cents.
+- A standard deviation no greater than 20 cents.
 
-界面支持 English / 中文，首次打开默认为英语。页眉语言菜单可即时切换，并使用 `arco-language` 保存偏好；切换语言保留当前琴弦、指位和调音记录。页面标题、HTML lang、指南、错误提示和音准反馈同步切换。
+A gap greater than 300 ms between valid readings restarts accumulation, so silence or background pauses cannot count toward a sustained note.
 
-调音成功时播放约 0.42 秒的轻柔上行提示音，同一次持续达标只播放一次；断音或离开准确区持续 0.3 秒后自动重新累计，再次稳定 0.5 秒会再次播放，无需手动重新检测。提示音播放期间持续刷新麦克风、指针和音准曲线，仅暂停自动目标切换及成功重新触发，避免提示音引起误切换或重复提示。音频输出不可用时仍保留视觉反馈。
+Success remains visible after releasing a note. After 0.3 seconds of silence or off-target pitch, the next note starts a new check. Restarting the microphone, changing the target, or choosing **Try again** also clears the result. History stays in the current page's memory; the app does not record audio or combine measurements from different targets.
 
-轨迹量程固定为 ±50 音分，超出范围的读数在边缘用棕色标记，原始读数仍用于统计。手型练习按所选把位与手型自动匹配四根弦的空弦与 1–4 指，连续三次一致才切换；同音优先当前琴弦。手动选弦或指位会锁定目标，下方开关可恢复自动识别；选择把位或手型会重新启用自动识别。
+Quiet-sound detection uses an RMS threshold of 0.002. Measurements must also pass a periodic-correlation check to reduce false detections from random background noise.
+
+## Success sound
+
+Each new successful hold plays a gentle rising chime lasting about 0.42 seconds. Holding the same accurate note does not repeatedly play the chime. After release or an off-target note lasting 0.3 seconds, another stable 0.5-second hold can trigger a new chime without a manual reset.
+
+Microphone analysis, the needle, and the pitch trace keep updating during the chime. Automatic target switching and success re-arming are temporarily suppressed to prevent speaker feedback from causing unwanted switches or repeated cues. Visual feedback remains available when audio output is unavailable.
+
+## Fixed chart range and automatic finger detection
+
+The pitch chart stays at ±50 cents. Out-of-range readings appear in brown at the edges; their original values are still used for statistics.
+
+Finger practice matches open strings and fingers 1–4 across all four strings within the selected position and pattern. Three consecutive matching readings are required before switching targets. When different strings can produce the same pitch, the current string takes priority.
+
+Manually selecting a string or finger locks the target. The switch below the tuner restores automatic detection. Selecting a position or pattern also re-enables automatic detection.
+
+## Languages
+
+The interface supports English and Chinese, with English as the default. The header language menu switches immediately and saves the preference under `arco-language`. Switching languages preserves the selected string, finger, and pitch history.
+
+The page title, HTML language attribute, practice guide, error messages, and tuning feedback switch together. Chinese translation strings are intentionally retained in the source to support the Chinese interface.
