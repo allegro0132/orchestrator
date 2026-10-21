@@ -28,6 +28,7 @@ import {
   ANALYSIS_BUFFER_SIZE,
 } from './audioConfig.js';
 import './style.css';
+const ScorePractice = React.lazy(() => import('./ScorePractice.jsx'));
 function App() {
   const { lang, setLang, t } = useLanguage();
   const [mode, setMode] = useState('open'),
@@ -45,6 +46,7 @@ function App() {
     [playing, setPlaying] = useState(false),
     [help, setHelp] = useState(false),
     [settings, setSettings] = useState(false);
+  const [importedScore, setImportedScore] = useState(null);
   const [tracking, setTracking] = useState(() => emptyTracking());
   const tracker = useRef(emptyTracking()),
     pitchBuffer = useRef([]),
@@ -116,7 +118,7 @@ function App() {
     stopTone();
     setHz(null);
     resetTracking();
-    if (mode === 'metronome') stop();
+    if (mode === 'metronome' || mode === 'score') stop();
   }, [string, mode, pattern, position, finger, reference]);
   async function context() {
     if (!audio.current)
@@ -146,7 +148,7 @@ function App() {
           autoGainControl: false,
         },
       });
-      if (config.current.mode === 'metronome') {
+      if (['metronome', 'score'].includes(config.current.mode)) {
         media.getTracks().forEach((track) => track.stop());
         return;
       }
@@ -320,7 +322,7 @@ function App() {
           <aside>
             <div className="section-label">
               {t('练习模式')}
-              <span>01 — 03</span>
+              <span>01 — 04</span>
             </div>
             <button
               className={'mode ' + (mode === 'open' ? 'active' : '')}
@@ -361,7 +363,20 @@ function App() {
               </span>
               {mode === 'metronome' && <span className="active-dot" />}
             </button>
-            {mode !== 'metronome' && (
+            <button
+              className={'mode ' + (mode === 'score' ? 'active' : '')}
+              onClick={() => setMode('score')}
+            >
+              <span className="mode-icon">
+                <BookOpen size={21} />
+              </span>
+              <span>
+                <b>{t('曲谱练习')}</b>
+                <small>{t('跟随曲谱，听见进步')}</small>
+              </span>
+              {mode === 'score' && <span className="active-dot" />}
+            </button>
+            {!['metronome', 'score'].includes(mode) && (
               <>
                 <div className="string-head">
                   <span>{t('选择琴弦')}</span>
@@ -407,7 +422,22 @@ function App() {
               </div>
             </div>
           </aside>
-          {mode === 'metronome' ? (
+          {mode === 'score' ? (
+            <React.Suspense
+              fallback={
+                <section className="tuner score-loading">
+                  {lang === 'zh' ? '正在加载曲谱练习…' : 'Loading score practice…'}
+                </section>
+              }
+            >
+              <ScorePractice
+                getAudioContext={context}
+                reference={reference}
+                score={importedScore}
+                setScore={setImportedScore}
+              />
+            </React.Suspense>
+          ) : mode === 'metronome' ? (
             <Metronome getAudioContext={context} />
           ) : (
             <section className="tuner">
@@ -657,11 +687,13 @@ function App() {
             <div>
               <b>{t('每一次准确，都是进步。')}</b>
               <p>
-                {mode === 'metronome'
-                  ? t('先把速度放慢，准确完成每个节奏，再逐渐提速。')
-                  : mode === 'open'
-                    ? t('建议按 A → D → G → E 的顺序调弦，再复查一次。')
-                    : t('相邻手指相距 1 个半音时靠拢，2 个半音时分开。各手型以当前把位为基准。')}
+                {mode === 'score'
+                  ? t('导入曲谱，选择声部和速度，跟随预备拍开始演奏。')
+                  : mode === 'metronome'
+                    ? t('先把速度放慢，准确完成每个节奏，再逐渐提速。')
+                    : mode === 'open'
+                      ? t('建议按 A → D → G → E 的顺序调弦，再复查一次。')
+                      : t('相邻手指相距 1 个半音时靠拢，2 个半音时分开。各手型以当前把位为基准。')}
               </p>
             </div>
           </div>
@@ -738,6 +770,10 @@ function App() {
                         '选择节拍器模式，设置速度和拍号后开始。首拍可加重音，切换模式或隐藏页面时会自动停止。',
                       )}
                     </p>
+                  </li>
+                  <li>
+                    <b>{t('曲谱练习')}</b>
+                    <p>{t('导入曲谱，选择声部和速度，跟随预备拍开始演奏。')}</p>
                   </li>
                 </ol>
                 <div className="modal-info">

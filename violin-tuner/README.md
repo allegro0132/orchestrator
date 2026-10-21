@@ -79,3 +79,25 @@ Manually selecting a string or finger locks the target. The switch below the tun
 The interface supports English and Chinese, with English as the default. The header language menu switches immediately and saves the preference under `arco-language`. Switching languages preserves the selected string, finger, and pitch history.
 
 The page title, HTML language attribute, practice guide, error messages, and tuning feedback switch together. Chinese translation strings are intentionally retained in the source to support the Chinese interface.
+
+## Score practice and live analysis
+
+Score practice is a separate mode. Import `.musicxml`, `.xml` (score-partwise MusicXML), compressed `.mxl`, or `.mid` / `.midi` files up to 10 MB. Scores and microphone samples are processed locally; no audio or score file is uploaded. A built-in melody lets you try the notation interface before selecting a file.
+
+Select a part and voice, a starting measure, and either the score's tempo map or a fixed practice tempo. The notation displays the current measure with its neighbors. A green cursor and a row of upcoming notes show what to play next. Before playback, the full-score toggle allows a broader review. A four-quarter-beat visual count-in precedes practice; pause, resume, and restart are available. Microphone analysis stops on mode changes, hidden pages, and navigation.
+
+Live analysis advances against the AudioContext clock at the selected tempo. It continues through mistakes rather than waiting for correct notes. Frequency detection targets 30 readings per second using the tuner's existing 48 kHz / 4,096-sample audio configuration and the saved A4 reference. It supports single-note violin input in the detector's approximate 170–2,400 Hz range.
+
+The panel shows the expected frequency, measured frequency, cents deviation, and detected onset offset in milliseconds. Completed notes contribute to three separate metrics:
+
+- **Pitch:** the proportion of voiced samples within ±20 cents of the written note. Silence is reported through coverage rather than included in this denominator.
+- **Duration coverage:** voiced time divided by written note duration, including missed notes as zero coverage. Earlier measures are excluded when starting partway through a score.
+- **Rhythm:** the proportion of detected onsets within ±150 ms of their written times, alongside the number of detected onsets. Missing attacks appear as **Not detected** in the note-by-note table and are not included in the rhythm percentage.
+
+Onsets require a stable pitch change or a return after a gap. Repeated legato notes and bow changes cannot always be distinguished by a monophonic pitch detector. Browser input latency also affects timing; this feature provides practice feedback rather than a calibrated performance grade. Tests cover synthetic pitch, onset matching, silence, wrong notes, ties, tempo maps, part selection, and all supported import containers; they do not replace testing on real instruments and microphones.
+
+MusicXML ties are merged for analysis, and score tempo changes are preserved. Playback follows written measure order without expanding repeats, endings, or navigation marks. Chords use the highest note of the selected voice. Grace notes are omitted from analysis. The notation still shows the source part; voice selection controls the analyzed line.
+
+MIDI is converted to simplified notation, using one monophonic line per track. Simultaneous notes prefer the highest pitch; overlapping later notes are skipped. The first time signature determines bar grouping, and subsequent meter changes are not expanded. Prefer MusicXML when original notation, multiple voices, or complex rhythms matter. PDF/image recognition and adaptive following of rubato are not included.
+
+The score UI and engraving library load on demand, keeping their download out of the initial tuner screen.

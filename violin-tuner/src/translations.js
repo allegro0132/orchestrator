@@ -1,4 +1,12 @@
 export const english = {
+  '导入曲谱，选择声部和速度，跟随预备拍开始演奏。':
+    'Import a score, choose a part and tempo, then start after the count-in.',
+  曲谱练习: 'Score practice',
+  '跟随曲谱，听见进步': 'Read, play, and review',
+  '正在排版曲谱…': 'Engraving score…',
+  '谱面排版失败，仍可使用下方音符和实时分析。':
+    'Notation could not be rendered. Note guidance and analysis remain available.',
+  五线谱: 'Staff notation',
   节拍练习: 'Practice with the metronome',
   '选择节拍器模式，设置速度和拍号后开始。首拍可加重音，切换模式或隐藏页面时会自动停止。':
     'Choose Metronome mode, set the tempo and time signature, then start. You can accent the first beat. Playback stops when you switch modes or hide the page.',

@@ -1820,7 +1820,7 @@ header {
 }
 @media (max-width: 600px) {
   aside {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .mode {
     display: flex;
@@ -1894,5 +1894,332 @@ header {
   }
   .volume-control {
     margin: 16px 0 18px;
+  }
+}
+
+.score-practice {
+  min-width: 0;
+}
+.score-body {
+  padding: 28px;
+}
+.score-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+}
+.score-heading h2 {
+  margin: 0 0 9px;
+  font-family: Georgia, serif;
+  font-size: 25px;
+  color: #394238;
+  overflow-wrap: anywhere;
+}
+.score-heading p,
+.score-empty p {
+  color: #858c79;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.score-import,
+.secondary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid #dce0d2;
+  background: #f7f8f2;
+  padding: 11px 15px;
+  border-radius: 8px;
+  color: #697453;
+  cursor: pointer;
+  font-size: 12px;
+}
+.score-import {
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+.score-import input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+}
+.score-import:focus-within {
+  outline: 2px solid #76815c;
+  outline-offset: 3px;
+}
+.score-import.disabled {
+  opacity: 0.5;
+}
+.score-empty {
+  text-align: center;
+  padding: 72px 20px;
+  color: #899372;
+}
+.score-empty p {
+  max-width: 380px;
+  margin: 15px auto 25px;
+}
+.score-controls {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 22px 0;
+}
+.score-controls label {
+  display: grid;
+  gap: 8px;
+  color: #879077;
+  font-size: 11px;
+  flex: 1;
+  min-width: 110px;
+}
+.score-controls select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #dce0d2;
+  background: #fafbf7;
+  border-radius: 6px;
+  color: #505c42;
+  font: inherit;
+}
+.score-notice {
+  font-size: 11px;
+  line-height: 1.6;
+  color: #9a7959;
+  padding: 10px 12px;
+  background: #faf5ec;
+  border-radius: 6px;
+}
+.score-view-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  color: #7a8567;
+  padding: 12px 0;
+}
+.score-view-heading button {
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  color: #77825d;
+  cursor: pointer;
+  font-size: 11px;
+}
+.notation-frame {
+  border: 1px solid #e5e7dd;
+  border-radius: 8px;
+  background: #fffefa;
+  position: relative;
+  min-height: 155px;
+  overflow: auto;
+  max-height: 460px;
+}
+.notation {
+  min-width: 280px;
+  padding: 8px;
+}
+.notation-message {
+  position: absolute;
+  top: 10px;
+  left: 20px;
+  color: #8b9479;
+  font-size: 12px;
+}
+.score-now {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 23px 0;
+}
+.score-now > div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.score-now span {
+  font-size: 10px;
+  color: #8a947b;
+}
+.score-now strong {
+  font-size: clamp(18px, 2vw, 26px);
+  font-family: Georgia, serif;
+  color: #535e45;
+}
+.score-now small {
+  font-size: 10px;
+  color: #929985;
+  line-height: 1.5;
+}
+.score-now .score-good strong {
+  color: #63853c;
+}
+.score-next {
+  display: flex;
+  gap: 7px;
+  overflow: auto;
+  padding: 3px 0 8px;
+}
+.score-next > div {
+  border: 1px solid #e2e6d8;
+  border-radius: 8px;
+  min-width: 75px;
+  flex: 1;
+  padding: 11px 8px;
+  display: grid;
+  gap: 7px;
+  text-align: center;
+  color: #879174;
+}
+.score-next small {
+  font-size: 8px;
+  letter-spacing: 1px;
+}
+.score-next b {
+  font-size: 21px;
+  font-family: Georgia, serif;
+}
+.score-next span {
+  font-size: 9px;
+  white-space: nowrap;
+}
+.score-next .current {
+  border-color: #879868;
+  background: #eaf0de;
+  color: #53653b;
+}
+.score-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 15px 0;
+  font-size: 10px;
+  color: #909982;
+}
+.score-progress progress {
+  width: 100%;
+  height: 6px;
+  accent-color: #87976d;
+}
+.score-progress span {
+  white-space: nowrap;
+}
+.score-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0 24px;
+}
+.score-actions .mic-button {
+  margin: 0;
+  width: auto;
+  padding: 12px 20px;
+}
+.score-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  padding: 20px 0;
+  border-top: 1px solid #e3e6da;
+}
+.score-stats > div {
+  display: grid;
+  gap: 8px;
+}
+.score-stats b {
+  font-family: Georgia, serif;
+  font-size: 25px;
+  color: #6d7e52;
+}
+.score-stats span {
+  font-size: 10px;
+  color: #939d83;
+  line-height: 1.5;
+}
+.score-method {
+  font-size: 11px;
+  line-height: 1.7;
+  color: #8d957f;
+}
+.score-results {
+  color: #7a8764;
+  font-size: 12px;
+  margin-top: 20px;
+}
+.score-results summary {
+  cursor: pointer;
+}
+.score-table-scroll {
+  overflow: auto;
+  max-height: 280px;
+  margin-top: 12px;
+}
+.score-results table {
+  width: 100%;
+  text-align: left;
+  border-collapse: collapse;
+  white-space: nowrap;
+}
+.score-results td,
+.score-results th {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e7eadd;
+  font-weight: 400;
+}
+@media (max-width: 600px) {
+  .score-body {
+    padding: 20px 16px;
+  }
+  .score-heading {
+    flex-direction: column;
+    gap: 6px;
+  }
+  .score-heading h2 {
+    font-size: 24px;
+  }
+  .score-now {
+    gap: 7px;
+  }
+  .score-now strong {
+    font-size: 20px;
+  }
+  .score-actions {
+    gap: 7px;
+  }
+  .score-actions .mic-button {
+    padding: 11px 14px;
+    font-size: 12px;
+  }
+  .score-controls {
+    gap: 8px;
+  }
+  .score-practice .panel-bottom {
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+}
+.score-loading {
+  padding: 36px;
+  color: #7c876a;
+}
+.score-view-heading {
+  scroll-margin-top: 16px;
+}
+.score-practice.is-playing .score-controls,
+.score-practice.is-playing .score-heading p,
+.score-practice.is-playing .score-import,
+.score-practice.is-playing .score-notice {
+  display: none;
+}
+@media (max-width: 600px) {
+  .score-practice.is-playing .notation-frame {
+    max-height: 230px;
   }
 }

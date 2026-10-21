@@ -1,6 +1,6 @@
 # ARCO · Violin Tuning Studio
 
-A responsive React violin tuner with English and Chinese support, faster pitch tracking, and a separate metronome practice mode. The application source lives in [`violin-tuner`](violin-tuner).
+A responsive React violin tuner with English and Chinese support, faster pitch tracking, a separate metronome practice mode, and local MusicXML/MXL/MIDI score practice with live pitch and timing analysis. The application source lives in [`violin-tuner`](violin-tuner).
 
 ## Development
 
@@ -32,7 +32,7 @@ The workflow sets `VITE_BASE_PATH=/orchestrator/` for project-site assets. Ordin
 ```sh
 cd violin-tuner
 VITE_BASE_PATH=/orchestrator/ npm run build
-npm run preview
+VITE_BASE_PATH=/orchestrator/ npm run preview
 ```
 
 Microphone input requires HTTPS or localhost. Audio stays on the device.
