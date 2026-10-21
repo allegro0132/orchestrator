@@ -102,6 +102,14 @@ MIDI is converted to simplified notation, using one monophonic line per track. S
 
 The score UI and engraving library load on demand, keeping their download out of the initial tuner screen.
 
+### Graded built-in score library
+
+Score practice includes six local MusicXML practice editions, with English and Chinese titles, difficulty filters, suggested slow tempos, and technique cues. Select **Score library**, choose a level, and press **Practice this piece**. Loading a piece does not start microphone recording. The library collapses after selection and can be reopened while paused. Importing a personal score continues to work independently.
+
+The library includes Ode to Joy (beginner), Amazing Grace, the first section of Minuet in G and the Greensleeves ground theme (elementary), and opening excerpts of Red Apple Rag and Rieding's Op. 35 concerto (intermediate). Difficulty describes the included practice edition, not an exam grade. Complete source arrangements may be harder. Simplified editions omit accompaniment and some markings; every adaptation is identified in the UI.
+
+Assets ship under the Pages base path and load from the app's own host without runtime requests to third-party score services. Each card and the selected score expose source attribution, license and a downloadable editable MusicXML file. See [`public/scores/SOURCES.md`](public/scores/SOURCES.md) for provenance, exact modifications, license terms, and rebuilding instructions. The source files and deterministic generator are included in the repository.
+
 ### Complete score and horizontal browsing
 
 The complete selected part is engraved once as a single horizontal ribbon on a warm champagne background, with cocoa notation and an amber playhead. Every measure remains in the scrollable document; changing the current measure does not replace, crop, or re-engrave the score. Changing the viewport width preserves the same engraving and updates the follow position.

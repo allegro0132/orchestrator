@@ -6,6 +6,8 @@ import { createScoreAnalysis, analyseScore, currentEvent, scoreSummary } from '.
 import { detectPitch, frequency, centsOff, noteName } from './pitch.js';
 import { AUDIO_SAMPLE_RATE, ANALYSIS_BUFFER_SIZE, ANALYSIS_INTERVAL_MS } from './audioConfig.js';
 import ScoreNotation from './ScoreNotation.jsx';
+import ScoreLibrary, { ScoreAttribution } from './ScoreLibrary.jsx';
+import { SCORE_LIBRARY } from './scoreLibrary.js';
 const nameOf = (e) => {
   if (!e || e.midi === null) return '𝄽';
   const n = noteName(e.midi);
@@ -23,6 +25,9 @@ export default function ScorePractice({
   const { lang } = useLanguage(),
     text = (zh, en) => (lang === 'zh' ? zh : en);
   const [showResults, setShowResults] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(!score);
+  const [loadingPreset, setLoadingPreset] = useState(null);
+  const preset = SCORE_LIBRARY.find((item) => item.id === score?.libraryId);
   const [trackId, setTrackId] = useState(0),
     [tempo, setTempo] = useState(0);
   const [time, setTime] = useState(0),
@@ -40,6 +45,7 @@ export default function ScorePractice({
     session = useRef({ token: 0 }),
     mounted = useRef(true),
     input = useRef(null),
+    scoreHeading = useRef(null),
     focusHeading = useRef(null),
     guideHeading = useRef(null),
     importAttempt = useRef(0),
@@ -90,30 +96,57 @@ export default function ScorePractice({
   useEffect(() => {
     onActivityChange?.(playing || busy);
   }, [playing, busy, onActivityChange]);
-  async function load(file) {
-    if (!file) return;
+  async function load(file, libraryItem = null) {
+    if (!file && !libraryItem) return;
     stop();
     const token = ++importAttempt.current;
     setImporting(true);
+    setLoadingPreset(libraryItem?.id || null);
     setError('');
     try {
+      if (libraryItem) {
+        const response = await fetch(
+          `${import.meta.env.BASE_URL}scores/${libraryItem.id}.musicxml`,
+        );
+        if (!response.ok) throw new Error('fetch');
+        file = new File([await response.text()], `${libraryItem.id}.musicxml`);
+      }
       const parsed = await importScore(file);
       if (!mounted.current || token !== importAttempt.current) return;
       setTrackId(0);
       setTempo(0);
-      setScore(parsed);
+      setScore(libraryItem ? { ...parsed, libraryId: libraryItem.id } : parsed);
+      setLibraryOpen(false);
+      requestAnimationFrame(() => {
+        if (!mounted.current || token !== importAttempt.current) return;
+        scoreHeading.current?.focus({ preventScroll: true });
+        scoreHeading.current?.scrollIntoView({
+          behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+            ? 'instant'
+            : 'smooth',
+          block: 'start',
+        });
+      });
     } catch (e) {
       if (mounted.current && token === importAttempt.current)
         setError(
-          e.message === 'size'
-            ? text('文件过大，请选择 10 MB 以内的曲谱。', 'Choose a score under 10 MB.')
-            : text(
-                '无法读取曲谱。请使用有效的 MusicXML、MXL 或 MIDI 文件。',
-                'Could not read this score. Choose a valid MusicXML, MXL, or MIDI file.',
-              ),
+          libraryItem
+            ? text(
+                '曲谱加载失败，请检查网络后重试。',
+                'Could not load the score. Check your connection and try again.',
+              )
+            : e.message === 'size'
+              ? text('文件过大，请选择 10 MB 以内的曲谱。', 'Choose a score under 10 MB.')
+              : text(
+                  '无法读取曲谱。请使用有效的 MusicXML、MXL 或 MIDI 文件。',
+                  'Could not read this score. Choose a valid MusicXML, MXL, or MIDI file.',
+                ),
         );
     } finally {
-      if (mounted.current && token === importAttempt.current) setImporting(false);
+      if (mounted.current && token === importAttempt.current) {
+        setImporting(false);
+        setLoadingPreset(null);
+      }
       if (input.current) input.current.value = '';
     }
   }
@@ -261,10 +294,12 @@ export default function ScorePractice({
       <div className="score-body">
         <div className="score-heading">
           <div>
-            <h2>
+            <h2 ref={scoreHeading} tabIndex={-1}>
               {lesson
                 ? lesson.title[lang]
-                : score?.title || text('让曲谱带领下一步', 'Your next note, in view')}
+                : preset?.title[lang] ||
+                  score?.title ||
+                  text('让曲谱带领下一步', 'Your next note, in view')}
             </h2>
             <p>
               {lesson
@@ -273,8 +308,8 @@ export default function ScorePractice({
                     'Follow the score and action cues, one calm step at a time.',
                   )
                 : text(
-                    '导入曲谱，在演奏中查看音高与节奏。',
-                    'Import a score. See your pitch and timing as you play.',
+                    '选择预置曲目或导入曲谱，在演奏中查看音高与节奏。',
+                    'Choose a library piece or import a score. See your pitch and timing as you play.',
                   )}
             </p>
           </div>
@@ -293,6 +328,22 @@ export default function ScorePractice({
             </label>
           )}
         </div>
+        {!lesson && (
+          <>
+            <ScoreLibrary
+              open={libraryOpen}
+              onToggle={() => setLibraryOpen((value) => !value)}
+              onSelect={(item) => load(null, item)}
+              selectedId={preset?.id}
+              disabled={playing || busy || importing}
+              loading={loadingPreset}
+            />
+            {preset && <ScoreAttribution item={preset} />}
+            <span role="status" className="library-status">
+              {importing ? text('正在加载曲谱…', 'Loading score…') : ''}
+            </span>
+          </>
+        )}
         {renderGuide && (
           <div ref={guideHeading}>
             {renderGuide({ event, index, time, counting, done, playing })}
@@ -315,6 +366,7 @@ export default function ScorePractice({
             </p>
             <button
               className="secondary-button"
+              disabled={importing || busy}
               onClick={() => {
                 setScore(parseMusicXml(DEMO_XML));
                 setTrackId(0);
