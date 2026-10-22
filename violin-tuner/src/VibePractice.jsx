@@ -17,6 +17,8 @@ import {
 } from './vibe.js';
 import { saveVibe, listVibes, deleteVibe } from './vibeStore.js';
 import { predictionRequest, commitPrediction } from './vibePrediction.js';
+import { RULE_MODEL_ID } from './vibeRules.js';
+import { SKY_DEPLOYMENT, SKY_CACHE, SKY_BYTES } from './skyWeights.js';
 import ScoreNotation from './ScoreNotation.jsx';
 import ScoreHUD from './ScoreHUD.jsx';
 const generatedEvents = (session) => session.bars.flatMap((bar) => bar.events);
@@ -35,7 +37,12 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
   const run = useRef({ token: 0 });
   const mounted = useRef(true);
   const predictor = useRef({ worker: null, ready: false, pending: null, serial: 0 });
-  const [modelStatus, setModelStatus] = useState('loading');
+  const [modelStatus, setModelStatus] = useState('ready');
+  const [engine, setEngine] = useState(RULE_MODEL_ID);
+  const [modelEnabled, setModelEnabled] = useState(false);
+  const [progress, setProgress] = useState(null);
+  const [modelError, setModelError] = useState('');
+  const [persistent, setPersistent] = useState(true);
   const [modelLatency, setModelLatency] = useState(null);
   const [modelAttempt, setModelAttempt] = useState(0);
   const latest = useRef({ reference, getAudioContext, onDraft });
@@ -99,8 +106,7 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
   function stop(update = true) {
     const current = run.current;
     current.token++;
-    predictor.current.pending = null;
-    clearTimeout(predictor.current.timer);
+    // Let an in-flight worker finish; token checks discard its result after pausing.
     cancelAnimationFrame(current.frame);
     current.stream?.getTracks().forEach((track) => track.stop());
     current.source?.disconnect();
@@ -149,11 +155,29 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
   }, []);
   useEffect(() => {
     const state = predictor.current;
-    setModelStatus('loading');
     state.ready = false;
+    setModelLatency(null);
+    setModelError('');
+    setProgress(null);
+    if (engine !== RULE_MODEL_ID && !modelEnabled) {
+      setModelStatus('idle');
+      return;
+    }
+    setModelStatus('loading');
     let worker;
-    const loadingTimer = setTimeout(() => fail(), 15000);
-    const fail = () => {
+    let loadingTimer;
+    const watchdog = () => {
+      clearTimeout(loadingTimer);
+      loadingTimer = setTimeout(
+        () => fail({ message: 'Model loading timed out. Retry to resume verified shards.' }),
+        90000,
+      );
+    };
+    watchdog();
+    const fail = (error) => {
+      setModelError(
+        error?.message || 'Prediction failed. Retry or choose rule-based continuation.',
+      );
       clearTimeout(loadingTimer);
       clearTimeout(state.timer);
       worker?.terminate();
@@ -163,19 +187,25 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
     };
     state.fail = fail;
     try {
-      worker = new Worker(new URL('./musicTransformer.worker.js', import.meta.url), {
+      worker = new Worker(new URL('./vibeEngine.worker.js', import.meta.url), {
         type: 'module',
       });
       state.worker = worker;
       worker.onmessage = ({ data: result }) => {
+        if (result.type === 'progress' || result.type === 'initializing') {
+          watchdog();
+          setProgress(result);
+          return;
+        }
         if (result.type === 'ready') {
+          setPersistent(result.persistent !== false);
           clearTimeout(loadingTimer);
           state.ready = true;
           setModelStatus('ready');
           return;
         }
         if (result.type === 'error') {
-          fail();
+          fail(result);
           return;
         }
         const pending = state.pending;
@@ -199,7 +229,7 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
         }
       };
       worker.onerror = fail;
-      worker.postMessage({ type: 'load' });
+      worker.postMessage({ type: 'load', engine });
     } catch {
       fail();
     }
@@ -210,11 +240,11 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
       state.ready = false;
       state.pending = null;
     };
-  }, [modelAttempt]);
+  }, [modelAttempt, engine, modelEnabled]);
   function predict(notes, beat, token) {
     const state = predictor.current;
     if (!state.ready || state.pending) return;
-    const request = predictionRequest(data.current, notes, beat);
+    const request = predictionRequest(data.current, notes, beat, engine);
     if (!request) return;
     const id = ++state.serial;
     state.pending = { id, request, session: data.current.id, token };
@@ -222,7 +252,8 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
     state.worker.postMessage({ type: 'predict', id, request });
   }
   async function start() {
-    if (busy || recording || data.current.elapsed >= VIBE_MAX_SECONDS) return;
+    if (!predictor.current.ready || busy || recording || data.current.elapsed >= VIBE_MAX_SECONDS)
+      return;
     setBusy(true);
     setError('');
     setSaved(false);
@@ -241,6 +272,7 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
         stream.getTracks().forEach((track) => track.stop());
         return;
       }
+      data.current.engine = engine;
       run.current.stream = stream;
       if (!data.current.notes.length) data.current.reference = latest.current.reference;
       const source = ctx.createMediaStreamSource(stream),
@@ -396,7 +428,9 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
     <div className="score-actions">
       <button
         className={'mic-button' + (recording ? ' listening' : '')}
-        disabled={busy || session.elapsed >= VIBE_MAX_SECONDS}
+        disabled={
+          busy || (!recording && modelStatus !== 'ready') || session.elapsed >= VIBE_MAX_SECONDS
+        }
         onClick={recording ? () => stop() : start}
       >
         {recording ? <Square size={16} /> : <Mic size={16} />}{' '}
@@ -437,6 +471,25 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
           </button>
         </div>
         <div className="score-controls">
+          <label>
+            {text('续写引擎', 'Continuation engine')}
+            <select
+              aria-label={text('续写引擎', 'Continuation engine')}
+              value={engine}
+              disabled={busy || recording}
+              onChange={(e) => {
+                setEngine(e.target.value);
+                setModelEnabled(false);
+                data.current.lastGeneratedBar = -1;
+                data.current.engine = e.target.value;
+              }}
+            >
+              <option value={RULE_MODEL_ID}>
+                {text('规律式续写（默认）', 'Rule-based (default)')}
+              </option>
+              <option value={SKY_DEPLOYMENT}>Transformer · SkyTNT W4A16</option>
+            </select>
+          </label>
           <label>
             {text('节拍速度', 'Tempo')}
             <select
@@ -487,8 +540,8 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
             </strong>
             <span>
               {text(
-                'Music Transformer · 4/4 拍 · 前方 4 小节 · 每段最多 10 分钟',
-                'Music Transformer · 4/4 · four bars ahead · up to 10 minutes per take',
+                '4/4 拍 · 前方 4 小节 · 每段最多 10 分钟',
+                '4/4 · four bars ahead · up to 10 minutes per take',
               )}
             </span>
           </div>
@@ -506,24 +559,101 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
           )}
         </div>
         <div className="vibe-model-status" role="status">
-          <span>
-            {modelStatus === 'loading'
-              ? text('正在加载本地预测模型…', 'Loading local prediction model…')
-              : modelStatus === 'error'
-                ? text(
-                    '模型加载或预测失败；录入仍可继续。',
-                    'Model loading or prediction failed; recording remains available.',
-                  )
-                : text(
-                    'Music Transformer 已就绪 · 实验版',
-                    'Music Transformer ready · experimental',
+          <div>
+            <strong>
+              {engine === RULE_MODEL_ID
+                ? text('规律式续写', 'Rule-based continuation')
+                : 'SkyTNT · INT4 / FP16 · WebGPU'}
+            </strong>
+            <p>
+              {modelStatus === 'ready'
+                ? text('已就绪', 'Ready')
+                : modelStatus === 'idle'
+                  ? text(
+                      '按需下载 144.5 MB 权重；需要支持 FP16 的 WebGPU。',
+                      'Download 144.5 MB of weights on demand. Requires WebGPU with FP16.',
+                    )
+                  : modelStatus === 'error'
+                    ? text(
+                        '模型不可用，请重试或选择规律式续写。',
+                        'Model unavailable. Retry or choose rule-based continuation.',
+                      )
+                    : progress?.type === 'initializing'
+                      ? text('权重校验完成，正在初始化 GPU…', 'Weights verified. Initializing GPU…')
+                      : text('正在下载并校验权重…', 'Downloading and verifying weights…')}
+              {modelStatus === 'ready' && modelLatency !== null && ` · ${modelLatency} ms`}
+            </p>
+            {engine !== RULE_MODEL_ID && progress?.total && modelStatus === 'loading' && (
+              <>
+                <progress
+                  aria-label={text('权重下载进度', 'Weight download progress')}
+                  value={progress.loaded}
+                  max={SKY_BYTES}
+                />
+                <span> {(progress.loaded / 1e6).toFixed(1)} / 144.5 MB</span>
+              </>
+            )}
+            {modelError && <p className="error">{modelError}</p>}
+            {engine !== RULE_MODEL_ID && (
+              <small>
+                {text(
+                  '已校验分片缓存在此浏览器，取消后可续传。',
+                  'Verified shards are cached in this browser; canceled downloads can resume.',
+                )}
+                {!persistent &&
+                  text(
+                    ' 本地缓存不可用，下次需要重新下载。',
+                    ' Persistent cache unavailable; another download may be needed next time.',
                   )}
-            {modelStatus === 'ready' && modelLatency !== null && ` · ${modelLatency} ms`}
-          </span>
-          {modelStatus === 'error' && (
-            <button className="secondary-button" onClick={() => setModelAttempt((n) => n + 1)}>
-              {text('重试模型', 'Retry model')}
-            </button>
+              </small>
+            )}
+          </div>
+          {engine !== RULE_MODEL_ID && (
+            <div className="vibe-model-actions">
+              {['idle', 'error'].includes(modelStatus) && (
+                <button
+                  className="secondary-button"
+                  disabled={recording || busy}
+                  onClick={() => {
+                    setModelEnabled(true);
+                    setModelAttempt((n) => n + 1);
+                  }}
+                >
+                  <Download size={14} />
+                  {text('下载 / 加载模型', 'Download / load model')}
+                </button>
+              )}
+              {modelStatus === 'loading' && (
+                <button
+                  className="secondary-button"
+                  onClick={() => {
+                    setModelEnabled(false);
+                    setModelAttempt((n) => n + 1);
+                  }}
+                >
+                  {text('取消', 'Cancel')}
+                </button>
+              )}
+              {modelStatus !== 'loading' && (
+                <button
+                  className="secondary-button"
+                  disabled={recording || busy}
+                  onClick={async () => {
+                    setModelEnabled(false);
+                    setModelAttempt((n) => n + 1);
+                    try {
+                      await caches.delete(SKY_CACHE);
+                      setModelError('');
+                    } catch {
+                      setModelError(text('无法清除缓存', 'Could not clear cached weights'));
+                    }
+                  }}
+                >
+                  <Trash2 size={14} />
+                  {text('清除权重缓存', 'Clear weight cache')}
+                </button>
+              )}
+            </div>
           )}
         </div>
         <div className="vibe-metrics">
@@ -716,8 +846,8 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
         )}
         <p className="score-method">
           {text(
-            '实验版 Music Transformer：以 5 首公共领域曲谱训练，采用相对位置注意力，读取最近 64 个音符事件预测音高与时值。模型较小，可能重复或产生不自然乐句。仅在设备上运行，不上传音频；JSON 保留演奏及各版预测。音域 G3–B5，4/4 拍；录入量化至八分音符，可能漏掉同音连奏及快速音符。',
-            'Experimental Music Transformer: trained on five public-domain score editions, using relative attention over the last 64 note events to predict pitches and durations. This small model may repeat or produce awkward phrases. Inference stays on your device; no audio is uploaded. JSON preserves your performance and each prediction. G3–B5, 4/4; capture is quantized to eighth notes and may miss repeated legato or fast notes.',
+            '默认规律式续写复用你的旋律走向和节奏；可选 SkyTNT Transformer，以实际音符和已锁定的下一小节为上下文。权重按需下载到此设备，音频不上传。生成限制为单声部、G3–B5、4/4 拍和指定小节长度。JSON 保留每次生成的引擎和版本。录入量化至八分音符，可能漏掉同音连奏及快速音符。',
+            'Rule-based continuation adapts your melodic contour and rhythm by default. Optional SkyTNT Transformer uses captured notes and the locked next bar as context. Weights download to this device; audio is never uploaded. Output is constrained to monophonic G3–B5, 4/4 and the requested bar count. JSON records each prediction engine and version. Eighth-note quantization may miss repeated legato and fast notes.',
           )}
         </p>
       </div>

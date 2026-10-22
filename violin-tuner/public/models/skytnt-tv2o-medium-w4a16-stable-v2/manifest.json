@@ -1,0 +1,177 @@
+{
+  "id": "skytnt-tv2o-medium-w4a16-stable-v2",
+  "sourceRevision": "0f8f265d4330f4e46527ac2313200254c5757f5f",
+  "recipe": {
+    "weightBits": 4,
+    "activationType": "float16",
+    "kvType": "float16",
+    "algorithm": "RTN",
+    "blockSize": 32,
+    "symmetric": true,
+    "quantizedOps": ["constant-input MatMul"],
+    "unquantizedWeights": "FP16 embeddings; FP32 normalization weights",
+    "accuracyLevel": 0,
+    "lastOutputOnly": true,
+    "fp32Islands": ["RMSNorm", "RoPE", "Softmax"]
+  },
+  "tools": {
+    "onnx": "1.23.2",
+    "onnxruntime": "1.31.0"
+  },
+  "files": {
+    "base": {
+      "name": "model_base.w4a16.onnx",
+      "bytes": 122528312,
+      "sha256": "af661833c5200485aa19736c3fbe90f12da1525449211ff433b25b23829d64c6",
+      "sourceBytes": 821713887,
+      "matMulNBits": 84,
+      "scaleTypes": ["FLOAT16"],
+      "initializerTypes": {
+        "FLOAT16": 86,
+        "FLOAT": 29,
+        "INT64": 19,
+        "UINT8": 84
+      },
+      "floatingIO": [
+        "past_key_values.0.key",
+        "past_key_values.0.value",
+        "past_key_values.1.key",
+        "past_key_values.1.value",
+        "past_key_values.2.key",
+        "past_key_values.2.value",
+        "past_key_values.3.key",
+        "past_key_values.3.value",
+        "past_key_values.4.key",
+        "past_key_values.4.value",
+        "past_key_values.5.key",
+        "past_key_values.5.value",
+        "past_key_values.6.key",
+        "past_key_values.6.value",
+        "past_key_values.7.key",
+        "past_key_values.7.value",
+        "past_key_values.8.key",
+        "past_key_values.8.value",
+        "past_key_values.9.key",
+        "past_key_values.9.value",
+        "past_key_values.10.key",
+        "past_key_values.10.value",
+        "past_key_values.11.key",
+        "past_key_values.11.value",
+        "hidden",
+        "present.0.key",
+        "present.0.value",
+        "present.1.key",
+        "present.1.value",
+        "present.2.key",
+        "present.2.value",
+        "present.3.key",
+        "present.3.value",
+        "present.4.key",
+        "present.4.value",
+        "present.5.key",
+        "present.5.value",
+        "present.6.key",
+        "present.6.value",
+        "present.7.key",
+        "present.7.value",
+        "present.8.key",
+        "present.8.value",
+        "present.9.key",
+        "present.9.value",
+        "present.10.key",
+        "present.10.value",
+        "present.11.key",
+        "present.11.value"
+      ],
+      "seconds": 3.402240250026807,
+      "shards": [
+        {
+          "name": "model_base.w4a16.onnx.00.bin",
+          "bytes": 16777216,
+          "sha256": "c4f318f354c2251cea71eaab8a3193b4abbd09d5cf7e8afd1524a13246c75587"
+        },
+        {
+          "name": "model_base.w4a16.onnx.01.bin",
+          "bytes": 16777216,
+          "sha256": "901955fa42087c2ee13d87f3a3fc46bff481753317544fb4a9988cb04253fc13"
+        },
+        {
+          "name": "model_base.w4a16.onnx.02.bin",
+          "bytes": 16777216,
+          "sha256": "a1343f94e240fb9721c737f9b92c6403abda8c261fee56bc7f2894c6b31681a4"
+        },
+        {
+          "name": "model_base.w4a16.onnx.03.bin",
+          "bytes": 16777216,
+          "sha256": "ba6c7b1b2d30890ce5ef2a9a94e4cdfe37c908fec6ad08afc413993e0f54cd0e"
+        },
+        {
+          "name": "model_base.w4a16.onnx.04.bin",
+          "bytes": 16777216,
+          "sha256": "ac125ffd7d441fdc27c8f42342ad2a86af86438f4e5009c5f39e7706a1b7be17"
+        },
+        {
+          "name": "model_base.w4a16.onnx.05.bin",
+          "bytes": 16777216,
+          "sha256": "a2416a7b1b707851287bcb4f3193b489584cbe967152266e5e724249503e1756"
+        },
+        {
+          "name": "model_base.w4a16.onnx.06.bin",
+          "bytes": 16777216,
+          "sha256": "e5203325b55a879c673a6e6a162f21da49a8800c6d75d6f64d2d74d493df98a1"
+        },
+        {
+          "name": "model_base.w4a16.onnx.07.bin",
+          "bytes": 5087800,
+          "sha256": "9fdc2b8b78f9f9fa0722e1dd0f37da433927c3107dcc14befd78566000d3ff88"
+        }
+      ]
+    },
+    "token": {
+      "name": "model_token.w4a16.onnx",
+      "bytes": 21965834,
+      "sha256": "bcfb7b634810458c4754b4df690ce87797257143403899acf93aed43440d8c24",
+      "sourceBytes": 116661381,
+      "matMulNBits": 22,
+      "scaleTypes": ["FLOAT16"],
+      "initializerTypes": {
+        "FLOAT16": 24,
+        "FLOAT": 11,
+        "INT64": 18,
+        "UINT8": 22
+      },
+      "floatingIO": [
+        "hidden",
+        "past_key_values.0.key",
+        "past_key_values.0.value",
+        "past_key_values.1.key",
+        "past_key_values.1.value",
+        "past_key_values.2.key",
+        "past_key_values.2.value",
+        "y",
+        "present.0.key",
+        "present.0.value",
+        "present.1.key",
+        "present.1.value",
+        "present.2.key",
+        "present.2.value"
+      ],
+      "seconds": 0.43761362496297807,
+      "shards": [
+        {
+          "name": "model_token.w4a16.onnx.00.bin",
+          "bytes": 16777216,
+          "sha256": "70d27ec88181e478b9531ef64837d3521c6f78680be0203a3d6e5da93e0e7da3"
+        },
+        {
+          "name": "model_token.w4a16.onnx.01.bin",
+          "bytes": 5188618,
+          "sha256": "d34338635a182ad6211067ad4fd8045de4ece66315eea9bd1e3845e898497edb"
+        }
+      ]
+    }
+  },
+  "bytes": 144494146,
+  "source": "https://huggingface.co/skytnt/midi-model-tv2o-medium",
+  "license": "Apache-2.0"
+}

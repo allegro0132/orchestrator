@@ -1,0 +1,6 @@
+SkyTNT MIDI Model, developed and trained by SkyTNT.
+Source: https://huggingface.co/skytnt/midi-model-tv2o-medium
+Model revision: 0f8f265d4330f4e46527ac2313200254c5757f5f
+Tokenizer source: https://github.com/SkyTNT/midi-model/tree/f504d5cb58f769ab0f2909c679238f6621034573
+Licensed under Apache License 2.0; see LICENSE.
+Modified for Arco: converted ONNX dense tensors and KV to FP16, symmetric RTN INT4 constant MatMul weights, block size 32, FP32 RMSNorm/RoPE/Softmax islands, last-output slices, and binary sharding. Original model authors do not endorse this conversion.

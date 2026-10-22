@@ -3455,3 +3455,21 @@ header {
 .vibe-model-status .secondary-button {
   flex-shrink: 0;
 }
+.vibe-model-status > div {
+  min-width: 0;
+}
+.vibe-model-status p {
+  margin: 6px 0;
+}
+.vibe-model-status small {
+  display: block;
+}
+.vibe-model-status progress {
+  max-width: 100%;
+  accent-color: var(--olive, #879366);
+}
+.vibe-model-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

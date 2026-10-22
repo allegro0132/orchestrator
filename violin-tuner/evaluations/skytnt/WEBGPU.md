@@ -1,3 +1,5 @@
+Production integration now uses this stable W4A16 conversion as the optional Vibe Transformer engine. Rule-based continuation remains the default. See the [hosted weights and download contract](../../public/models/skytnt-tv2o-medium-w4a16-stable-v2/README.md).
+
 # W4A16 + WebGPU priority path
 
 The preferred browser deployment candidate is now **INT4 linear weights + FP16 activations/KV cache + WebGPU**, with explicit FP32 stability islands for RMSNorm, rotary-position calculations and softmax. The conversion and actual desktop-browser inference paths have been implemented and tested. Production Vibe still uses the compact model; these large converted weights have not been added to the public app or downloaded automatically.

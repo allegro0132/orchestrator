@@ -1,6 +1,6 @@
 import { VIBE_KEYS, estimateVibeKey } from './vibe.js';
 import { MODEL_ID, encodeNote, performanceTokens } from './musicTransformer.js';
-export function predictionRequest(session, notes, beat) {
+export function predictionRequest(session, notes, beat, engine = MODEL_ID) {
   const bar = Math.floor(beat / 4);
   if (
     session.lastGeneratedBar === bar ||
@@ -19,6 +19,20 @@ export function predictionRequest(session, notes, beat) {
     .flatMap((b) => b.events)
     .map((e) => encodeNote(e.midi, e.duration));
   return {
+    predictor: engine,
+    bpm: session.bpm,
+    notes: [
+      ...notes.map((n) => ({ ...n })),
+      ...session.bars
+        .filter((b) => b.bar === bar + 1)
+        .flatMap((b) => b.events)
+        .filter((e) => e.midi !== null)
+        .map((e) => ({
+          midi: e.midi,
+          start: (e.beat * 60) / session.bpm,
+          duration: (e.duration * 60) / session.bpm,
+        })),
+    ],
     tokens: [...performanceTokens(notes, session.bpm), ...bridge].slice(-64),
     fromBar,
     count: bar + 5 - fromBar,
@@ -36,13 +50,13 @@ export function commitPrediction(session, request, bars, beat, milliseconds) {
   session.bars = [...session.bars.filter((b) => b.bar < fromBar), ...accepted];
   session.lastGeneratedBar = request.requestedBar;
   session.estimatedKey = request.key.id;
-  session.predictor = MODEL_ID;
+  session.predictor = request.predictor || MODEL_ID;
   session.revisions.push({
     atBeat: beat,
     fromBar,
     key: request.key.id,
     bars: accepted,
-    predictor: MODEL_ID,
+    predictor: request.predictor || MODEL_ID,
     milliseconds,
   });
   return true;
