@@ -29,6 +29,7 @@ import {
   ANALYSIS_INTERVAL_MS,
   ANALYSIS_BUFFER_SIZE,
 } from './audioConfig.js';
+import useViolinPlayback from './useViolinPlayback.js';
 import './style.css';
 const ScorePractice = React.lazy(() => import('./ScorePractice.jsx'));
 const BeginnerPractice = React.lazy(() => import('./BeginnerPractice.jsx'));
@@ -47,7 +48,6 @@ function App() {
     [listening, setListening] = useState(false),
     [hz, setHz] = useState(null),
     [error, setError] = useState(''),
-    [playing, setPlaying] = useState(false),
     [help, setHelp] = useState(false),
     [settings, setSettings] = useState(false);
   const [importedScore, setImportedScore] = useState(null);
@@ -60,9 +60,13 @@ function App() {
   const audio = useRef(null),
     stream = useRef(null),
     frame = useRef(null),
-    osc = useRef(null),
     running = useRef(false),
     config = useRef({});
+  const tonePlayer = useViolinPlayback(context);
+  const playing = tonePlayer.playing || tonePlayer.loading;
+  useEffect(() => {
+    if (tonePlayer.error) setError('声音播放失败，请检查浏览器音频设置。');
+  }, [tonePlayer.error]);
   const base = STRINGS[string].midi,
     targetMidi =
       mode === 'open' || finger === 0
@@ -94,13 +98,7 @@ function App() {
     localStorage.setItem('arco-a', reference);
   }, [reference]);
   function stopTone() {
-    if (osc.current) {
-      try {
-        osc.current.stop();
-      } catch {}
-      osc.current = null;
-    }
-    setPlaying(false);
+    tonePlayer.stop();
   }
   function stop() {
     running.current = false;
@@ -241,31 +239,8 @@ function App() {
       return;
     }
     if (listening) stop();
-    try {
-      const ctx = await context(),
-        o = ctx.createOscillator(),
-        g = ctx.createGain();
-      o.type = 'triangle';
-      o.frequency.value = target;
-      g.gain.setValueAtTime(0, ctx.currentTime);
-      g.gain.linearRampToValueAtTime(0.16, ctx.currentTime + 0.08);
-      g.gain.setValueAtTime(0.16, ctx.currentTime + 2.6);
-      g.gain.linearRampToValueAtTime(0, ctx.currentTime + 3);
-      o.connect(g);
-      g.connect(ctx.destination);
-      osc.current = o;
-      setPlaying(true);
-      o.onended = () => {
-        if (osc.current === o) {
-          osc.current = null;
-          setPlaying(false);
-        }
-      };
-      o.start();
-      o.stop(ctx.currentTime + 3);
-    } catch {
-      setError('声音播放失败，请检查浏览器音频设置。');
-    }
+    setError('');
+    await tonePlayer.play([{ midi: targetMidi, start: 0, end: 3 }], 3, reference);
   }
   return (
     <div className="app">
@@ -672,9 +647,10 @@ function App() {
                     {t(error)}
                   </div>
                 )}
-                <button className="play-tone" onClick={playTone}>
+                <button className="play-tone" disabled={starting} onClick={playTone}>
                   {playing ? <Square size={15} /> : <Volume2 size={17} />}{' '}
-                  {playing ? t('停止标准音') : t('聆听标准音')}
+                  {playing ? t('停止标准音') : t('聆听标准音')} ·{' '}
+                  {lang === 'zh' ? '小提琴' : 'Violin'}
                   <span>
                     {note.name}
                     {note.octave}

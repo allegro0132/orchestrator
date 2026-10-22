@@ -19,6 +19,8 @@ import { saveVibe, listVibes, deleteVibe } from './vibeStore.js';
 import { predictionRequest, commitPrediction } from './vibePrediction.js';
 import { RULE_MODEL_ID } from './vibeRules.js';
 import { SKY_DEPLOYMENT, SKY_CACHE, SKY_BYTES } from './skyWeights.js';
+import useViolinPlayback from './useViolinPlayback.js';
+import ViolinPlaybackControls from './ViolinPlaybackControls.jsx';
 import ScoreNotation from './ScoreNotation.jsx';
 import ScoreHUD from './ScoreHUD.jsx';
 const generatedEvents = (session) => session.bars.flatMap((bar) => bar.events);
@@ -74,9 +76,58 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
     result.windowBeat = windowBeat;
     return result;
   };
-  const [track, setTrack] = useState(() => makeTrack(data.current));
+  const [liveTrack, setTrack] = useState(() => makeTrack(data.current));
   const session = data.current;
   const tuningReference = session.reference || reference;
+  const [auditionMode, setAuditionMode] = useState(false);
+  const preview = useViolinPlayback(getAudioContext);
+  const playbackPlan = useMemo(() => {
+    if (!session.bars.length) return null;
+    const start = session.bars[0].bar * 4;
+    const events = generatedEvents(session).map((e) => ({ ...e, beat: e.beat - start }));
+    // Keep full-take engraving out of the live capture path.
+    const score = auditionMode
+      ? vibeTrack(
+          events,
+          session.bpm,
+          'Generated continuation',
+          session.estimatedKey || 'D',
+          0,
+          start / 4,
+        )
+      : null;
+    if (score) score.windowBeat = start;
+    return {
+      track: score,
+      windowBeat: start,
+      events: events.map((e) => ({
+        ...e,
+        start: (e.beat * 60) / session.bpm,
+        end: ((e.beat + e.duration) * 60) / session.bpm,
+      })),
+      duration: ((session.bars.at(-1).bar * 4 + 4 - start) * 60) / session.bpm,
+    };
+  }, [liveTrack, session.id, auditionMode]);
+  const track = auditionMode && playbackPlan ? playbackPlan.track : liveTrack;
+  function stopPreview() {
+    preview.stop();
+    setAuditionMode(false);
+  }
+  function listen(seekBeat = null) {
+    if (recording || busy || !playbackPlan) return;
+    if (preview.loading) {
+      stopPreview();
+      return;
+    }
+    const at =
+      seekBeat !== null
+        ? Math.max(0, ((seekBeat - playbackPlan.windowBeat) * 60) / session.bpm)
+        : preview.status === 'paused'
+          ? preview.time
+          : 0;
+    setAuditionMode(true);
+    void preview.play(playbackPlan.events, playbackPlan.duration, tuningReference, at);
+  }
   function snapshot(final = false) {
     const current = data.current;
     current.notes = captureNotes(capture.current, current.elapsed, final);
@@ -254,6 +305,7 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
   async function start() {
     if (!predictor.current.ready || busy || recording || data.current.elapsed >= VIBE_MAX_SECONDS)
       return;
+    stopPreview();
     setBusy(true);
     setError('');
     setSaved(false);
@@ -330,6 +382,7 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
   }
   async function fresh() {
     if (recording || busy) return;
+    stopPreview();
     if (!(await persist())) return;
     data.current = newVibeSession(session.bpm, session.key);
     capture.current = createCapture();
@@ -343,6 +396,7 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
   }
   function load(record) {
     if (recording || busy) return;
+    stopPreview();
     data.current = structuredClone(record);
     capture.current = createCapture(record.notes);
     latest.current.onDraft?.(structuredClone(record));
@@ -355,6 +409,7 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
     redraw((n) => n + 1);
   }
   async function remove(record) {
+    stopPreview();
     try {
       await deleteVibe(record.id);
       setHistory(await listVibes());
@@ -394,7 +449,10 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
-  const beat = (time * session.bpm) / 60;
+  const beat =
+    auditionMode && playbackPlan
+      ? playbackPlan.windowBeat + (preview.time * session.bpm) / 60
+      : (time * session.bpm) / 60;
   const events = useMemo(
     () =>
       track
@@ -442,6 +500,15 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
               ? text('继续 Vibe', 'Resume Vibe')
               : text('开始 Vibe', 'Start Vibe')}
       </button>
+      {playbackPlan && (
+        <ViolinPlaybackControls
+          player={preview}
+          disabled={recording || busy}
+          label={text('试听续句', 'Listen to continuation')}
+          onPlay={() => listen()}
+          onStop={stopPreview}
+        />
+      )}
     </div>
   );
   const locked = busy || recording || !!session.notes.length || !!session.bars.length;
@@ -689,32 +756,40 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
             <div className="score-view-heading">
               <span>{text('为你生成的续句', 'YOUR CONTINUATION')}</span>
               <span>
-                {text('实时窗口 · 小节', 'Live window · bars')} {track.windowBeat / 4 + 1}–
-                {track.windowBeat / 4 + track.measures.length}
+                {auditionMode
+                  ? text('试听 · 小节', 'Listening · bars')
+                  : text('实时窗口 · 小节', 'Live window · bars')}{' '}
+                {track.windowBeat / 4 + 1}–{track.windowBeat / 4 + track.measures.length}
               </span>
             </div>
             <ScoreNotation
               track={track}
-              measureNumber={Math.floor(beat / 4) + 1}
+              measureNumber={Math.min(Math.floor(beat / 4) + 1, session.bars.at(-1).bar + 1)}
               totalMeasures={session.bars.at(-1).bar + 1}
               measure={Math.min(
                 track.measures.length - 1,
                 Math.floor((beat - track.windowBeat) / 4),
               )}
               beat={beat - track.windowBeat}
-              playing={recording}
+              onSeek={!recording && !busy ? (beat) => listen(beat) : undefined}
+              playing={recording || preview.playing}
               noteDuration={((event?.duration || 1) * 60) / session.bpm}
               action={
                 <div className="vibe-cue">
-                  {event
+                  {auditionMode
                     ? text(
-                        '跟随续句，也可以继续即兴。',
-                        'Follow the suggestion, or keep improvising.',
+                        '正在试听生成的续句，演奏记录保持不变。',
+                        'Listening to your generated continuation. Your performance record stays unchanged.',
                       )
-                    : text(
-                        '先自由演奏，续句将在下一小节接入。',
-                        'Keep playing freely. Your continuation begins at the next bar.',
-                      )}
+                    : event
+                      ? text(
+                          '跟随续句，也可以继续即兴。',
+                          'Follow the suggestion, or keep improvising.',
+                        )
+                      : text(
+                          '先自由演奏，续句将在下一小节接入。',
+                          'Keep playing freely. Your continuation begins at the next bar.',
+                        )}
                   <span>
                     {text(
                       '下一小节保持不变，较远的续句随你更新。',
@@ -729,13 +804,13 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
                   next={next}
                   reference={tuningReference}
                   counting={false}
-                  done={time >= VIBE_MAX_SECONDS}
+                  done={auditionMode ? preview.status === 'ended' : time >= VIBE_MAX_SECONDS}
                   hz={hz}
                   deviation={deviation}
                   onset={null}
                   transport={transport}
-                  time={time}
-                  duration={VIBE_MAX_SECONDS}
+                  time={auditionMode ? preview.time : time}
+                  duration={auditionMode ? playbackPlan.duration : VIBE_MAX_SECONDS}
                   error={expanded ? error : ''}
                 />
               )}

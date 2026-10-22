@@ -1,0 +1,92 @@
+[
+  {
+    "midi": 55,
+    "hz": 195.930543,
+    "loopStart": 0.6,
+    "loopEnd": 2.6,
+    "source": "G3.wav",
+    "sourceSha256": "80bae3776b0ccd3d4774f47429e829c7764f5fe6061ff844a8affc6ac68b7899",
+    "sha256": "1e547a7e092378a94b35ed55a0ed8e1af56c7b696fc1f2a91b758d746cabe8ff"
+  },
+  {
+    "midi": 60,
+    "hz": 262.325669,
+    "loopStart": 0.6,
+    "loopEnd": 2.6,
+    "source": "C4.wav",
+    "sourceSha256": "4169605b51a72454f11bc2c34efc66c1d9993fd2b7d5f097a025ef9d3a2dbdfa",
+    "sha256": "b1380ab572c4b5a4628dacdee973987955a048275870f17ec4346c1132250b4c"
+  },
+  {
+    "midi": 64,
+    "hz": 329.936599,
+    "loopStart": 0.6,
+    "loopEnd": 2.6,
+    "source": "E4.wav",
+    "sourceSha256": "418512905f3294a23cf999f0587bf8e04d60192fe317ea8c80c150a85670eda2",
+    "sha256": "e106e89ced7978854de5c2f0bc439300e963df9b9b31cf2e630b99eb5cf6941d"
+  },
+  {
+    "midi": 67,
+    "hz": 392.210776,
+    "loopStart": 0.6,
+    "loopEnd": 2.6,
+    "source": "G4.wav",
+    "sourceSha256": "14e3ea3d5172722d4d2686bae5da3d603800a7a474fa295d98275a9410913822",
+    "sha256": "4fd7529cbb7df2ce3b010b8eae61f911876d05a25675e51c0aac7e94e0e738e9"
+  },
+  {
+    "midi": 72,
+    "hz": 524.579536,
+    "loopStart": 0.6,
+    "loopEnd": 2.6,
+    "source": "C5.wav",
+    "sourceSha256": "af72f852ef2892233699851dacf5f8d97d446822d8eb4ce9e0ec27d5a721b118",
+    "sha256": "686a51826300f462d5b7d5772a53ab620398cf0c9822a73ff6d3e656d8e65335"
+  },
+  {
+    "midi": 76,
+    "hz": 665.500847,
+    "loopStart": 0.6,
+    "loopEnd": 2.6,
+    "source": "E5.wav",
+    "sourceSha256": "5c278e263fd59650190fc58294945cd291906eb1abd8293f728a96a878d1d478",
+    "sha256": "bfa9168ae582246ab99e918e9cb0ffe14090851edea2952bd6857bb6467897fa"
+  },
+  {
+    "midi": 79,
+    "hz": 785.747792,
+    "loopStart": 0.6,
+    "loopEnd": 2.6,
+    "source": "G5.wav",
+    "sourceSha256": "b5bb27541d6187e6eeb20baf50625ca35fc9d44c7f113936a9369bc7ce490a68",
+    "sha256": "6a4cb4d2833bdd1a67ca3c993c25971dc9d472f39d58d800403f129fc87ff351"
+  },
+  {
+    "midi": 84,
+    "hz": 1042.929159,
+    "loopStart": 0.6,
+    "loopEnd": 2.6,
+    "source": "C6.wav",
+    "sourceSha256": "7ec8e0c2dde75282a4aaacccc713c84faa3e84daa9cf43df45ffc0e209964d46",
+    "sha256": "5cb9fc4593e2f745cf1081622d0b2d3a1e7b3376c9fd59b6fd2dc496cf77b678"
+  },
+  {
+    "midi": 88,
+    "hz": 1328.543576,
+    "loopStart": 0.6,
+    "loopEnd": 2.6,
+    "source": "E6.wav",
+    "sourceSha256": "8d1712f5659274a83aa90807132084559633e4817027c8a5b5f40826b3d9bc84",
+    "sha256": "c1da308fd23d8d5a640c1e25d98e17d3e24263f5b36abb56918e2f61fa606a29"
+  },
+  {
+    "midi": 96,
+    "hz": 2092.505034,
+    "loopStart": 0.6,
+    "loopEnd": 2.6,
+    "source": "C7.wav",
+    "sourceSha256": "f8223aed62911ef3f6937111bf3cdcc36fc25a636d4f99480b97029c4d28f393",
+    "sha256": "d5b6a3859fea99e104026c279f5bba0352749204a423f51feeb35f9e692fa977"
+  }
+]

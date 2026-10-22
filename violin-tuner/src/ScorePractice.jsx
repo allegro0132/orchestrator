@@ -15,6 +15,8 @@ import { AUDIO_SAMPLE_RATE, ANALYSIS_BUFFER_SIZE, ANALYSIS_INTERVAL_MS } from '.
 import ScoreNotation from './ScoreNotation.jsx';
 import ScoreHUD from './ScoreHUD.jsx';
 import ScoreLibrary, { ScoreAttribution } from './ScoreLibrary.jsx';
+import useViolinPlayback from './useViolinPlayback.js';
+import ViolinPlaybackControls from './ViolinPlaybackControls.jsx';
 import { SCORE_LIBRARY } from './scoreLibrary.js';
 export default function ScorePractice({
   getAudioContext,
@@ -56,6 +58,36 @@ export default function ScorePractice({
     importAttempt = useRef(0),
     position = useRef(0),
     initial = useRef(true);
+  const [auditionMode, setAuditionMode] = useState(false);
+  const preview = useViolinPlayback(getAudioContext, {
+    onTime: (value) => {
+      position.current = value;
+      setTime(value);
+    },
+  });
+  const audioActive = preview.playing || preview.loading;
+  function stopPreview() {
+    if (auditionMode) {
+      model.current = createScoreAnalysis(events, Math.max(0, position.current));
+      initial.current = false;
+    }
+    preview.stop();
+    setAuditionMode(false);
+  }
+  function listen(at = null) {
+    if (preview.loading) {
+      stopPreview();
+      return;
+    }
+    stop();
+    const from =
+      at ??
+      (position.current >= duration
+        ? secondsAt(track, startBeat, tempo || null)
+        : Math.max(0, position.current));
+    setAuditionMode(true);
+    void preview.play(events, duration, reference, from);
+  }
   function stop(update = true) {
     const run = session.current;
     run.token++;
@@ -72,6 +104,7 @@ export default function ScorePractice({
     }
   }
   function reset(at = 0) {
+    stopPreview();
     stop();
     model.current = createScoreAnalysis(events, at);
     position.current = at;
@@ -103,10 +136,11 @@ export default function ScorePractice({
     };
   }, []);
   useEffect(() => {
-    onActivityChange?.(playing || busy);
-  }, [playing, busy, onActivityChange]);
+    onActivityChange?.(playing || busy || audioActive);
+  }, [playing, busy, audioActive, onActivityChange]);
   async function load(file, libraryItem = null) {
     if (!file && !libraryItem) return;
+    stopPreview();
     stop();
     const token = ++importAttempt.current;
     setImporting(true);
@@ -161,6 +195,7 @@ export default function ScorePractice({
   }
   async function start(seekBeat = null) {
     if (busy || !events.length) return;
+    stopPreview();
     if (typeof seekBeat === 'number') {
       const selected = scoreStartAtBeat(track, seekBeat, tempo || null);
       if (!selected) return;
@@ -298,7 +333,7 @@ export default function ScorePractice({
       : events.findIndex((e) => e.end > Math.max(offset, time));
   return (
     <section
-      className={'tuner score-practice' + (playing ? ' is-playing' : '')}
+      className={'tuner score-practice' + (playing || preview.playing ? ' is-playing' : '')}
       aria-label={
         lesson ? text('初学者练习', 'Beginner practice') : text('曲谱练习', 'Score practice')
       }
@@ -355,7 +390,7 @@ export default function ScorePractice({
               onToggle={() => setLibraryOpen((value) => !value)}
               onSelect={(item) => load(null, item)}
               selectedId={preset?.id}
-              disabled={playing || busy || importing}
+              disabled={playing || busy || audioActive || importing}
               loading={loadingPreset}
             />
             {preset && <ScoreAttribution item={preset} />}
@@ -366,7 +401,14 @@ export default function ScorePractice({
         )}
         {renderGuide && (
           <div ref={guideHeading}>
-            {renderGuide({ event, index, time, counting, done, playing })}
+            {renderGuide({
+              event,
+              index,
+              time,
+              counting,
+              done,
+              playing: playing || preview.playing,
+            })}
           </div>
         )}
         {error && (
@@ -404,7 +446,7 @@ export default function ScorePractice({
                   {text('声部 / 声部编号', 'Part / voice')}
                   <select
                     value={trackId}
-                    disabled={playing || busy}
+                    disabled={playing || busy || audioActive}
                     onChange={(e) => setTrackId(+e.target.value)}
                   >
                     {score.tracks.map((tr, i) => (
@@ -419,7 +461,7 @@ export default function ScorePractice({
                 {text('练习速度', 'Practice tempo')}
                 <select
                   value={tempo}
-                  disabled={playing || busy}
+                  disabled={playing || busy || audioActive}
                   onChange={(e) => setTempo(+e.target.value)}
                 >
                   <option value={0}>
@@ -441,7 +483,7 @@ export default function ScorePractice({
                 {text('起始小节', 'Start at bar')}
                 <select
                   value={startBar}
-                  disabled={playing || busy}
+                  disabled={playing || busy || audioActive}
                   onChange={(e) => {
                     const bar = +e.target.value;
                     setStartBar(bar);
@@ -478,8 +520,24 @@ export default function ScorePractice({
             </div>
             <ScoreNotation
               track={track}
-              onSeek={(beat) => start(beat)}
-              action={renderAction?.({ event, index, time, counting, done, playing })}
+              onSeek={(beat) => {
+                if (auditionMode) {
+                  const selected = scoreStartAtBeat(track, beat, tempo || null);
+                  if (selected) {
+                    setStartBar(selected.bar);
+                    setStartBeat(selected.beat);
+                    listen(selected.time);
+                  }
+                } else start(beat);
+              }}
+              action={renderAction?.({
+                event,
+                index,
+                time,
+                counting,
+                done,
+                playing: playing || preview.playing,
+              })}
               renderOverlay={({ expanded }) => (
                 <ScoreHUD
                   event={event || events.find((e) => e.start >= time)}
@@ -494,9 +552,9 @@ export default function ScorePractice({
                   reference={reference}
                   counting={counting}
                   done={done}
-                  hz={hz}
-                  deviation={deviation}
-                  onset={result?.onset}
+                  hz={auditionMode ? null : hz}
+                  deviation={auditionMode ? null : deviation}
+                  onset={auditionMode ? null : result?.onset}
                   count={Math.ceil(
                     (offset - time) /
                       (60 /
@@ -522,6 +580,13 @@ export default function ScorePractice({
                                   : text('开始演奏', 'Start playing')
                                 : text('继续演奏', 'Resume')}
                       </button>
+                      <ViolinPlaybackControls
+                        player={preview}
+                        disabled={busy || importing}
+                        label={text('试听曲谱', 'Listen to score')}
+                        onPlay={() => listen()}
+                        onStop={stopPreview}
+                      />
                       <button
                         className="secondary-button"
                         disabled={busy}
@@ -538,33 +603,35 @@ export default function ScorePractice({
                 />
               )}
               measure={focus || 0}
-              playing={playing}
+              playing={playing || preview.playing}
               noteDuration={event ? event.end - event.start : 0.5}
               beat={Math.max(event?.beat ?? track.measures[focus].beat, track.measures[focus].beat)}
             />
-            <div className="score-stats">
-              <div>
-                <b>{summary.pitch === null ? '—' : `${summary.pitch}%`}</b>
-                <span>{text('有声采样音准 ±20 音分', 'Voiced samples within ±20 cents')}</span>
+            {!auditionMode && (
+              <div className="score-stats">
+                <div>
+                  <b>{summary.pitch === null ? '—' : `${summary.pitch}%`}</b>
+                  <span>{text('有声采样音准 ±20 音分', 'Voiced samples within ±20 cents')}</span>
+                </div>
+                <div>
+                  <b>{summary.coverage}%</b>
+                  <span>{text('音符时长覆盖', 'Note duration coverage')}</span>
+                </div>
+                <div>
+                  <b>{summary.rhythm === null ? '—' : `${summary.rhythm}%`}</b>
+                  <span>
+                    {text('起音在 ±150 ms 内', 'Onsets within ±150 ms')} · {summary.onsets}
+                  </span>
+                </div>
               </div>
-              <div>
-                <b>{summary.coverage}%</b>
-                <span>{text('音符时长覆盖', 'Note duration coverage')}</span>
-              </div>
-              <div>
-                <b>{summary.rhythm === null ? '—' : `${summary.rhythm}%`}</b>
-                <span>
-                  {text('起音在 ±150 ms 内', 'Onsets within ±150 ms')} · {summary.onsets}
-                </span>
-              </div>
-            </div>
+            )}
             <p className="score-method">
               {text(
                 '实时分析按速度前进，不会因错音停住。开始前有 4 拍视觉预备拍。音准与时长按已完成音符统计；节奏只统计检测到的起音。同音连奏、换弓和设备延迟可能影响起音识别。',
                 'Live analysis follows tempo and continues through mistakes. Start with a four-beat visual count-in. Pitch and duration use completed notes; rhythm uses detected onsets only. Repeated legato notes, bow changes, and device latency can affect onset detection.',
               )}
             </p>
-            {summary.completed > 0 && (
+            {!auditionMode && summary.completed > 0 && (
               <details
                 className="score-results"
                 onToggle={(e) => setShowResults(e.currentTarget.open)}

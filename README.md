@@ -4,6 +4,8 @@ A responsive React violin tuner with English and Chinese support, faster pitch t
 
 Vibe mode listens to an improvised melody and continuously extends the score ahead. Rule-based continuation is the default; optional SkyTNT Transformer inference uses INT4 weights, FP16 compute and WebGPU on the device. Its 144.5 MB of weights are hosted with the site and downloaded only on request, verified and cached as resumable shards. Performed notes and generated revisions retain their engine IDs for review and export. See the [deployment and model details](violin-tuner/public/models/skytnt-tv2o-medium-w4a16-stable-v2/README.md).
 
+Reference tones, beginner/score practice, and Vibe continuations can be auditioned with real solo-violin samples. Playback supports pause/resume, score-position seeking, fullscreen controls and the selected A4 tuning. Samples are hosted with the app; see [sample credits](violin-tuner/public/audio/violin/README.md).
+
 A separate [SkyTNT pretrained-model evaluation](violin-tuner/evaluations/skytnt/README.md) includes verified native inference measurements, constrained violin decoding, and MIDI/MusicXML examples. Its [W4A16 + WebGPU priority path](violin-tuner/evaluations/skytnt/WEBGPU.md) now includes converted-weight and real desktop-browser precision/latency comparisons.
 
 Score practice includes a graded library of nine openly licensed or public-domain practice editions. See the [score credits and licenses](violin-tuner/public/scores/SOURCES.md).
