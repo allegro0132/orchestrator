@@ -372,19 +372,6 @@ function App() {
               {mode === 'metronome' && <span className="active-dot" />}
             </button>
             <button
-              className={'mode ' + (mode === 'score' ? 'active' : '')}
-              onClick={() => setMode('score')}
-            >
-              <span className="mode-icon">
-                <BookOpen size={21} />
-              </span>
-              <span>
-                <b>{t('曲谱练习')}</b>
-                <small>{t('跟随曲谱，听见进步')}</small>
-              </span>
-              {mode === 'score' && <span className="active-dot" />}
-            </button>
-            <button
               className={'mode beginner-mode ' + (mode === 'beginner' ? 'active' : '')}
               onClick={() => setMode('beginner')}
             >
@@ -396,6 +383,19 @@ function App() {
                 <small>{t('长弓、换弦与左手入门')}</small>
               </span>
               {mode === 'beginner' && <span className="active-dot" />}
+            </button>
+            <button
+              className={'mode score-mode ' + (mode === 'score' ? 'active' : '')}
+              onClick={() => setMode('score')}
+            >
+              <span className="mode-icon">
+                <BookOpen size={21} />
+              </span>
+              <span>
+                <b>{t('曲谱练习')}</b>
+                <small>{t('跟随曲谱，听见进步')}</small>
+              </span>
+              {mode === 'score' && <span className="active-dot" />}
             </button>
             {!['metronome', 'score', 'beginner'].includes(mode) && (
               <>

@@ -249,6 +249,18 @@ export function secondsAt(track, beat, tempo = null) {
   }
   return seconds + ((beat - previous) * 60) / bpm;
 }
+export function scoreStartAtBeat(track, beat, tempo = null) {
+  if (!Number.isFinite(beat) || !track?.measures.length) return null;
+  const selected = Math.max(0, Math.min(beat, track.duration - 0.000001));
+  return {
+    beat: selected,
+    time: secondsAt(track, selected, tempo),
+    bar: Math.max(
+      0,
+      track.measures.findLastIndex((m) => m.beat <= selected + 0.0000001),
+    ),
+  };
+}
 export function timedEvents(track, tempo) {
   return track.events.map((e, i) => ({
     ...e,

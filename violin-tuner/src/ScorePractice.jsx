@@ -1,7 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Upload, Play, Square, RotateCcw, Music2 } from 'lucide-react';
 import { useLanguage } from './i18n.jsx';
-import { importScore, parseMusicXml, DEMO_XML, timedEvents, secondsAt } from './score.js';
+import {
+  importScore,
+  parseMusicXml,
+  DEMO_XML,
+  timedEvents,
+  secondsAt,
+  scoreStartAtBeat,
+} from './score.js';
 import { createScoreAnalysis, analyseScore, currentEvent, scoreSummary } from './scoreAnalysis.js';
 import { detectPitch, frequency, centsOff } from './pitch.js';
 import { AUDIO_SAMPLE_RATE, ANALYSIS_BUFFER_SIZE, ANALYSIS_INTERVAL_MS } from './audioConfig.js';
@@ -22,6 +29,7 @@ export default function ScorePractice({
   const { lang } = useLanguage(),
     text = (zh, en) => (lang === 'zh' ? zh : en);
   const [showResults, setShowResults] = useState(false);
+  const [startBeat, setStartBeat] = useState(0);
   const [libraryOpen, setLibraryOpen] = useState(!score);
   const [loadingPreset, setLoadingPreset] = useState(null);
   const preset = SCORE_LIBRARY.find((item) => item.id === score?.libraryId);
@@ -74,9 +82,12 @@ export default function ScorePractice({
   useEffect(() => {
     reset(0);
     setStartBar(0);
+    setStartBeat(0);
   }, [events]);
   useEffect(() => {
     mounted.current = true;
+    const previousAnchor = document.body.style.overflowAnchor;
+    document.body.style.overflowAnchor = 'none';
     const hide = () => {
       if (document.hidden) stop();
     };
@@ -84,6 +95,7 @@ export default function ScorePractice({
     window.addEventListener('pagehide', hide);
     return () => {
       mounted.current = false;
+      document.body.style.overflowAnchor = previousAnchor;
       importAttempt.current++;
       stop(false);
       document.removeEventListener('visibilitychange', hide);
@@ -147,8 +159,28 @@ export default function ScorePractice({
       if (input.current) input.current.value = '';
     }
   }
-  async function start() {
+  async function start(seekBeat = null) {
     if (busy || !events.length) return;
+    if (typeof seekBeat === 'number') {
+      const selected = scoreStartAtBeat(track, seekBeat, tempo || null);
+      if (!selected) return;
+      setStartBar(selected.bar);
+      setStartBeat(selected.beat);
+      position.current = selected.time;
+      model.current = createScoreAnalysis(events, selected.time);
+      initial.current = false;
+      setTime(selected.time);
+      setHz(null);
+      if (playing && session.current.stream) {
+        const run = session.current;
+        Object.assign(run, {
+          origin: run.context.currentTime,
+          offset: selected.time,
+          startAt: selected.time,
+        });
+        return;
+      }
+    }
     setError('');
     setBusy(true);
     const token = ++session.current.token;
@@ -168,7 +200,7 @@ export default function ScorePractice({
         return;
       }
       if (position.current >= duration) {
-        position.current = secondsAt(track, track.measures[startBar].beat, tempo || null);
+        position.current = secondsAt(track, startBeat, tempo || null);
         model.current = createScoreAnalysis(events, position.current);
         initial.current = true;
       }
@@ -177,25 +209,19 @@ export default function ScorePractice({
       analyser.fftSize = ANALYSIS_BUFFER_SIZE;
       source.connect(analyser);
       const run = session.current;
-      Object.assign(run, { stream: media, source, analyser });
+      Object.assign(run, { stream: media, source, analyser, context: ctx });
       const buffer = new Float32Array(analyser.fftSize),
         countIn = initial.current
-          ? (4 * 60) /
-            (tempo ||
-              track.tempos.findLast((t) => t.beat <= track.measures[startBar].beat)?.bpm ||
-              80)
+          ? (4 * 60) / (tempo || track.tempos.findLast((t) => t.beat <= startBeat)?.bpm || 80)
           : 0;
-      const origin = ctx.currentTime,
-        offset = position.current - countIn,
-        startAt = position.current;
+      Object.assign(run, {
+        origin: ctx.currentTime,
+        offset: position.current - countIn,
+        startAt: position.current,
+      });
       initial.current = false;
       setPlaying(true);
       setBusy(false);
-      if (!focusHeading.current?.parentElement.querySelector('.notation-frame.is-expanded'))
-        (lesson ? guideHeading.current : focusHeading.current)?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start',
-        });
       model.current.lastTime = null;
       model.current.lastHz = null;
       model.current.lastVoiced = -Infinity;
@@ -204,13 +230,13 @@ export default function ScorePractice({
         lastPaint = -Infinity;
       const tick = (stamp) => {
         if (token !== session.current.token) return;
-        const elapsed = ctx.currentTime - origin + offset;
+        const elapsed = ctx.currentTime - run.origin + run.offset;
         if (stamp - last >= ANALYSIS_INTERVAL_MS) {
           last = stamp;
           position.current = elapsed;
           analyser.getFloatTimeDomainData(buffer);
           const pitch = detectPitch(buffer, ctx.sampleRate);
-          if (elapsed >= Math.max(startAt, model.current.from)) {
+          if (elapsed >= Math.max(run.startAt, model.current.from)) {
             analyseScore(model.current, elapsed, pitch, reference);
             if (stamp - lastPaint >= 65) {
               setHz(pitch);
@@ -246,7 +272,7 @@ export default function ScorePractice({
       }
     }
   }
-  const offset = track ? secondsAt(track, track.measures[startBar].beat, tempo || null) : 0;
+  const offset = track ? secondsAt(track, startBeat, tempo || null) : 0;
   const counting = playing && time < offset;
   const index = currentEvent(events, Math.max(time, offset)),
     event = events[index],
@@ -419,6 +445,7 @@ export default function ScorePractice({
                   onChange={(e) => {
                     const bar = +e.target.value;
                     setStartBar(bar);
+                    setStartBeat(track.measures[bar].beat);
                     reset(secondsAt(track, track.measures[bar].beat, tempo || null));
                   }}
                 >
@@ -451,6 +478,7 @@ export default function ScorePractice({
             </div>
             <ScoreNotation
               track={track}
+              onSeek={(beat) => start(beat)}
               action={renderAction?.({ event, index, time, counting, done, playing })}
               renderOverlay={({ expanded }) => (
                 <ScoreHUD
@@ -472,10 +500,7 @@ export default function ScorePractice({
                   count={Math.ceil(
                     (offset - time) /
                       (60 /
-                        (tempo ||
-                          track.tempos.findLast((t) => t.beat <= track.measures[startBar].beat)
-                            ?.bpm ||
-                          80)),
+                        (tempo || track.tempos.findLast((t) => t.beat <= startBeat)?.bpm || 80)),
                   )}
                   transport={
                     <div className="score-actions">

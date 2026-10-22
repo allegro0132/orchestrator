@@ -10,8 +10,24 @@ import {
   secondsAt,
   timedEvents,
   excerptXml,
+  scoreStartAtBeat,
 } from './score.js';
 const Midi = MidiLibrary.Midi || MidiLibrary.default.Midi;
+test('seek positions retain exact note beats, partial bars, and tempo-map timing', () => {
+  const track = {
+    duration: 10,
+    measures: [{ beat: 0 }, { beat: 1 }, { beat: 5 }, { beat: 9 }],
+    tempos: [
+      { beat: 0, bpm: 60 },
+      { beat: 5, bpm: 120 },
+    ],
+  };
+  assert.deepEqual(scoreStartAtBeat(track, 6.5), { beat: 6.5, time: 5.75, bar: 2 });
+  assert.deepEqual(scoreStartAtBeat(track, 1, 120), { beat: 1, time: 0.5, bar: 1 });
+  assert.equal(scoreStartAtBeat(track, -5).beat, 0);
+  assert.ok(scoreStartAtBeat(track, 100).beat < track.duration);
+  assert.equal(scoreStartAtBeat(track, NaN), null);
+});
 const wrap = (body) =>
   `<score-partwise><part-list><score-part id="P1"><part-name>Violin</part-name></score-part></part-list><part id="P1">${body}</part></score-partwise>`;
 const note = (step = 'A', extra = '', duration = 2) =>

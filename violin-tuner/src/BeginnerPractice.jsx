@@ -4,10 +4,11 @@ import ScorePractice from './ScorePractice.jsx';
 import BeginnerAction from './BeginnerAction.jsx';
 import { BEGINNER_LESSONS, lessonScore, localize } from './beginnerLessons.js';
 import { useLanguage } from './i18n.jsx';
-function BeginnerGuide({ lesson, playing }) {
+function BeginnerGuide({ lesson }) {
   const { lang } = useLanguage(),
     text = (zh, en) => (lang === 'zh' ? zh : en);
   const [checks, setChecks] = useState([]);
+  const [instructionsOpen, setInstructionsOpen] = useState(true);
   return (
     <div className="beginner-guide">
       <div className="beginner-goal">
@@ -17,7 +18,11 @@ function BeginnerGuide({ lesson, playing }) {
           <span>{text(`建议 ${lesson.minutes} 分钟`, `~${lesson.minutes} min practice`)}</span>
         )}
       </div>
-      <details className="beginner-instructions" open={!playing}>
+      <details
+        className="beginner-instructions"
+        open={instructionsOpen}
+        onToggle={(e) => setInstructionsOpen(e.currentTarget.open)}
+      >
         <summary>
           {text('练习做法与检查点', 'Instructions and checkpoints')}{' '}
           <span>

@@ -14,6 +14,7 @@ export default function ScoreNotation({
   playing = false,
   renderOverlay,
   action,
+  onSeek,
 }) {
   const frame = useRef(null);
   const overlay = useRef(null);
@@ -25,6 +26,9 @@ export default function ScoreNotation({
   latest.current = { measure, beat, noteDuration, playing };
   const follow = useRef(true),
     drag = useRef(null);
+  const touch = useRef(null),
+    lastTap = useRef(null),
+    lastSeek = useRef(0);
   const [following, setFollowing] = useState(true),
     [dragging, setDragging] = useState(false);
   const [loading, setLoading] = useState(true),
@@ -170,7 +174,28 @@ export default function ScoreNotation({
         playhead = document.createElement('div');
         playhead.className = 'notation-playhead';
         playhead.setAttribute('aria-hidden', 'true');
-        controller.current = { position };
+        controller.current = {
+          position,
+          hit(clientX, clientY) {
+            const svg = surface.querySelector('svg');
+            if (!svg) return null;
+            const bounds = svg.getBoundingClientRect();
+            if (
+              clientY < bounds.top ||
+              clientY > bounds.bottom ||
+              clientX < bounds.left ||
+              clientX > bounds.right
+            )
+              return null;
+            // Convert screen coordinates through the SVG matrix, then undo engraving zoom.
+            const sheet = renderer.GraphicSheet;
+            const point = sheet.svgToOsmd(sheet.domToSvg({ x: clientX, y: clientY }));
+            point.x /= renderer.Zoom;
+            point.y /= renderer.Zoom;
+            const entry = sheet.GetNearestVoiceEntry(point, true)?.parentStaffEntry;
+            return entry ? entry.getAbsoluteTimestamp().RealValue * 4 : null;
+          },
+        };
         position(false);
         setLoading(false);
         if (!media.matches)
@@ -211,22 +236,52 @@ export default function ScoreNotation({
   }, [measure]);
   function pointerDown(e) {
     browse();
+    if (e.pointerType === 'touch') {
+      touch.current = { x: e.clientX, y: e.clientY, moved: false };
+      return;
+    }
     if (e.pointerType !== 'mouse' || e.button !== 0) return;
-    e.preventDefault();
     drag.current = { id: e.pointerId, x: e.clientX, left: e.currentTarget.scrollLeft };
     e.currentTarget.setPointerCapture(e.pointerId);
     setDragging(true);
   }
   function pointerMove(e) {
+    if (touch.current && Math.hypot(e.clientX - touch.current.x, e.clientY - touch.current.y) > 10)
+      touch.current.moved = true;
     if (!drag.current || drag.current.id !== e.pointerId) return;
     e.currentTarget.scrollLeft = drag.current.left + drag.current.x - e.clientX;
   }
   function pointerUp(e) {
+    if (e.pointerType === 'touch') {
+      if (touch.current && !touch.current.moved) {
+        const now = Date.now(),
+          previous = lastTap.current;
+        if (
+          previous &&
+          now - previous.time < 350 &&
+          Math.hypot(e.clientX - previous.x, e.clientY - previous.y) < 24
+        ) {
+          activate(e);
+          lastTap.current = null;
+        } else lastTap.current = { time: now, x: e.clientX, y: e.clientY };
+      } else lastTap.current = null;
+      touch.current = null;
+      return;
+    }
     if (drag.current?.id !== e.pointerId) return;
     drag.current = null;
     setDragging(false);
     if (e.currentTarget.hasPointerCapture(e.pointerId))
       e.currentTarget.releasePointerCapture(e.pointerId);
+  }
+  function activate(e) {
+    if (!onSeek || Date.now() - lastSeek.current < 400) return;
+    const target = controller.current?.hit(e.clientX, e.clientY);
+    if (!Number.isFinite(target)) return;
+    lastSeek.current = Date.now();
+    follow.current = true;
+    setFollowing(true);
+    onSeek(target);
   }
   function keyDown(e) {
     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
@@ -300,9 +355,14 @@ export default function ScoreNotation({
             'Full score. Swipe, drag, or use arrow keys to browse.',
           )}
           onPointerDown={pointerDown}
+          onDoubleClick={activate}
           onPointerMove={pointerMove}
           onPointerUp={pointerUp}
-          onPointerCancel={pointerUp}
+          onPointerCancel={(e) => {
+            touch.current = null;
+            lastTap.current = null;
+            pointerUp(e);
+          }}
           onLostPointerCapture={() => {
             drag.current = null;
             setDragging(false);
@@ -320,7 +380,10 @@ export default function ScoreNotation({
       </div>
       <div className="notation-navigation">
         <span>
-          {text('左右滑动或拖动，浏览完整曲谱', 'Swipe or drag to explore the full score')}
+          {text(
+            '双击音符开始 / 继续 · 左右滑动浏览',
+            'Double-click a note to play · swipe or drag to browse',
+          )}
         </span>
         <div>
           <button
