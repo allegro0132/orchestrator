@@ -6,18 +6,10 @@ import {
   createCapture,
   capturePitch,
   captureNotes,
-  generateVibeBars,
-  extendVibe,
   estimateVibeKey,
-  VIBE_KEYS,
   quantizePerformance,
   vibeXml,
 } from './vibe.js';
-const melody = [62, 64, 66, 69, 67, 66, 64, 62].map((midi, i) => ({
-  midi,
-  start: i * 0.5,
-  duration: 0.5,
-}));
 test('transcribes a stable bowed melody while tolerating vibrato and excluding short glitches', () => {
   const capture = createCapture();
   for (let i = 0; i < 30; i++)
@@ -62,20 +54,7 @@ test('pause discards an unconfirmed transition so resuming cannot backdate a new
   assert.equal(notes.length, 2);
   assert.ok(notes[1].start >= notes[0].start + notes[0].duration);
 });
-test('continuation yields playable complete bars in the chosen key with reproducible variation', () => {
-  for (const key of VIBE_KEYS) {
-    const bars = generateVibeBars(melody, 3, 4, 60, key, 42);
-    assert.deepEqual(bars, generateVibeBars(melody, 3, 4, 60, key, 42));
-    assert.equal(bars.length, 4);
-    for (const bar of bars) {
-      assert.equal(
-        bar.events.reduce((sum, n) => sum + n.duration, 0),
-        4,
-      );
-      assert.equal(bar.events[0].beat, bar.bar * 4);
-      for (const n of bar.events) assert.ok(n.midi >= 55 && n.midi <= 83 && n.duration >= 0.5);
-    }
-  }
+test('estimates the key from recent performed pitches and durations', () => {
   assert.equal(
     estimateVibeKey([
       { midi: 62, duration: 4 },
@@ -84,18 +63,6 @@ test('continuation yields playable complete bars in the chosen key with reproduc
     ]).id,
     'D',
   );
-});
-test('continuous updates protect the current and next bars and preserve published revisions', () => {
-  const session = { bpm: 60, key: 'D', seed: 1, bars: [], revisions: [], lastGeneratedBar: -1 };
-  assert.equal(extendVibe(session, [], 0), false);
-  assert.equal(extendVibe(session, melody, 3), true);
-  const locked = structuredClone(session.bars.slice(0, 2));
-  assert.equal(extendVibe(session, melody, 3.5), false);
-  assert.equal(extendVibe(session, melody.slice().reverse(), 4), true);
-  assert.deepEqual(session.bars.slice(0, 2), locked);
-  assert.equal(session.revisions.length, 2);
-  assert.equal(new Set(session.bars.map((b) => b.bar)).size, session.bars.length);
-  assert.equal(session.bars.at(-1).bar, 5);
 });
 test('performed and generated MusicXML retain separate pitches, quantized rests and tied durations', () => {
   const notes = quantizePerformance(
@@ -110,7 +77,9 @@ test('performed and generated MusicXML retain separate pitches, quantized rests 
   assert.ok(track.events.some((e) => e.midi === null && e.duration > 0));
   const tied = parseMusicXml(vibeXml([{ midi: 69, beat: 3, duration: 3 }], 60)).tracks[0];
   assert.equal(tied.events.find((e) => e.midi === 69).duration, 3);
-  const bars = generateVibeBars(melody, 1, 4, 60, VIBE_KEYS[0]);
+  const bars = Array.from({ length: 4 }, (_, i) => ({
+    events: [{ midi: 62 + i, beat: (i + 1) * 4, duration: 4 }],
+  }));
   const generated = parseMusicXml(
     vibeXml(
       bars.flatMap((b) => b.events),

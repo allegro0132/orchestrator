@@ -1,0 +1,188 @@
+{
+  "id": "arco-mt-v1",
+  "architecture": "causal-relative-key-attention",
+  "config": {
+    "width": 64,
+    "heads": 4,
+    "layers": 2,
+    "ff": 128,
+    "context": 64,
+    "vocab": 181
+  },
+  "durations": [0.5, 1, 1.5, 2, 3, 4],
+  "minMidi": 55,
+  "maxMidi": 83,
+  "tensors": {
+    "embed.weight": {
+      "shape": [181, 64],
+      "offset": 0,
+      "length": 11584
+    },
+    "blocks.0.relative": {
+      "shape": [4, 64, 16],
+      "offset": 11584,
+      "length": 4096
+    },
+    "blocks.0.norm1.weight": {
+      "shape": [64],
+      "offset": 15680,
+      "length": 64
+    },
+    "blocks.0.norm1.bias": {
+      "shape": [64],
+      "offset": 15744,
+      "length": 64
+    },
+    "blocks.0.qkv.weight": {
+      "shape": [192, 64],
+      "offset": 15808,
+      "length": 12288
+    },
+    "blocks.0.qkv.bias": {
+      "shape": [192],
+      "offset": 28096,
+      "length": 192
+    },
+    "blocks.0.proj.weight": {
+      "shape": [64, 64],
+      "offset": 28288,
+      "length": 4096
+    },
+    "blocks.0.proj.bias": {
+      "shape": [64],
+      "offset": 32384,
+      "length": 64
+    },
+    "blocks.0.norm2.weight": {
+      "shape": [64],
+      "offset": 32448,
+      "length": 64
+    },
+    "blocks.0.norm2.bias": {
+      "shape": [64],
+      "offset": 32512,
+      "length": 64
+    },
+    "blocks.0.fc1.weight": {
+      "shape": [128, 64],
+      "offset": 32576,
+      "length": 8192
+    },
+    "blocks.0.fc1.bias": {
+      "shape": [128],
+      "offset": 40768,
+      "length": 128
+    },
+    "blocks.0.fc2.weight": {
+      "shape": [64, 128],
+      "offset": 40896,
+      "length": 8192
+    },
+    "blocks.0.fc2.bias": {
+      "shape": [64],
+      "offset": 49088,
+      "length": 64
+    },
+    "blocks.1.relative": {
+      "shape": [4, 64, 16],
+      "offset": 49152,
+      "length": 4096
+    },
+    "blocks.1.norm1.weight": {
+      "shape": [64],
+      "offset": 53248,
+      "length": 64
+    },
+    "blocks.1.norm1.bias": {
+      "shape": [64],
+      "offset": 53312,
+      "length": 64
+    },
+    "blocks.1.qkv.weight": {
+      "shape": [192, 64],
+      "offset": 53376,
+      "length": 12288
+    },
+    "blocks.1.qkv.bias": {
+      "shape": [192],
+      "offset": 65664,
+      "length": 192
+    },
+    "blocks.1.proj.weight": {
+      "shape": [64, 64],
+      "offset": 65856,
+      "length": 4096
+    },
+    "blocks.1.proj.bias": {
+      "shape": [64],
+      "offset": 69952,
+      "length": 64
+    },
+    "blocks.1.norm2.weight": {
+      "shape": [64],
+      "offset": 70016,
+      "length": 64
+    },
+    "blocks.1.norm2.bias": {
+      "shape": [64],
+      "offset": 70080,
+      "length": 64
+    },
+    "blocks.1.fc1.weight": {
+      "shape": [128, 64],
+      "offset": 70144,
+      "length": 8192
+    },
+    "blocks.1.fc1.bias": {
+      "shape": [128],
+      "offset": 78336,
+      "length": 128
+    },
+    "blocks.1.fc2.weight": {
+      "shape": [64, 128],
+      "offset": 78464,
+      "length": 8192
+    },
+    "blocks.1.fc2.bias": {
+      "shape": [64],
+      "offset": 86656,
+      "length": 64
+    },
+    "norm.weight": {
+      "shape": [64],
+      "offset": 86720,
+      "length": 64
+    },
+    "norm.bias": {
+      "shape": [64],
+      "offset": 86784,
+      "length": 64
+    },
+    "head.weight": {
+      "shape": [181, 64],
+      "offset": 86848,
+      "length": 11584
+    },
+    "head.bias": {
+      "shape": [181],
+      "offset": 98432,
+      "length": 181
+    }
+  },
+  "sha256": "81b498bb7ab839f4f99b0c99860c7699b16be25b9b0258d7c08226d468c960b3",
+  "bytes": 394452,
+  "training": {
+    "seed": 1729,
+    "steps": 400,
+    "selectedStep": 100,
+    "initialValidationLoss": 5.3876893520355225,
+    "validationLoss": 4.660915911197662,
+    "unigramValidationLoss": 5.049934148788452,
+    "selectedTrainingLoss": 2.9181389808654785,
+    "finalTrainingLoss": 1.467942237854004,
+    "holdout": "greensleeves",
+    "trainPieces": ["old100", "ode", "lullaby", "minuet", "rag"],
+    "augmentedTrainSequences": 66,
+    "limitations": "Experimental small-corpus model. Transpositions are augmentation, not independent compositions. No broad musical-quality benchmark."
+  }
+}

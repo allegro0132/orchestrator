@@ -3435,3 +3435,18 @@ header {
     font-size: 33px;
   }
 }
+
+.vibe-model-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 40px;
+  margin: 8px 0;
+  color: #858667;
+  font-size: 11px;
+  line-height: 1.7;
+}
+.vibe-model-status .secondary-button {
+  flex-shrink: 0;
+}

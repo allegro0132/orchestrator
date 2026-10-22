@@ -11,12 +11,12 @@ import {
   createCapture,
   capturePitch,
   captureNotes,
-  extendVibe,
   quantizePerformance,
   vibeXml,
   vibeTrack,
 } from './vibe.js';
 import { saveVibe, listVibes, deleteVibe } from './vibeStore.js';
+import { predictionRequest, commitPrediction } from './vibePrediction.js';
 import ScoreNotation from './ScoreNotation.jsx';
 import ScoreHUD from './ScoreHUD.jsx';
 const generatedEvents = (session) => session.bars.flatMap((bar) => bar.events);
@@ -34,6 +34,10 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
   if (!capture.current) capture.current = createCapture(data.current.notes);
   const run = useRef({ token: 0 });
   const mounted = useRef(true);
+  const predictor = useRef({ worker: null, ready: false, pending: null, serial: 0 });
+  const [modelStatus, setModelStatus] = useState('loading');
+  const [modelLatency, setModelLatency] = useState(null);
+  const [modelAttempt, setModelAttempt] = useState(0);
   const latest = useRef({ reference, getAudioContext, onDraft });
   latest.current = { reference, getAudioContext, onDraft };
   const [recording, setRecording] = useState(false),
@@ -95,6 +99,8 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
   function stop(update = true) {
     const current = run.current;
     current.token++;
+    predictor.current.pending = null;
+    clearTimeout(predictor.current.timer);
     cancelAnimationFrame(current.frame);
     current.stream?.getTracks().forEach((track) => track.stop());
     current.source?.disconnect();
@@ -141,6 +147,80 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
       window.removeEventListener('pagehide', leave);
     };
   }, []);
+  useEffect(() => {
+    const state = predictor.current;
+    setModelStatus('loading');
+    state.ready = false;
+    let worker;
+    const loadingTimer = setTimeout(() => fail(), 15000);
+    const fail = () => {
+      clearTimeout(loadingTimer);
+      clearTimeout(state.timer);
+      worker?.terminate();
+      state.ready = false;
+      state.pending = null;
+      setModelStatus('error');
+    };
+    state.fail = fail;
+    try {
+      worker = new Worker(new URL('./musicTransformer.worker.js', import.meta.url), {
+        type: 'module',
+      });
+      state.worker = worker;
+      worker.onmessage = ({ data: result }) => {
+        if (result.type === 'ready') {
+          clearTimeout(loadingTimer);
+          state.ready = true;
+          setModelStatus('ready');
+          return;
+        }
+        if (result.type === 'error') {
+          fail();
+          return;
+        }
+        const pending = state.pending;
+        if (result.type !== 'result' || !pending || pending.id !== result.id) return;
+        state.pending = null;
+        clearTimeout(state.timer);
+        if (pending.session !== data.current.id || pending.token !== run.current.token) return;
+        const current = data.current;
+        if (
+          commitPrediction(
+            current,
+            pending.request,
+            result.bars,
+            (current.elapsed * current.bpm) / 60,
+            result.milliseconds,
+          )
+        ) {
+          setTrack(makeTrack(current));
+          setModelLatency(Math.round(result.milliseconds));
+          void persist();
+        }
+      };
+      worker.onerror = fail;
+      worker.postMessage({ type: 'load' });
+    } catch {
+      fail();
+    }
+    return () => {
+      clearTimeout(loadingTimer);
+      clearTimeout(state.timer);
+      worker?.terminate();
+      state.ready = false;
+      state.pending = null;
+    };
+  }, [modelAttempt]);
+  function predict(notes, beat, token) {
+    const state = predictor.current;
+    if (!state.ready || state.pending) return;
+    const request = predictionRequest(data.current, notes, beat);
+    if (!request) return;
+    const id = ++state.serial;
+    state.pending = { id, request, session: data.current.id, token };
+    state.timer = setTimeout(() => state.fail(), 10000);
+    state.worker.postMessage({ type: 'predict', id, request });
+  }
   async function start() {
     if (busy || recording || data.current.elapsed >= VIBE_MAX_SECONDS) return;
     setBusy(true);
@@ -185,12 +265,7 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
           const detected = detectPitch(buffer, ctx.sampleRate);
           capturePitch(capture.current, elapsed, detected, data.current.reference);
           const notes = captureNotes(capture.current, elapsed);
-          if (extendVibe(data.current, notes, (elapsed * data.current.bpm) / 60)) {
-            setTrack(makeTrack(data.current));
-            setTime(elapsed);
-            setHz(detected);
-            lastPaint = stamp;
-          }
+          predict(notes, (elapsed * data.current.bpm) / 60, token);
           data.current.notes = notes;
           if (stamp - lastPaint >= 100) {
             setTime(elapsed);
@@ -412,8 +487,8 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
             </strong>
             <span>
               {text(
-                '本地动机续写 · 4/4 拍 · 前方 4 小节 · 每段最多 10 分钟',
-                'Local motif continuation · 4/4 · four bars ahead · up to 10 minutes per take',
+                'Music Transformer · 4/4 拍 · 前方 4 小节 · 每段最多 10 分钟',
+                'Music Transformer · 4/4 · four bars ahead · up to 10 minutes per take',
               )}
             </span>
           </div>
@@ -427,6 +502,27 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
               aria-label={text('暂停 Vibe', 'Pause Vibe')}
             >
               <Square size={16} />
+            </button>
+          )}
+        </div>
+        <div className="vibe-model-status" role="status">
+          <span>
+            {modelStatus === 'loading'
+              ? text('正在加载本地预测模型…', 'Loading local prediction model…')
+              : modelStatus === 'error'
+                ? text(
+                    '模型加载或预测失败；录入仍可继续。',
+                    'Model loading or prediction failed; recording remains available.',
+                  )
+                : text(
+                    'Music Transformer 已就绪 · 实验版',
+                    'Music Transformer ready · experimental',
+                  )}
+            {modelStatus === 'ready' && modelLatency !== null && ` · ${modelLatency} ms`}
+          </span>
+          {modelStatus === 'error' && (
+            <button className="secondary-button" onClick={() => setModelAttempt((n) => n + 1)}>
+              {text('重试模型', 'Retry model')}
             </button>
           )}
         </div>
@@ -620,8 +716,8 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
         )}
         <p className="score-method">
           {text(
-            '按所选速度量化到八分音符，调性估计和续句均可作为即兴参考。续句音域为 G3–B5。单音识别可能遗漏同音连奏或很快的音符；不记录原始音频。下载 JSON 可保留未量化的音符时间及每次生成版本。',
-            'Notation is quantized to eighth notes at your chosen tempo. Key estimates and local motif-based suggestions are improvisation aids. Suggested phrases use G3–B5. Monophonic detection may miss repeated legato or very fast notes; raw audio is not recorded. JSON preserves unquantized note times and every generated revision.',
+            '实验版 Music Transformer：以 5 首公共领域曲谱训练，采用相对位置注意力，读取最近 64 个音符事件预测音高与时值。模型较小，可能重复或产生不自然乐句。仅在设备上运行，不上传音频；JSON 保留演奏及各版预测。音域 G3–B5，4/4 拍；录入量化至八分音符，可能漏掉同音连奏及快速音符。',
+            'Experimental Music Transformer: trained on five public-domain score editions, using relative attention over the last 64 note events to predict pitches and durations. This small model may repeat or produce awkward phrases. Inference stays on your device; no audio is uploaded. JSON preserves your performance and each prediction. G3–B5, 4/4; capture is quantized to eighth notes and may miss repeated legato or fast notes.',
           )}
         </p>
       </div>

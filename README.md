@@ -2,7 +2,7 @@
 
 A responsive React violin tuner with English and Chinese support, faster pitch tracking, a separate metronome practice mode, and local MusicXML/MXL/MIDI score practice with live pitch and timing analysis, plus guided beginner bowing and fingering exercises. The application source lives in [`violin-tuner`](violin-tuner).
 
-Vibe mode listens to an improvised melody, continually extends the score ahead using local pitch and rhythm motifs, and saves performed notes and generated revisions for review and export.
+Vibe mode listens to an improvised melody, continually extends the score ahead using a small on-device Music Transformer, and saves performed notes and generated revisions for review and export. The experimental relative-attention decoder is trained on five public-domain score editions; see the [model card, limitations and reproduction instructions](violin-tuner/public/models/README.md).
 
 Score practice includes a graded library of nine openly licensed or public-domain practice editions. See the [score credits and licenses](violin-tuner/public/scores/SOURCES.md).
 
