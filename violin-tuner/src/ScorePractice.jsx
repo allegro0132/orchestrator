@@ -3,16 +3,12 @@ import { Upload, Play, Square, RotateCcw, Music2 } from 'lucide-react';
 import { useLanguage } from './i18n.jsx';
 import { importScore, parseMusicXml, DEMO_XML, timedEvents, secondsAt } from './score.js';
 import { createScoreAnalysis, analyseScore, currentEvent, scoreSummary } from './scoreAnalysis.js';
-import { detectPitch, frequency, centsOff, noteName } from './pitch.js';
+import { detectPitch, frequency, centsOff } from './pitch.js';
 import { AUDIO_SAMPLE_RATE, ANALYSIS_BUFFER_SIZE, ANALYSIS_INTERVAL_MS } from './audioConfig.js';
 import ScoreNotation from './ScoreNotation.jsx';
+import ScoreHUD from './ScoreHUD.jsx';
 import ScoreLibrary, { ScoreAttribution } from './ScoreLibrary.jsx';
 import { SCORE_LIBRARY } from './scoreLibrary.js';
-const nameOf = (e) => {
-  if (!e || e.midi === null) return '𝄽';
-  const n = noteName(e.midi);
-  return `${n.name}${n.octave}`;
-};
 export default function ScorePractice({
   getAudioContext,
   reference,
@@ -20,6 +16,7 @@ export default function ScorePractice({
   setScore,
   lesson,
   renderGuide,
+  renderAction,
   onActivityChange,
 }) {
   const { lang } = useLanguage(),
@@ -194,10 +191,11 @@ export default function ScorePractice({
       initial.current = false;
       setPlaying(true);
       setBusy(false);
-      (lesson ? guideHeading.current : focusHeading.current)?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-      });
+      if (!focusHeading.current?.parentElement.querySelector('.notation-frame.is-expanded'))
+        (lesson ? guideHeading.current : focusHeading.current)?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
       model.current.lastTime = null;
       model.current.lastHz = null;
       model.current.lastVoiced = -Infinity;
@@ -272,10 +270,6 @@ export default function ScorePractice({
     : index >= 0 && !counting
       ? index
       : events.findIndex((e) => e.end > Math.max(offset, time));
-  const firstCard = done
-    ? Math.max(0, events.length - 7)
-    : Math.max(0, nextIndex - (counting ? 0 : 1));
-  const upcoming = events.slice(firstCard, firstCard + 7);
   return (
     <section
       className={'tuner score-practice' + (playing ? ' is-playing' : '')}
@@ -457,130 +451,72 @@ export default function ScorePractice({
             </div>
             <ScoreNotation
               track={track}
+              renderOverlay={({ expanded }) => (
+                <ScoreHUD
+                  event={event || events.find((e) => e.start >= time)}
+                  next={
+                    done
+                      ? []
+                      : events.slice(
+                          Math.max(0, nextIndex + (counting ? 0 : 1)),
+                          Math.max(0, nextIndex + (counting ? 0 : 1)) + 3,
+                        )
+                  }
+                  reference={reference}
+                  counting={counting}
+                  done={done}
+                  hz={hz}
+                  deviation={deviation}
+                  onset={result?.onset}
+                  count={Math.ceil(
+                    (offset - time) /
+                      (60 /
+                        (tempo ||
+                          track.tempos.findLast((t) => t.beat <= track.measures[startBar].beat)
+                            ?.bpm ||
+                          80)),
+                  )}
+                  action={renderAction?.({ event, index, time, counting, done, playing })}
+                  transport={
+                    <div className="score-actions">
+                      <button
+                        className={'mic-button ' + (playing ? 'listening' : '')}
+                        disabled={busy || importing}
+                        onClick={playing ? () => stop() : start}
+                      >
+                        {playing ? <Square size={16} /> : <Play size={17} />}{' '}
+                        {busy
+                          ? text('正在开启…', 'Starting…')
+                          : playing
+                            ? text('暂停演奏', 'Pause')
+                            : done
+                              ? text('再次演奏', 'Play again')
+                              : initial.current
+                                ? lesson
+                                  ? text('开始练习', 'Start exercise')
+                                  : text('开始演奏', 'Start playing')
+                                : text('继续演奏', 'Resume')}
+                      </button>
+                      <button
+                        className="secondary-button"
+                        disabled={busy}
+                        onClick={() => reset(offset)}
+                      >
+                        <RotateCcw size={15} />
+                        {text('重新开始', 'Restart')}
+                      </button>
+                    </div>
+                  }
+                  time={time}
+                  duration={duration}
+                  error={expanded ? error : ''}
+                />
+              )}
               measure={focus || 0}
               playing={playing}
               noteDuration={event ? event.end - event.start : 0.5}
               beat={Math.max(event?.beat ?? track.measures[focus].beat, track.measures[focus].beat)}
             />
-            <div className="score-now" aria-live="off">
-              <div>
-                <span>
-                  {counting
-                    ? text('预备拍', 'Count in')
-                    : done
-                      ? text('演奏完成', 'Finished')
-                      : text('当前音符', 'Play now')}
-                </span>
-                <strong>
-                  {counting
-                    ? Math.ceil(
-                        (offset - time) /
-                          (60 /
-                            (tempo ||
-                              track.tempos.findLast((t) => t.beat <= track.measures[startBar].beat)
-                                ?.bpm ||
-                              80)),
-                      )
-                    : done
-                      ? '✓'
-                      : nameOf(event || events.find((e) => e.start >= time))}
-                </strong>
-                <small>
-                  {event?.midi != null
-                    ? `${frequency(event.midi, reference).toFixed(1)} Hz · ${event.duration} ${text('四分音符拍', 'quarter beats')}`
-                    : text('休止 / 等待起音', 'Rest / wait for the entrance')}
-                </small>
-              </div>
-              <div className={deviation !== null && Math.abs(deviation) <= 20 ? 'score-good' : ''}>
-                <span>{text('实际音高', 'Detected pitch')}</span>
-                <strong>{hz ? `${hz.toFixed(1)} Hz` : '—'}</strong>
-                <small>
-                  {deviation !== null
-                    ? `${deviation > 0 ? '+' : ''}${Math.round(deviation)} ${text('音分', 'cents')}`
-                    : text('单音演奏', 'Play one note at a time')}
-                </small>
-              </div>
-              <div>
-                <span>{text('起音偏差', 'Onset timing')}</span>
-                <strong>
-                  {result?.onset != null
-                    ? `${result.onset > 0 ? '+' : ''}${Math.round(result.onset * 1000)} ms`
-                    : '—'}
-                </strong>
-                <small>{text('负数为提前，正数为延后', '− early · + late')}</small>
-              </div>
-            </div>
-            <div className="score-next" aria-label={text('接下来演奏', 'Upcoming notes')}>
-              {upcoming.map((e) => (
-                <div key={e.index} className={e.index === index ? 'current' : ''}>
-                  <small>
-                    {e.index === index
-                      ? text('现在', 'NOW')
-                      : e.index < index
-                        ? text('之前', 'PREV')
-                        : text('之后', 'NEXT')}
-                  </small>
-                  <b>{nameOf(e)}</b>
-                  <span>
-                    {text('小节', 'Bar')} {e.bar} · {e.duration} ♩
-                    {lesson && (
-                      <em>
-                        {lesson.cues[e.index]?.midi === null
-                          ? lesson.cues[e.index]?.phase === 'stop'
-                            ? text('停弓', 'Stop')
-                            : lesson.cues[e.index]?.phase === 'finish'
-                              ? text('结束', 'Finish')
-                              : text('放稳', 'Place')
-                          : lesson.cues[e.index]?.finger !== undefined
-                            ? lesson.cues[e.index].finger === 0
-                              ? text('空弦', 'Open string')
-                              : text(
-                                  `${lesson.cues[e.index].finger} 指`,
-                                  `Finger ${lesson.cues[e.index].finger}`,
-                                )
-                            : lesson.cues[e.index]?.bow === 'down'
-                              ? text('下弓', 'Down-bow')
-                              : text('上弓', 'Up-bow')}
-                      </em>
-                    )}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <div className="score-progress">
-              <progress
-                aria-label={text('演奏进度', 'Performance progress')}
-                value={Math.max(0, time)}
-                max={duration || 1}
-              />
-              <span>
-                {Math.max(0, time).toFixed(1)} / {duration.toFixed(1)} s
-              </span>
-            </div>
-            <div className="score-actions">
-              <button
-                className={'mic-button ' + (playing ? 'listening' : '')}
-                disabled={busy || importing}
-                onClick={playing ? () => stop() : start}
-              >
-                {playing ? <Square size={16} /> : <Play size={17} />}{' '}
-                {busy
-                  ? text('正在开启…', 'Starting…')
-                  : playing
-                    ? text('暂停演奏', 'Pause')
-                    : done
-                      ? text('再次演奏', 'Play again')
-                      : initial.current
-                        ? lesson
-                          ? text('开始练习', 'Start exercise')
-                          : text('开始演奏', 'Start playing')
-                        : text('继续演奏', 'Resume')}
-              </button>
-              <button className="secondary-button" disabled={busy} onClick={() => reset(offset)}>
-                <RotateCcw size={15} />
-                {text('重新开始', 'Restart')}
-              </button>
-            </div>
             <div className="score-stats">
               <div>
                 <b>{summary.pitch === null ? '—' : `${summary.pitch}%`}</b>

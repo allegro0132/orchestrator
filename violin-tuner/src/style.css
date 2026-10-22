@@ -2575,6 +2575,375 @@ header {
   opacity: 0.4;
   cursor: default;
 }
+.notation-stage {
+  position: relative;
+  padding-bottom: calc(var(--hud-height, 200px) + 28px);
+}
+.notation-overlay {
+  position: absolute;
+  bottom: 14px;
+  left: 16px;
+  right: 16px;
+  max-width: 720px;
+  margin-inline: auto;
+  z-index: 4;
+}
+.notation-expand {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid #b3956350;
+  border-radius: 7px;
+  background: #fff7e580;
+  color: #785b39;
+  font: inherit;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+.notation-expand:focus-visible,
+.hud-collapse:focus-visible {
+  outline: 2px solid #9b733e;
+  outline-offset: 3px;
+}
+.notation-frame.is-expanded {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  width: 100%;
+  height: 100dvh;
+  border: 0;
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
+    env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+}
+.notation-frame.is-expanded .notation-stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+.notation-frame.is-expanded .notation-viewport {
+  max-height: 100%;
+}
+.notation-frame.is-expanded .notation-toolbar {
+  padding-block: 14px 8px;
+}
+.notation-frame.is-expanded .notation-navigation {
+  flex-shrink: 0;
+}
+.score-hud {
+  color: #645b43;
+  background: #fffcf0ed;
+  border: 1px solid #fffaf0;
+  border-radius: 16px;
+  box-shadow:
+    0 12px 40px #63472120,
+    0 1px 3px #8e704318;
+  backdrop-filter: blur(18px);
+  padding: 16px 18px;
+  letter-spacing: normal;
+}
+.hud-readout {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.hud-note,
+.hud-pitch {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.hud-readout small,
+.hud-upcoming > small {
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: #9b8b6d;
+}
+.hud-note strong {
+  font:
+    34px Georgia,
+    serif;
+  color: #65502d;
+  line-height: 1.2;
+}
+.hud-note > span,
+.hud-pitch > span {
+  font-size: 10px;
+  color: #978467;
+  line-height: 1.5;
+}
+.hud-pitch strong {
+  font:
+    21px Georgia,
+    serif;
+}
+.hud-pitch.score-good strong,
+.hud-pitch.score-good span {
+  color: #6c8050;
+}
+.hud-collapse {
+  align-self: flex-start;
+  display: grid;
+  place-items: center;
+  min-width: 32px;
+  min-height: 32px;
+  border: 1px solid #ded6c5;
+  border-radius: 8px;
+  background: transparent;
+  color: #907953;
+  cursor: pointer;
+}
+.hud-upcoming {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 14px 0;
+  padding-top: 12px;
+  border-top: 1px solid #d6c9a950;
+}
+.hud-upcoming > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+.hud-upcoming b {
+  font:
+    17px Georgia,
+    serif;
+  color: #766546;
+}
+.hud-upcoming span {
+  font-size: 9px;
+  color: #a19074;
+}
+.hud-footer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.hud-transport {
+  flex-shrink: 0;
+}
+.score-hud .score-actions {
+  margin: 0;
+  display: flex;
+  gap: 6px;
+}
+.score-hud .mic-button {
+  min-height: 36px;
+  padding: 9px 13px;
+  font-size: 11px;
+  width: auto;
+  flex: none;
+}
+.score-hud .secondary-button {
+  padding: 9px;
+  font-size: 10px;
+  background: transparent;
+}
+.hud-progress {
+  flex: 1;
+  min-width: 60px;
+  display: grid;
+  gap: 6px;
+}
+.hud-progress progress {
+  width: 100%;
+  height: 3px;
+  accent-color: #a6844b;
+}
+.hud-progress span {
+  font-size: 9px;
+  color: #a08e70;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.score-hud .beginner-cue {
+  background: #eeebdb80;
+  border: 1px solid #e0d7bd;
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  gap: 10px;
+}
+.score-hud .beginner-bow {
+  width: 36px;
+  height: 38px;
+  font-size: 25px;
+  flex-shrink: 0;
+}
+.score-hud .beginner-cue strong {
+  font-size: 13px;
+}
+.score-hud .beginner-cue small {
+  font-size: 8px;
+}
+.score-hud .beginner-cue span {
+  font-size: 10px;
+}
+.score-hud .beginner-beats {
+  gap: 4px;
+}
+.score-hud .beginner-beats span {
+  width: 23px;
+  height: 23px;
+}
+.score-hud .hud-error {
+  font-size: 11px;
+  color: #a0523c;
+  line-height: 1.6;
+  margin: 10px 0;
+}
+.score-hud.collapsed {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding-block: 10px;
+}
+.score-hud.collapsed .hud-readout {
+  flex: 1;
+  gap: 10px;
+}
+.score-hud.collapsed .hud-note {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+.score-hud.collapsed .hud-note strong {
+  font-size: 25px;
+}
+.score-hud.collapsed .hud-collapse {
+  align-self: center;
+}
+.score-hud.collapsed .hud-progress {
+  display: none;
+}
+@media (max-width: 600px) {
+  .notation-overlay {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+  }
+  .score-hud {
+    padding: 12px;
+    border-radius: 12px;
+  }
+  .hud-readout {
+    gap: 10px;
+  }
+  .hud-note strong {
+    font-size: 29px;
+  }
+  .hud-pitch strong {
+    font-size: 18px;
+  }
+  .hud-note > span,
+  .hud-pitch > span {
+    font-size: 9px;
+  }
+  .hud-upcoming {
+    gap: 8px;
+  }
+  .hud-upcoming > small {
+    font-size: 8px;
+    max-width: 45px;
+  }
+  .hud-upcoming b {
+    font-size: 16px;
+  }
+  .hud-upcoming span {
+    font-size: 8px;
+  }
+  .hud-footer {
+    gap: 10px;
+  }
+  .score-hud .beginner-cue {
+    flex-wrap: wrap;
+  }
+  .score-hud .beginner-cue > div:nth-child(2) {
+    flex: 1;
+  }
+  .score-hud .beginner-beats {
+    flex: 0 0 100%;
+    justify-content: flex-end;
+  }
+  .score-hud.collapsed {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .score-hud.collapsed .hud-readout {
+    flex-basis: 100%;
+  }
+  .score-hud.collapsed .hud-footer {
+    flex: 1;
+  }
+  .score-hud.collapsed .hud-progress {
+    display: grid;
+  }
+}
+@media (max-height: 540px) {
+  .is-expanded .score-hud {
+    padding: 8px 14px;
+  }
+  .is-expanded .hud-readout {
+    gap: 12px;
+  }
+  .is-expanded .hud-note {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+  }
+  .is-expanded .hud-note strong {
+    font-size: 24px;
+  }
+  .is-expanded .hud-note > span,
+  .is-expanded .hud-pitch,
+  .is-expanded .hud-upcoming,
+  .is-expanded .beginner-cue small,
+  .is-expanded .beginner-cue > div:nth-child(2) > span {
+    display: none;
+  }
+  .is-expanded .hud-action .beginner-cue {
+    margin: 6px 0;
+    padding: 4px 8px;
+    flex-wrap: nowrap;
+  }
+  .is-expanded .hud-action .beginner-bow {
+    width: 28px;
+    height: 26px;
+    font-size: 20px;
+  }
+  .is-expanded .hud-action .beginner-beats {
+    flex: 0 0 auto;
+  }
+  .is-expanded .hud-action .beginner-beats span {
+    width: 20px;
+    height: 20px;
+  }
+  .is-expanded .hud-footer {
+    margin-top: 6px;
+  }
+  .is-expanded .notation-toolbar {
+    padding-block: 6px;
+  }
+  .is-expanded .notation-navigation {
+    padding-block: 4px;
+  }
+  .is-expanded .notation-navigation > span {
+    display: none;
+  }
+  .is-expanded .notation {
+    padding-block: 12px;
+  }
+}
 @media (max-width: 600px) {
   .notation-navigation {
     padding: 8px 12px 12px;

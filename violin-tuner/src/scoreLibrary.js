@@ -9,6 +9,23 @@ export const SCORE_LEVELS = [
 ];
 export const SCORE_LIBRARY = [
   {
+    id: 'old100',
+    level: 'beginner',
+    bpm: 60,
+    key: 'G major',
+    bars: 13,
+    title: { en: 'Old 100th', zh: 'Old 100th · 赞美诗' },
+    composer: 'L. Bourgeois · arr. John Dowland',
+    focus: { en: 'Steady long notes · simple stepwise motion', zh: '稳定长音 · 简单级进' },
+    edition: {
+      en: 'Tenor melody raised an octave for violin. Note values halved into 4/4; accompaniment omitted.',
+      zh: '原版次中音旋律升高八度用于小提琴，音符时值减半记为 4/4 拍，省略伴奏。',
+    },
+    credit: 'Peter Chubb · Mutopia-2015/01/17-90',
+    sourceId: 90,
+    ...publicDomain,
+  },
+  {
     id: 'ode',
     level: 'beginner',
     bpm: 60,
@@ -42,6 +59,26 @@ export const SCORE_LIBRARY = [
     sourceId: 1832,
     license: 'CC BY-SA 3.0',
     licenseUrl: 'https://creativecommons.org/licenses/by-sa/3.0/',
+  },
+  {
+    id: 'lullaby',
+    level: 'elementary',
+    bpm: 60,
+    key: 'D major',
+    bars: 17,
+    title: { en: 'Brahms’ Lullaby', zh: '勃拉姆斯 · 摇篮曲' },
+    composer: 'Johannes Brahms · Op. 49 No. 4',
+    focus: {
+      en: 'Gentle 3/4 · dotted notes · rests and entrances',
+      zh: '舒缓三拍子 · 附点音符 · 休止与起音',
+    },
+    edition: {
+      en: 'Vocal melody transposed from E-flat to D major. Piano introduction, accompaniment, ornaments and repeats omitted; silent final beat retained.',
+      zh: '声乐旋律由降 E 大调移至 D 大调，省略钢琴引子、伴奏、装饰音和反复，保留最后一拍休止。',
+    },
+    credit: 'Shogo Mori (森 章吾) · Mutopia-2007/11/04-1037',
+    sourceId: 1037,
+    ...publicDomain,
   },
   {
     id: 'minuet',
@@ -123,6 +160,27 @@ export const SCORE_LIBRARY = [
     sourceId: 1781,
     license: 'CC BY 3.0',
     licenseUrl: 'https://creativecommons.org/licenses/by/3.0/',
+  },
+  {
+    id: 'gavotte',
+    level: 'intermediate',
+    bpm: 60,
+    key: 'G major',
+    bars: 9,
+    title: { en: 'Martini Gavotte · opening', zh: '马尔蒂尼 · 加沃特舞曲开头' },
+    composer: 'Giovanni Battista Martini',
+    focus: {
+      en: 'Half-bar pickup · dance pulse · quick string crossings',
+      zh: '半小节弱起 · 舞曲节奏 · 快速换弦',
+    },
+    edition: {
+      en: 'Violin pickup and first eight full bars; one pass. Simplified notation without accompaniment, slurs, articulation, dynamics or trill.',
+      zh: '小提琴弱起与前 8 个完整小节，演奏一遍，简化记谱并省略伴奏、连线、奏法、力度及颤音。',
+    },
+    credit: '© 2011 Fabien Mirloup · Mutopia-2011/09/17-1785',
+    sourceId: 1785,
+    license: 'CC BY-SA 3.0',
+    licenseUrl: 'https://creativecommons.org/licenses/by-sa/3.0/',
   },
 ].map((item) => ({
   ...item,

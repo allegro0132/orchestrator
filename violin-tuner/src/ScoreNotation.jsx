@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, LocateFixed } from 'lucide-react';
+import { ChevronLeft, ChevronRight, LocateFixed, Maximize2, Minimize2 } from 'lucide-react';
+import useScoreFullscreen from './useScoreFullscreen.jsx';
 import { excerptXml } from './score.js';
 import { useLanguage } from './i18n.jsx';
 let notationModule;
@@ -11,7 +12,11 @@ export default function ScoreNotation({
   beat,
   noteDuration = 0.5,
   playing = false,
+  renderOverlay,
 }) {
+  const frame = useRef(null);
+  const overlay = useRef(null);
+  const { expanded, toggle } = useScoreFullscreen(frame);
   const host = useRef(null),
     viewport = useRef(null),
     controller = useRef(null);
@@ -25,6 +30,17 @@ export default function ScoreNotation({
     [failed, setFailed] = useState(false);
   const { lang, t } = useLanguage();
   const text = (zh, en) => (lang === 'zh' ? zh : en);
+  useEffect(() => {
+    if (!overlay.current) return;
+    const observer = new ResizeObserver(([entry]) => {
+      frame.current?.style.setProperty(
+        '--hud-height',
+        `${entry.target.getBoundingClientRect().height}px`,
+      );
+    });
+    observer.observe(overlay.current);
+    return () => observer.disconnect();
+  }, [!!renderOverlay]);
   function browse() {
     follow.current = false;
     setFollowing(false);
@@ -224,8 +240,16 @@ export default function ScoreNotation({
   }
   return (
     <div
-      className={'notation-frame' + (playing && following ? ' is-following' : '')}
+      ref={frame}
+      className={
+        'notation-frame' +
+        (playing && following ? ' is-following' : '') +
+        (expanded ? ' is-expanded' : '')
+      }
       aria-busy={loading}
+      role={expanded ? 'dialog' : undefined}
+      aria-modal={expanded ? true : undefined}
+      aria-label={expanded ? text('全屏曲谱', 'Fullscreen score') : undefined}
     >
       <div className="notation-toolbar">
         <span>
@@ -243,6 +267,19 @@ export default function ScoreNotation({
             <em> / {String(track.measures.length).padStart(2, '0')}</em>
           </b>
         </span>
+        <button
+          className="notation-expand"
+          type="button"
+          data-fullscreen-toggle
+          aria-label={
+            expanded ? text('退出全屏', 'Exit fullscreen') : text('全屏谱面', 'Fullscreen score')
+          }
+          aria-pressed={expanded}
+          onClick={toggle}
+        >
+          {expanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+          <span>{expanded ? text('退出全屏', 'Exit fullscreen') : text('全屏', 'Fullscreen')}</span>
+        </button>
       </div>
       {loading && <p className="notation-message">{t('正在排版曲谱…')}</p>}
       {failed && (
@@ -250,27 +287,34 @@ export default function ScoreNotation({
           {t('谱面排版失败，仍可使用下方音符和实时分析。')}
         </p>
       )}
-      <div
-        ref={viewport}
-        className={'notation-viewport' + (dragging ? ' dragging' : '')}
-        role="region"
-        tabIndex={0}
-        aria-label={text(
-          '完整曲谱，可左右滑动或使用方向键浏览',
-          'Full score. Swipe, drag, or use arrow keys to browse.',
+      <div className="notation-stage">
+        <div
+          ref={viewport}
+          className={'notation-viewport' + (dragging ? ' dragging' : '')}
+          role="region"
+          tabIndex={0}
+          aria-label={text(
+            '完整曲谱，可左右滑动或使用方向键浏览',
+            'Full score. Swipe, drag, or use arrow keys to browse.',
+          )}
+          onPointerDown={pointerDown}
+          onPointerMove={pointerMove}
+          onPointerUp={pointerUp}
+          onPointerCancel={pointerUp}
+          onLostPointerCapture={() => {
+            drag.current = null;
+            setDragging(false);
+          }}
+          onWheel={browse}
+          onKeyDown={keyDown}
+        >
+          <div ref={host} className="notation" aria-label={t('五线谱')} />
+        </div>
+        {renderOverlay && (
+          <div className="notation-overlay" ref={overlay}>
+            {renderOverlay({ expanded })}
+          </div>
         )}
-        onPointerDown={pointerDown}
-        onPointerMove={pointerMove}
-        onPointerUp={pointerUp}
-        onPointerCancel={pointerUp}
-        onLostPointerCapture={() => {
-          drag.current = null;
-          setDragging(false);
-        }}
-        onWheel={browse}
-        onKeyDown={keyDown}
-      >
-        <div ref={host} className="notation" aria-label={t('五线谱')} />
       </div>
       <div className="notation-navigation">
         <span>

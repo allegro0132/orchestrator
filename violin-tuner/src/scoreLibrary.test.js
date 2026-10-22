@@ -66,3 +66,27 @@ test('opening melodies match the credited source lines', async () => {
     [74, 67, 69, 71, 72],
   );
 });
+test('new hymn, lullaby and gavotte retain their chosen melodies and pickup lengths', async () => {
+  const hymn = (await read('old100')).tracks[0];
+  assert.equal(hymn.measures[1].beat, 2);
+  assert.deepEqual(
+    hymn.events.slice(0, 5).map((e) => e.midi),
+    [67, 67, 66, 64, 62],
+  );
+  assert.equal(hymn.duration, 48);
+  const lullaby = (await read('lullaby')).tracks[0];
+  assert.equal(lullaby.measures[1].beat, 1);
+  assert.deepEqual(
+    lullaby.events.slice(0, 4).map((e) => e.midi),
+    [66, 66, 69, 66],
+  );
+  assert.equal(lullaby.duration, 49);
+  assert.equal(lullaby.events.at(-1).midi, null);
+  const gavotte = (await read('gavotte')).tracks[0];
+  assert.equal(gavotte.measures[1].beat, 2);
+  assert.deepEqual(
+    gavotte.events.slice(0, 4).map((e) => e.midi),
+    [71, 72, 74, 79],
+  );
+  assert.equal(gavotte.duration, 34);
+});

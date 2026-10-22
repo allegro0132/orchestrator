@@ -43,7 +43,12 @@ export default function ScoreLibrary({ open, onToggle, onSelect, selectedId, dis
         <BookOpen size={18} />
         <span>
           {text('预置曲库', 'Score library')}
-          <small>{text('6 首开放曲谱 · 按难度选曲', '6 open scores · find your next piece')}</small>
+          <small>
+            {text(
+              `${SCORE_LIBRARY.length} 首开放曲谱 · 按难度选曲`,
+              `${SCORE_LIBRARY.length} open scores · find your next piece`,
+            )}
+          </small>
         </span>
         <ChevronDown size={18} className={open ? 'expanded' : ''} />
       </button>

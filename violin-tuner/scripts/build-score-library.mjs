@@ -9,6 +9,42 @@ const sources = new URL('./score-sources/', import.meta.url);
 const output = new URL('../public/scores/', import.meta.url);
 const n = (pitch, duration = 1) => ({ pitch, duration });
 const line = (pitches) => pitches.split(' ').map((p) => n(p));
+// Dowland's tenor carries the hymn melody; halve note values and raise one octave.
+const old100 = [
+  [n('G4', 2)],
+  line('G4 F#4 E4 D4'),
+  [n('G4', 2), n('A4', 2)],
+  [n('B4', 2), n('B4', 2)],
+  line('B4 B4 A4 G4'),
+  [n('C5', 2), n('B4', 2)],
+  [n('A4', 2), n('G4', 2)],
+  line('A4 B4 A4 G4'),
+  [n('E4', 2), n('F#4', 2)],
+  [n('G4', 2), n('D5', 2)],
+  line('B4 G4 A4 C5'),
+  [n('B4', 2), n('A4', 2)],
+  [n('G4', 2)],
+];
+// Mori's vocal line in D rather than E-flat, with ornaments omitted.
+const lullaby = [
+  [n('F#4', 0.5), n('F#4', 0.5)],
+  [n('A4', 1.5), n('F#4', 0.5), n('F#4')],
+  [n('A4'), n(null), n('F#4', 0.5), n('A4', 0.5)],
+  [n('D5'), n('C#5', 1.5), n('B4', 0.5)],
+  [n('B4'), n('A4'), n('E4', 0.5), n('F#4', 0.5)],
+  [n('G4'), n('E4'), n('E4', 0.5), n('F#4', 0.5)],
+  [n('G4'), n(null), n('E4', 0.5), n('G4', 0.5)],
+  [n('C#5', 0.5), n('B4', 0.5), n('A4'), n('C#5')],
+  [n('D5'), n(null), n('D4', 0.5), n('D4', 0.5)],
+  [n('D5', 2), n('B4', 0.5), n('G4', 0.5)],
+  [n('A4', 2), n('F#4', 0.5), n('D4', 0.5)],
+  line('G4 A4 B4'),
+  [n('A4', 2), n('D4', 0.5), n('D4', 0.5)],
+  [n('D5', 2), n('B4', 0.5), n('G4', 0.5)],
+  [n('A4', 2), n('F#4', 0.5), n('D4', 0.5)],
+  line('G4 F#4 E4'),
+  [n('D4', 2), n(null)],
+];
 // Chubb's soprano line, transposed down a fourth into D major.
 const ode = [
   line('F#4 F#4 G4 A4'),
@@ -88,6 +124,14 @@ function midiBars(id, start, lengths) {
   });
 }
 const editions = {
+  old100: { bars: old100, meter: [4, 4], fifths: 1, pickup: true },
+  lullaby: { bars: lullaby, meter: [3, 4], fifths: 2, pickup: true },
+  gavotte: {
+    bars: midiBars('gavotte', 0, [2, ...Array(8).fill(4)]),
+    meter: [2, 2],
+    fifths: 1,
+    pickup: true,
+  },
   ode: { bars: ode, meter: [4, 4], fifths: 2 },
   amazing: { bars: amazing, meter: [9, 8], fifths: 1, pickup: true },
   minuet: { bars: minuet, meter: [3, 4], fifths: 1 },
