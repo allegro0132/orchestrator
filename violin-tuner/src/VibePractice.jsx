@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AudioLines, Mic, Square, Plus, Download, Trash2, History, Eraser } from 'lucide-react';
 import { useLanguage } from './i18n.jsx';
 import { detectPitch, frequency, centsOff, noteName } from './pitch.js';
-import { AUDIO_SAMPLE_RATE, ANALYSIS_BUFFER_SIZE, ANALYSIS_INTERVAL_MS } from './audioConfig.js';
+import { AUDIO_SAMPLE_RATE, ANALYSIS_BUFFER_SIZE, nextAnalysisTime } from './audioConfig.js';
 import {
   VIBE_KEYS,
   VIBE_MAX_SECONDS,
@@ -412,8 +412,9 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
       const tick = (stamp) => {
         if (token !== run.current.token) return;
         const elapsed = Math.min(VIBE_MAX_SECONDS, ctx.currentTime - origin);
-        if (stamp - lastAnalysis >= ANALYSIS_INTERVAL_MS) {
-          lastAnalysis = stamp;
+        const analysisTime = nextAnalysisTime(lastAnalysis, stamp);
+        if (analysisTime !== null) {
+          lastAnalysis = analysisTime;
           data.current.elapsed = elapsed;
           analyser.getFloatTimeDomainData(buffer);
           const detected = detectPitch(buffer, ctx.sampleRate);

@@ -11,7 +11,7 @@ import {
 } from './score.js';
 import { createScoreAnalysis, analyseScore, currentEvent, scoreSummary } from './scoreAnalysis.js';
 import { detectPitch, frequency, centsOff } from './pitch.js';
-import { AUDIO_SAMPLE_RATE, ANALYSIS_BUFFER_SIZE, ANALYSIS_INTERVAL_MS } from './audioConfig.js';
+import { AUDIO_SAMPLE_RATE, ANALYSIS_BUFFER_SIZE, nextAnalysisTime } from './audioConfig.js';
 import ScoreNotation from './ScoreNotation.jsx';
 import ScoreHUD from './ScoreHUD.jsx';
 import ScoreLibrary, { ScoreAttribution } from './ScoreLibrary.jsx';
@@ -266,8 +266,9 @@ export default function ScorePractice({
       const tick = (stamp) => {
         if (token !== session.current.token) return;
         const elapsed = ctx.currentTime - run.origin + run.offset;
-        if (stamp - last >= ANALYSIS_INTERVAL_MS) {
-          last = stamp;
+        const analysisTime = nextAnalysisTime(last, stamp);
+        if (analysisTime !== null) {
+          last = analysisTime;
           position.current = elapsed;
           analyser.getFloatTimeDomainData(buffer);
           const pitch = detectPitch(buffer, ctx.sampleRate);

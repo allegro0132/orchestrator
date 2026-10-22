@@ -26,7 +26,7 @@ import Metronome from './Metronome.jsx';
 import {
   createAudioContext,
   AUDIO_SAMPLE_RATE,
-  ANALYSIS_INTERVAL_MS,
+  nextAnalysisTime,
   ANALYSIS_BUFFER_SIZE,
 } from './audioConfig.js';
 import useViolinPlayback from './useViolinPlayback.js';
@@ -163,11 +163,12 @@ function App() {
       const buffer = new Float32Array(analyser.fftSize);
       running.current = true;
       setListening(true);
-      let last = 0;
+      let last = -Infinity;
       function tick(time) {
         if (!running.current) return;
-        if (time - last >= ANALYSIS_INTERVAL_MS) {
-          last = time - ((time - last) % ANALYSIS_INTERVAL_MS);
+        const analysisTime = nextAnalysisTime(last, time);
+        if (analysisTime !== null) {
+          last = analysisTime;
           analyser.getFloatTimeDomainData(buffer);
           const raw = detectPitch(buffer, ctx.sampleRate);
           let f = raw;
