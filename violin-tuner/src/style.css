@@ -3521,3 +3521,25 @@ header {
     width: 100%;
   }
 }
+
+@media (max-width: 600px) {
+  .vibe-model-status {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .vibe-model-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  .vibe-model-actions .secondary-button {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    justify-content: center;
+  }
+  .vibe-model-actions .secondary-button svg {
+    flex-shrink: 0;
+  }
+}
