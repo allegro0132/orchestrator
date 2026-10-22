@@ -66,6 +66,7 @@ export class SkyDecoder {
       onLogits = () => {},
       onEvent = () => {},
       onTensor = () => {},
+      shouldCancel = () => false,
     } = {},
   ) {
     const state = structuredClone(request),
@@ -79,6 +80,7 @@ export class SkyDecoder {
     const started = performance.now();
     try {
       for (let n = 0; n < request.count * 8 && state.cursor < state.endTick; n++) {
+        if (shouldCancel()) throw new DOMException('Generation canceled', 'AbortError');
         const x = this.ints(input.flat(), [1, input.length, 8]);
         let baseOutput;
         try {

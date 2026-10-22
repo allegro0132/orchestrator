@@ -1,8 +1,10 @@
 import { generateVibeBars, RULE_MODEL_ID } from './vibeRules.js';
-import { skyPrompt } from './skytnt.js';
+import { skyPrompt, skyCompletedBars } from './skytnt.js';
 import { SKY_DEPLOYMENT, loadSkyWeights } from './skyWeights.js';
 let decoder,
-  active = false;
+  active = false,
+  canceled = false,
+  activeId = null;
 const post = (value) => self.postMessage(value);
 async function load() {
   const adapter = await navigator.gpu?.requestAdapter();
@@ -56,8 +58,14 @@ async function load() {
   post({ type: 'ready', persistent });
 }
 self.onmessage = async ({ data }) => {
+  if (data.type === 'cancel') {
+    if (data.id === activeId) canceled = true;
+    return;
+  }
   if (active) return;
   active = true;
+  canceled = false;
+  activeId = data.id;
   try {
     if (data.type === 'load') {
       if (data.engine === RULE_MODEL_ID) post({ type: 'ready' });
@@ -65,23 +73,53 @@ self.onmessage = async ({ data }) => {
     } else if (data.type === 'predict') {
       const start = performance.now(),
         request = data.request;
-      const bars =
-        request.predictor === RULE_MODEL_ID
-          ? generateVibeBars(
-              request.notes,
-              request.fromBar,
-              request.count,
-              request.bpm,
-              request.key,
-              request.seed,
-            )
-          : (await decoder.generate(skyPrompt(request.notes, request), { seed: request.seed }))
-              .bars;
-      post({ type: 'result', id: data.id, bars, milliseconds: performance.now() - start });
+      let bars;
+      if (request.predictor === RULE_MODEL_ID) {
+        bars = generateVibeBars(
+          request.notes,
+          request.fromBar,
+          request.count,
+          request.bpm,
+          request.key,
+          request.seed,
+        );
+        for (const bar of bars)
+          post({ type: 'bars', id: data.id, bars: [bar], milliseconds: performance.now() - start });
+      } else {
+        const prompt = skyPrompt(request.notes, request),
+          events = [];
+        let published = 0;
+        const output = await decoder.generate(prompt, {
+          seed: request.seed,
+          shouldCancel: () => canceled,
+          onEvent: ({ event }) => {
+            if (canceled) return;
+            events.push(event);
+            const completed = skyCompletedBars(prompt, events);
+            if (completed.length > published) {
+              post({
+                type: 'bars',
+                id: data.id,
+                bars: completed.slice(published),
+                milliseconds: performance.now() - start,
+              });
+              published = completed.length;
+            }
+          },
+        });
+        bars = output.bars;
+      }
+      post({
+        type: canceled ? 'canceled' : 'result',
+        id: data.id,
+        bars,
+        milliseconds: performance.now() - start,
+      });
     }
   } catch (error) {
-    post({ type: 'error', message: error.message });
+    post({ type: canceled ? 'canceled' : 'error', id: data.id, message: error.message });
   } finally {
     active = false;
+    activeId = null;
   }
 };

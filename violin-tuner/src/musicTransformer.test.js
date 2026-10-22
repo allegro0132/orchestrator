@@ -118,7 +118,7 @@ test('asynchronous commits preserve current/next bars, reject stale revisions an
     session.bars.filter((b) => b.bar < 3),
     locked,
   );
-  assert.equal(session.revisions[1].fromBar, 4);
+  assert.equal(session.revisions[1].fromBar, 5);
   assert.equal(commitPrediction(session, request, bars, 8, 30), false);
   assert.equal(commitPrediction(session, next, bars, 100, 30), false);
 });

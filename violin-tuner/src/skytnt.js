@@ -257,3 +257,14 @@ export function skyBars(request, events) {
     };
   });
 }
+
+// Publish only closed measures; later tokens can never change a published bar.
+export function skyCompletedBars(request, events) {
+  const end = events.at(-1);
+  if (!end) return [];
+  const count = Math.min(
+    request.count,
+    Math.floor((end.beat + end.duration - request.startTick / 16) / 4),
+  );
+  return skyBars(request, events).slice(0, count);
+}

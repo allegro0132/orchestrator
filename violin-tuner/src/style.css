@@ -3543,3 +3543,56 @@ header {
     flex-shrink: 0;
   }
 }
+
+.notation.is-streaming {
+  width: max-content;
+  min-width: 100%;
+}
+.notation-stream {
+  display: flex;
+  position: relative;
+  align-items: flex-start;
+  min-height: 180px;
+  width: max-content;
+}
+.stream-bar {
+  flex: none;
+  min-height: 180px;
+}
+.stream-bar-surface {
+  position: relative;
+}
+.vibe-take-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.vibe-context-notice {
+  color: #6a7751;
+  font-size: 12px;
+  line-height: 1.7;
+}
+@media (max-width: 600px) {
+  .vibe-take-actions {
+    width: 100%;
+  }
+  .vibe-take-actions button {
+    max-width: 100%;
+    min-width: 0;
+    white-space: normal;
+  }
+}
+
+.stream-bar {
+  position: relative;
+}
+.stream-bar::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 80px;
+  height: 40px;
+  width: 1px;
+  background: #887255;
+  pointer-events: none;
+}

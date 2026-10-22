@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AudioLines, Mic, Square, Plus, Download, Trash2, History } from 'lucide-react';
+import { AudioLines, Mic, Square, Plus, Download, Trash2, History, Eraser } from 'lucide-react';
 import { useLanguage } from './i18n.jsx';
 import { detectPitch, frequency, centsOff, noteName } from './pitch.js';
 import { AUDIO_SAMPLE_RATE, ANALYSIS_BUFFER_SIZE, ANALYSIS_INTERVAL_MS } from './audioConfig.js';
@@ -16,7 +16,12 @@ import {
   vibeTrack,
 } from './vibe.js';
 import { saveVibe, listVibes, deleteVibe } from './vibeStore.js';
-import { predictionRequest, commitPrediction } from './vibePrediction.js';
+import {
+  predictionRequest,
+  commitPrediction,
+  clearVibeContext,
+  vibeDisplayTrack,
+} from './vibePrediction.js';
 import { RULE_MODEL_ID } from './vibeRules.js';
 import { SKY_DEPLOYMENT, SKY_CACHE, SKY_BYTES } from './skyWeights.js';
 import { readVibePreferences, writeVibePreferences, VIBE_TEMPOS } from './vibePreferences.js';
@@ -67,23 +72,16 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
     [showHistory, setShowHistory] = useState(false),
     [showCapture, setShowCapture] = useState(false);
   const [, redraw] = useState(0);
-  const makeTrack = (session) => {
-    if (!session.bars.length) return null;
-    const windowBeat = Math.max(0, Math.floor((session.elapsed * session.bpm) / 60 / 4) - 1) * 4;
-    const events = generatedEvents(session)
-      .filter((e) => e.beat >= windowBeat)
-      .map((e) => ({ ...e, beat: e.beat - windowBeat }));
-    const result = vibeTrack(
-      events,
-      session.bpm,
-      'Generated continuation',
-      session.estimatedKey || 'D',
-      0,
-      windowBeat / 4,
-    );
-    result.windowBeat = windowBeat;
-    return result;
-  };
+  const makeTrack = vibeDisplayTrack;
+  const [contextNotice, setContextNotice] = useState(false);
+  function resetContext() {
+    clearVibeContext(data.current);
+    const state = predictor.current;
+    if (state.pending) state.worker?.postMessage({ type: 'cancel', id: state.pending.id });
+    setContextNotice(true);
+    void persist();
+    redraw((n) => n + 1);
+  }
   const [liveTrack, setTrack] = useState(() => makeTrack(data.current));
   const session = data.current;
   const tuningReference = session.reference || reference;
@@ -93,20 +91,8 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
     if (!session.bars.length) return null;
     const start = session.bars[0].bar * 4;
     const events = generatedEvents(session).map((e) => ({ ...e, beat: e.beat - start }));
-    // Keep full-take engraving out of the live capture path.
-    const score = auditionMode
-      ? vibeTrack(
-          events,
-          session.bpm,
-          'Generated continuation',
-          session.estimatedKey || 'D',
-          0,
-          start / 4,
-        )
-      : null;
-    if (score) score.windowBeat = start;
     return {
-      track: score,
+      track: liveTrack,
       windowBeat: start,
       events: events.map((e) => ({
         ...e,
@@ -115,7 +101,7 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
       })),
       duration: ((session.bars.at(-1).bar * 4 + 4 - start) * 60) / session.bpm,
     };
-  }, [liveTrack, session.id, auditionMode]);
+  }, [liveTrack, session.id]);
   const track = auditionMode && playbackPlan ? playbackPlan.track : liveTrack;
   function stopPreview() {
     preview.stop();
@@ -146,13 +132,13 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
     if (!value.notes.length) return true;
     try {
       await saveVibe(value);
-      if (mounted.current) {
+      if (mounted.current && value.id === data.current.id) {
         setSaved(true);
         setHistory(await listVibes());
       }
       return true;
     } catch {
-      if (mounted.current)
+      if (mounted.current && value.id === data.current.id)
         setError(
           text(
             '本地保存失败。请下载 JSON 备份，避免丢失记录。',
@@ -268,10 +254,27 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
           return;
         }
         const pending = state.pending;
-        if (result.type !== 'result' || !pending || pending.id !== result.id) return;
-        state.pending = null;
-        clearTimeout(state.timer);
-        if (pending.session !== data.current.id || pending.token !== run.current.token) return;
+        if (
+          !pending ||
+          pending.id !== result.id ||
+          !['bars', 'result', 'canceled'].includes(result.type)
+        )
+          return;
+        if (result.type !== 'bars') {
+          state.pending = null;
+          clearTimeout(state.timer);
+        }
+        if (
+          result.type === 'canceled' ||
+          pending.session !== data.current.id ||
+          pending.token !== run.current.token ||
+          (pending.request.contextEpoch || 0) !== (data.current.contextEpoch || 0)
+        )
+          return;
+        if (result.type === 'bars') {
+          clearTimeout(state.timer);
+          state.timer = setTimeout(() => state.fail(), 10000);
+        }
         const current = data.current;
         if (
           commitPrediction(
@@ -283,9 +286,10 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
           )
         ) {
           setTrack(makeTrack(current));
-          setModelLatency(Math.round(result.milliseconds));
+          setContextNotice(false);
           void persist();
         }
+        if (result.type === 'result') setModelLatency(Math.round(result.milliseconds));
       };
       worker.onerror = fail;
       worker.postMessage({ type: 'load', engine });
@@ -392,6 +396,7 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
     if (recording || busy) return;
     stopPreview();
     if (!(await persist())) return;
+    setContextNotice(false);
     data.current = newVibeSession(preferences.bpm, preferences.key);
     capture.current = createCapture();
     latest.current.onDraft?.(structuredClone(data.current));
@@ -405,6 +410,7 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
   function load(record) {
     if (recording || busy) return;
     stopPreview();
+    setContextNotice(false);
     data.current = structuredClone(record);
     capture.current = createCapture(record.notes);
     latest.current.onDraft?.(structuredClone(record));
@@ -540,11 +546,25 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
               )}
             </p>
           </div>
-          <button className="secondary-button" onClick={fresh} disabled={recording || busy}>
-            <Plus size={15} />
-            {text('新的一段', 'New take')}
-          </button>
+          <div className="vibe-take-actions">
+            <button className="secondary-button" onClick={resetContext} disabled={busy}>
+              <Eraser size={15} />
+              {text('清空续写上下文', 'Clear continuation context')}
+            </button>
+            <button className="secondary-button" onClick={fresh} disabled={recording || busy}>
+              <Plus size={15} />
+              {text('新的一段', 'New take')}
+            </button>
+          </div>
         </div>
+        {contextNotice && (
+          <p className="vibe-context-notice" role="status">
+            {text(
+              '续写上下文已清空。请拉一段新旋律；已有谱面和演奏记录会保留。',
+              'Continuation context cleared. Play a fresh phrase; your score and performance record are preserved.',
+            )}
+          </p>
+        )}
         <div className="score-controls">
           <label>
             {text('续写引擎', 'Continuation engine')}
@@ -780,7 +800,7 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
               <span>
                 {auditionMode
                   ? text('试听 · 小节', 'Listening · bars')
-                  : text('实时窗口 · 小节', 'Live window · bars')}{' '}
+                  : text('持续续写 · 小节', 'Continuous score · bars')}{' '}
                 {track.windowBeat / 4 + 1}–{track.windowBeat / 4 + track.measures.length}
               </span>
             </div>
@@ -790,10 +810,10 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
               totalMeasures={session.bars.at(-1).bar + 1}
               measure={Math.min(
                 track.measures.length - 1,
-                Math.floor((beat - track.windowBeat) / 4),
+                Math.max(0, Math.floor((beat - track.windowBeat) / 4)),
               )}
               beat={beat - track.windowBeat}
-              onSeek={!recording && !busy ? (beat) => listen(beat) : undefined}
+              onSeek={!recording && !busy ? (beat) => listen(beat + track.windowBeat) : undefined}
               playing={recording || preview.playing}
               noteDuration={((event?.duration || 1) * 60) / session.bpm}
               action={
@@ -814,8 +834,8 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
                         )}
                   <span>
                     {text(
-                      '下一小节保持不变，较远的续句随你更新。',
-                      'The next bar stays fixed; more distant phrases adapt to you.',
+                      '已有小节保持不变，新乐句逐小节追加。',
+                      'Existing bars stay fixed. New phrases append one bar at a time.',
                     )}
                   </span>
                 </div>
@@ -943,8 +963,8 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
         )}
         <p className="score-method">
           {text(
-            '默认规律式续写复用你的旋律走向和节奏；可选 SkyTNT Transformer，以实际音符和已锁定的下一小节为上下文。权重按需下载到此设备，音频不上传。生成限制为单声部、G3–B5、4/4 拍和指定小节长度。JSON 保留每次生成的引擎和版本。录入量化至八分音符，可能漏掉同音连奏及快速音符。',
-            'Rule-based continuation adapts your melodic contour and rhythm by default. Optional SkyTNT Transformer uses captured notes and the locked next bar as context. Weights download to this device; audio is never uploaded. Output is constrained to monophonic G3–B5, 4/4 and the requested bar count. JSON records each prediction engine and version. Eighth-note quantization may miss repeated legato and fast notes.',
+            '默认规律式续写复用你的旋律走向和节奏；可选 SkyTNT Transformer，以实际音符和已生成的末尾小节为上下文。权重按需下载到此设备，音频不上传。生成限制为单声部、G3–B5、4/4 拍和指定小节长度。JSON 保留每次生成的引擎和版本。录入量化至八分音符，可能漏掉同音连奏及快速音符。',
+            'Rule-based continuation adapts your melodic contour and rhythm by default. Optional SkyTNT Transformer uses captured notes and the generated tail as context. Weights download to this device; audio is never uploaded. Output is constrained to monophonic G3–B5, 4/4 and the requested bar count. JSON records each prediction engine and version. Eighth-note quantization may miss repeated legato and fast notes.',
           )}
         </p>
       </div>

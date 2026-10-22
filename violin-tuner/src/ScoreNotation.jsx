@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, LocateFixed, Maximize2, Minimize2 } from 'lucide-react';
+import StreamingStaff from './StreamingStaff.jsx';
 import useScoreFullscreen from './useScoreFullscreen.jsx';
 import { excerptXml } from './score.js';
 import { useLanguage } from './i18n.jsx';
@@ -18,6 +19,7 @@ export default function ScoreNotation({
   measureNumber,
   totalMeasures,
 }) {
+  const streaming = !!track.streamBars;
   const frame = useRef(null);
   const overlay = useRef(null);
   const { expanded, toggle } = useScoreFullscreen(frame);
@@ -67,6 +69,11 @@ export default function ScoreNotation({
     });
   }
   useEffect(() => {
+    if (streaming) {
+      setLoading(true);
+      setFailed(false);
+      return;
+    }
     const surface = host.current,
       frame = viewport.current;
     const media = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -225,7 +232,7 @@ export default function ScoreNotation({
       surface.style.width = '';
       surface.style.minHeight = '';
     };
-  }, [track]);
+  }, [streaming ? track.streamId : track, streaming]);
   useEffect(() => {
     controller.current?.position();
   }, [beat, noteDuration, measure]);
@@ -372,7 +379,27 @@ export default function ScoreNotation({
           onWheel={browse}
           onKeyDown={keyDown}
         >
-          <div ref={host} className="notation" aria-label={t('五线谱')} />
+          <div
+            ref={host}
+            className={'notation' + (streaming ? ' is-streaming' : '')}
+            aria-label={t('五线谱')}
+          >
+            {streaming && (
+              <StreamingStaff
+                key={track.streamId}
+                track={track}
+                viewport={viewport}
+                controller={controller}
+                latest={latest}
+                follow={follow}
+                onReady={() => setLoading(false)}
+                onError={() => {
+                  setLoading(false);
+                  setFailed(true);
+                }}
+              />
+            )}
+          </div>
         </div>
         {renderOverlay && (
           <div className="notation-overlay" ref={overlay}>
