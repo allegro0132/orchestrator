@@ -1900,6 +1900,223 @@ header {
 .score-practice {
   min-width: 0;
 }
+.vibe-practice {
+  min-width: 0;
+}
+.vibe-status {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 18px;
+  margin: 20px 0;
+  border: 1px solid #e0dcc6;
+  border-radius: 12px;
+  background: linear-gradient(120deg, #f2eedb, #f8f5eb);
+  color: #818364;
+}
+.vibe-status.live {
+  border-color: #a4ad81;
+  position: sticky;
+  top: 8px;
+  z-index: 5;
+}
+.vibe-stop {
+  display: grid;
+  place-items: center;
+  min-width: 34px;
+  min-height: 34px;
+  border: 1px solid #a4ad81;
+  border-radius: 8px;
+  background: #f8f6e9;
+  color: #6b7a51;
+  cursor: pointer;
+}
+.vibe-status > div {
+  display: grid;
+  gap: 6px;
+  flex: 1;
+}
+.vibe-status strong {
+  font-size: 13px;
+  font-weight: 500;
+  color: #677448;
+}
+.vibe-status span {
+  font-size: 10px;
+  line-height: 1.7;
+}
+.vibe-status > b {
+  font:
+    21px Georgia,
+    serif;
+  font-variant-numeric: tabular-nums;
+  color: #85704b;
+}
+.vibe-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  margin: 20px 0;
+  font-size: 11px;
+  color: #8c9078;
+}
+.vibe-metrics b {
+  color: #707b57;
+  font-weight: 500;
+}
+.vibe-beats {
+  display: inline-flex;
+  gap: 5px;
+}
+.vibe-beats i {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid #dedecb;
+  font-style: normal;
+  font-size: 10px;
+}
+.vibe-beats i.active {
+  background: #87976b;
+  color: white;
+  border-color: #87976b;
+}
+.vibe-empty {
+  text-align: center;
+  padding: 42px 20px;
+  border-radius: 14px;
+  background: #f5efdc;
+  color: #8d805f;
+}
+.vibe-empty h3 {
+  font:
+    23px Georgia,
+    serif;
+  color: #77704e;
+}
+.vibe-empty p {
+  font-size: 12px;
+  line-height: 1.8;
+  max-width: 390px;
+  margin: 18px auto 24px;
+}
+.vibe-empty .mic-button {
+  padding: 12px 20px;
+}
+.vibe-cue {
+  padding: 13px 15px;
+  margin-top: 12px;
+  border: 1px solid #d8c7a5;
+  border-radius: 10px;
+  background: #fffae466;
+  color: #827451;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.vibe-cue span {
+  display: block;
+  margin-top: 4px;
+  font-size: 10px;
+  color: #a08b67;
+}
+.vibe-record-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 24px 0 16px;
+}
+.vibe-record-toolbar > span {
+  font-size: 10px;
+  color: #8b9379;
+}
+.vibe-downloads {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.vibe-downloads button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.vibe-captured {
+  margin: 24px 0;
+  font-size: 12px;
+  color: #858667;
+}
+.vibe-captured summary {
+  cursor: pointer;
+  padding: 12px 0;
+}
+.vibe-history {
+  margin: 20px 0;
+  border: 1px solid #e2dfd0;
+  padding: 12px 18px;
+  border-radius: 12px;
+}
+.vibe-history > p {
+  font-size: 12px;
+  line-height: 1.7;
+  color: #8f937b;
+}
+.vibe-take {
+  display: flex;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #e5e3d8;
+}
+.vibe-take:last-child {
+  border-bottom: 0;
+}
+.vibe-take > button:first-child {
+  flex: 1;
+  display: grid;
+  gap: 7px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  color: #75805c;
+  cursor: pointer;
+}
+.vibe-take strong {
+  font-size: 12px;
+  font-weight: 500;
+}
+.vibe-take small {
+  color: #a2a38c;
+  font-size: 10px;
+}
+.vibe-delete {
+  background: transparent;
+  border: 0;
+  color: #a18f79;
+  cursor: pointer;
+  padding: 10px;
+}
+.vibe-take button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+@media (max-width: 600px) {
+  .score-mode {
+    grid-column: auto;
+  }
+  .vibe-status {
+    padding: 14px 12px;
+  }
+  .vibe-status > svg {
+    display: none;
+  }
+  .vibe-downloads button {
+    font-size: 10px;
+    padding: 10px;
+  }
+}
 .score-library {
   margin: 22px 0;
   border: 1px solid #dedaca;
@@ -3179,9 +3396,6 @@ header {
   font-style: normal;
 }
 @media (max-width: 600px) {
-  .score-mode {
-    grid-column: 1/-1;
-  }
   .beginner-selector {
     padding: 20px 16px;
     gap: 14px;

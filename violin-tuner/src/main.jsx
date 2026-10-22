@@ -14,6 +14,7 @@ import {
   Play,
   Square,
   Sprout,
+  Sparkles,
 } from 'lucide-react';
 import { STRINGS, PATTERNS, frequency, centsOff, noteName, detectPitch } from './pitch';
 import { emptyTracking, trackPitch, ACCURACY_CENTS } from './tuning.js';
@@ -31,6 +32,7 @@ import {
 import './style.css';
 const ScorePractice = React.lazy(() => import('./ScorePractice.jsx'));
 const BeginnerPractice = React.lazy(() => import('./BeginnerPractice.jsx'));
+const VibePractice = React.lazy(() => import('./VibePractice.jsx'));
 function App() {
   const { lang, setLang, t } = useLanguage();
   const [mode, setMode] = useState('open'),
@@ -49,6 +51,7 @@ function App() {
     [help, setHelp] = useState(false),
     [settings, setSettings] = useState(false);
   const [importedScore, setImportedScore] = useState(null);
+  const [vibeDraft, setVibeDraft] = useState(null);
   const [tracking, setTracking] = useState(() => emptyTracking());
   const tracker = useRef(emptyTracking()),
     pitchBuffer = useRef([]),
@@ -120,7 +123,7 @@ function App() {
     stopTone();
     setHz(null);
     resetTracking();
-    if (['metronome', 'score', 'beginner'].includes(mode)) stop();
+    if (['metronome', 'score', 'beginner', 'vibe'].includes(mode)) stop();
   }, [string, mode, pattern, position, finger, reference]);
   async function context() {
     if (!audio.current)
@@ -150,7 +153,7 @@ function App() {
           autoGainControl: false,
         },
       });
-      if (['metronome', 'score', 'beginner'].includes(config.current.mode)) {
+      if (['metronome', 'score', 'beginner', 'vibe'].includes(config.current.mode)) {
         media.getTracks().forEach((track) => track.stop());
         return;
       }
@@ -330,7 +333,7 @@ function App() {
           <aside>
             <div className="section-label">
               {t('练习模式')}
-              <span>01 — 05</span>
+              <span>01 — 06</span>
             </div>
             <button
               className={'mode ' + (mode === 'open' ? 'active' : '')}
@@ -397,7 +400,22 @@ function App() {
               </span>
               {mode === 'score' && <span className="active-dot" />}
             </button>
-            {!['metronome', 'score', 'beginner'].includes(mode) && (
+            <button
+              className={'mode ' + (mode === 'vibe' ? 'active' : '')}
+              onClick={() => setMode('vibe')}
+            >
+              <span className="mode-icon">
+                <Sparkles size={21} />
+              </span>
+              <span>
+                <b>Vibe</b>
+                <small>
+                  {lang === 'zh' ? '即兴演奏，旋律续写' : 'Improvise, extend, and keep'}
+                </small>
+              </span>
+              {mode === 'vibe' && <span className="active-dot" />}
+            </button>
+            {!['metronome', 'score', 'beginner', 'vibe'].includes(mode) && (
               <>
                 <div className="string-head">
                   <span>{t('选择琴弦')}</span>
@@ -443,7 +461,22 @@ function App() {
               </div>
             </div>
           </aside>
-          {mode === 'beginner' ? (
+          {mode === 'vibe' ? (
+            <React.Suspense
+              fallback={
+                <section className="tuner score-loading">
+                  {lang === 'zh' ? '正在加载 Vibe…' : 'Loading Vibe…'}
+                </section>
+              }
+            >
+              <VibePractice
+                getAudioContext={context}
+                reference={reference}
+                draft={vibeDraft}
+                onDraft={setVibeDraft}
+              />
+            </React.Suspense>
+          ) : mode === 'beginner' ? (
             <React.Suspense
               fallback={
                 <section className="tuner score-loading">{t('正在加载初学者练习…')}</section>

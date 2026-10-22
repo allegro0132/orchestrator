@@ -15,6 +15,8 @@ export default function ScoreNotation({
   renderOverlay,
   action,
   onSeek,
+  measureNumber,
+  totalMeasures,
 }) {
   const frame = useRef(null);
   const overlay = useRef(null);
@@ -319,8 +321,8 @@ export default function ScoreNotation({
               ? text('正在跟随', 'FOLLOWING')
               : text('准备演奏', 'READY')}
           <b>
-            {String(measure + 1).padStart(2, '0')}
-            <em> / {String(track.measures.length).padStart(2, '0')}</em>
+            {String(measureNumber ?? measure + 1).padStart(2, '0')}
+            <em> / {String(totalMeasures ?? track.measures.length).padStart(2, '0')}</em>
           </b>
         </span>
         <button
@@ -380,10 +382,12 @@ export default function ScoreNotation({
       </div>
       <div className="notation-navigation">
         <span>
-          {text(
-            '双击音符开始 / 继续 · 左右滑动浏览',
-            'Double-click a note to play · swipe or drag to browse',
-          )}
+          {onSeek
+            ? text(
+                '双击音符开始 / 继续 · 左右滑动浏览',
+                'Double-click a note to play · swipe or drag to browse',
+              )
+            : text('左右滑动或拖动，浏览曲谱', 'Swipe or drag to explore the score')}
         </span>
         <div>
           <button
