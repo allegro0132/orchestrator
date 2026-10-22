@@ -50,7 +50,7 @@ export function createVibeEngineHost({
         await previous?.dispose?.();
         if (data.engine === RULE_MODEL_ID) engine = RULE_MODEL_ID;
         else if (data.engine === SKY_DEPLOYMENT) {
-          const loaded = await loadTransformer();
+          const loaded = await loadTransformer({ cachedOnly: !!data.cachedOnly });
           if (disposed) {
             await loaded?.dispose?.();
             return;

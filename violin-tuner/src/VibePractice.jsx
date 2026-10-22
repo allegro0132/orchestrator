@@ -23,7 +23,7 @@ import {
   vibeDisplayTrack,
 } from './vibePrediction.js';
 import { RULE_MODEL_ID } from './vibeRules.js';
-import { SKY_DEPLOYMENT, SKY_CACHE, SKY_BYTES } from './skyWeights.js';
+import { SKY_DEPLOYMENT, SKY_CACHE, SKY_BYTES, hasCachedSkyWeights } from './skyWeights.js';
 import { readVibePreferences, writeVibePreferences, VIBE_TEMPOS } from './vibePreferences.js';
 import {
   VIBE_ENGINE_PROTOCOL,
@@ -58,8 +58,10 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
   const run = useRef({ token: 0 });
   const mounted = useRef(true);
   const predictor = useRef({ worker: null, ready: false, pending: null, serial: 0 });
-  const [modelStatus, setModelStatus] = useState('ready');
+  const [modelStatus, setModelStatus] = useState('loading');
   const [engine, setEngine] = useState(preferences.engine);
+  const autoInitAllowed = useRef(true);
+  const cachedOnly = useRef(false);
   const [modelEnabled, setModelEnabled] = useState(false);
   const [progress, setProgress] = useState(null);
   const [modelError, setModelError] = useState('');
@@ -214,8 +216,24 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
     setModelError('');
     setProgress(null);
     if (engine !== RULE_MODEL_ID && !modelEnabled) {
-      setModelStatus('idle');
-      return;
+      if (!autoInitAllowed.current) {
+        setModelStatus('idle');
+        return;
+      }
+      let canceled = false;
+      setModelStatus('checking');
+      void hasCachedSkyWeights(
+        new URL(`${import.meta.env.BASE_URL}models/${SKY_DEPLOYMENT}/`, window.location.origin),
+      ).then((available) => {
+        if (canceled) return;
+        if (available) {
+          cachedOnly.current = true;
+          setModelEnabled(true);
+        } else setModelStatus('idle');
+      });
+      return () => {
+        canceled = true;
+      };
     }
     setModelStatus('loading');
     let worker;
@@ -343,7 +361,7 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
         if (result.type === 'result') setModelLatency(Math.round(result.milliseconds));
       };
       worker.onerror = fail;
-      worker.postMessage({ type: 'load', engine });
+      worker.postMessage({ type: 'load', engine, cachedOnly: cachedOnly.current });
     } catch {
       fail();
     }
@@ -634,6 +652,8 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
               onChange={(e) => {
                 setEngine(e.target.value);
                 remember({ engine: e.target.value });
+                autoInitAllowed.current = true;
+                cachedOnly.current = false;
                 setModelEnabled(false);
                 data.current.lastGeneratedBar = -1;
                 data.current.engine = e.target.value;
@@ -734,32 +754,46 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
                 : 'SkyTNT · INT4 / FP16 · WebGPU'}
             </strong>
             <p>
-              {modelStatus === 'ready'
-                ? text('已就绪', 'Ready')
-                : modelStatus === 'idle'
-                  ? text(
-                      '按需下载 144.5 MB 权重；需要支持 FP16 的 WebGPU。',
-                      'Download 144.5 MB of weights on demand. Requires WebGPU with FP16.',
-                    )
-                  : modelStatus === 'error'
+              {modelStatus === 'checking'
+                ? text('正在检查本机权重缓存…', 'Checking cached weights on this device…')
+                : modelStatus === 'ready'
+                  ? text('已就绪', 'Ready')
+                  : modelStatus === 'idle'
                     ? text(
-                        '模型不可用，请重试或选择规律式续写。',
-                        'Model unavailable. Retry or choose rule-based continuation.',
+                        '按需下载 144.5 MB 权重；需要支持 FP16 的 WebGPU。',
+                        'Download 144.5 MB of weights on demand. Requires WebGPU with FP16.',
                       )
-                    : progress?.type === 'initializing'
-                      ? progress.stage === 'warmup'
-                        ? text('正在验证本机模型推理…', 'Verifying model inference on this device…')
-                        : text(
-                            '权重校验完成，正在初始化 GPU…',
-                            'Weights verified. Initializing GPU…',
-                          )
-                      : text('正在下载并校验权重…', 'Downloading and verifying weights…')}
+                    : modelStatus === 'error'
+                      ? text(
+                          '模型不可用，请重试或选择规律式续写。',
+                          'Model unavailable. Retry or choose rule-based continuation.',
+                        )
+                      : progress?.type === 'initializing'
+                        ? progress.stage === 'warmup'
+                          ? text(
+                              '正在验证本机模型推理…',
+                              'Verifying model inference on this device…',
+                            )
+                          : text(
+                              '权重校验完成，正在初始化 GPU…',
+                              'Weights verified. Initializing GPU…',
+                            )
+                        : cachedOnly.current
+                          ? text(
+                              '正在校验本机缓存权重…',
+                              'Verifying cached weights on this device…',
+                            )
+                          : text('正在下载并校验权重…', 'Downloading and verifying weights…')}
               {modelStatus === 'ready' && modelLatency !== null && ` · ${modelLatency} ms`}
             </p>
             {engine !== RULE_MODEL_ID && progress?.total && modelStatus === 'loading' && (
               <>
                 <progress
-                  aria-label={text('权重下载进度', 'Weight download progress')}
+                  aria-label={
+                    cachedOnly.current
+                      ? text('缓存权重校验进度', 'Cached weight verification progress')
+                      : text('权重下载进度', 'Weight download progress')
+                  }
                   value={progress.loaded}
                   max={SKY_BYTES}
                 />
@@ -789,6 +823,8 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
                   disabled={busy}
                   onClick={() => {
                     if (recording) stop();
+                    autoInitAllowed.current = false;
+                    cachedOnly.current = false;
                     setModelEnabled(true);
                     setModelAttempt((n) => n + 1);
                   }}
@@ -797,10 +833,11 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
                   {text('下载 / 加载模型', 'Download / load model')}
                 </button>
               )}
-              {modelStatus === 'loading' && (
+              {['loading', 'checking'].includes(modelStatus) && (
                 <button
                   className="secondary-button"
                   onClick={() => {
+                    autoInitAllowed.current = false;
                     setModelEnabled(false);
                     setModelAttempt((n) => n + 1);
                   }}
@@ -808,11 +845,12 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
                   {text('取消', 'Cancel')}
                 </button>
               )}
-              {modelStatus !== 'loading' && (
+              {!['loading', 'checking'].includes(modelStatus) && (
                 <button
                   className="secondary-button"
                   disabled={recording || busy}
                   onClick={async () => {
+                    autoInitAllowed.current = false;
                     setModelEnabled(false);
                     setModelAttempt((n) => n + 1);
                     try {

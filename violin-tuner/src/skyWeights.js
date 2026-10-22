@@ -9,24 +9,46 @@ export async function verified(buffer, file) {
     throw new Error('Model checksum mismatch');
   return buffer;
 }
-export async function loadSkyWeights(
-  root,
-  progress,
-  { fetcher = fetch, storage = globalThis.caches } = {},
-) {
-  const response = await fetcher(new URL('manifest.json', root), {
-    signal: AbortSignal.timeout(60000),
-  });
+async function readManifest(root, cache, fetcher) {
+  const url = new URL('manifest.json', root).href;
+  const cached = await cache?.match(url);
+  const response = cached || (await fetcher(url, { signal: AbortSignal.timeout(60000) }));
   if (!response.ok) throw new Error('Model manifest unavailable');
   const manifest = await response.json();
   if (manifest.id !== SKY_DEPLOYMENT || manifest.bytes !== SKY_BYTES)
     throw new Error('Unsupported model version');
+  return manifest;
+}
+// Inspect cache metadata only; checksum validation stays in the model Worker.
+export async function hasCachedSkyWeights(root, { fetcher = fetch, storage } = {}) {
+  try {
+    storage ??= globalThis.caches;
+    if (!(await storage?.has(SKY_CACHE))) return false;
+    const cache = await storage.open(SKY_CACHE);
+    const manifest = await readManifest(root, cache, fetcher);
+    for (const part of ['base', 'token']) {
+      const shards = manifest.files[part].shards;
+      if (!shards.length) return false;
+      for (const shard of shards)
+        if (!(await cache.match(new URL(shard.name, root).href))) return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+export async function loadSkyWeights(
+  root,
+  progress,
+  { fetcher = fetch, storage, cachedOnly = false } = {},
+) {
   let cache;
   try {
-    cache = await storage?.open(SKY_CACHE);
+    cache = await (storage ?? globalThis.caches)?.open(SKY_CACHE);
   } catch {
     /* Private browsing may disable persistent storage. */
   }
+  const manifest = await readManifest(root, cache, fetcher);
   let loaded = 0,
     persistent = !!cache;
   const buffers = {};
@@ -46,6 +68,13 @@ export async function loadSkyWeights(
         }
       }
       if (!buffer) {
+        if (cachedOnly)
+          throw Object.assign(
+            new Error(
+              'Cached weights are incomplete. Choose Download / load model to restore them.',
+            ),
+            { code: 'WEIGHT_CACHE_INCOMPLETE' },
+          );
         const result = await fetcher(url, { signal: AbortSignal.timeout(300000) });
         if (!result.ok) throw new Error(`Weight download failed (${result.status})`);
         // Stream progress within each shard, including slow mobile connections.
@@ -80,6 +109,13 @@ export async function loadSkyWeights(
       progress({ loaded, total: manifest.bytes, persistent });
     }
     buffers[part] = new Uint8Array(await verified(output.buffer, file));
+  }
+  if (cache) {
+    try {
+      await cache.put(new URL('manifest.json', root).href, Response.json(manifest));
+    } catch {
+      persistent = false;
+    }
   }
   return { buffers, persistent };
 }

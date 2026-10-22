@@ -225,3 +225,15 @@ test('the active loaded engine is used instead of an earlier recording callback 
   state.ready = false;
   assert.equal(engineForPrediction(state), null);
 });
+test('automatic model loads preserve cache-only policy through the Worker host', async () => {
+  const options = [];
+  const { host } = fixture({
+    loadTransformer: async (policy) => {
+      options.push(policy);
+      return { generate() {} };
+    },
+  });
+  await host.handle({ type: 'load', engine: SKY_DEPLOYMENT, cachedOnly: true });
+  await host.handle({ type: 'load', engine: SKY_DEPLOYMENT });
+  assert.deepEqual(options, [{ cachedOnly: true }, { cachedOnly: false }]);
+});

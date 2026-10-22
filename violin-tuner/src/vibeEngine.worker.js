@@ -5,7 +5,7 @@ import { skyPrompt, skyCompletedBars } from './skytnt.js';
 import { SKY_DEPLOYMENT, loadSkyWeights } from './skyWeights.js';
 import { createVibeEngineHost, VIBE_ENGINE_PROTOCOL } from './vibeEngineHost.js';
 const post = (value) => self.postMessage({ ...value, protocol: VIBE_ENGINE_PROTOCOL });
-async function load() {
+async function load({ cachedOnly = false } = {}) {
   let base, token, device;
   try {
     const adapter = await navigator.gpu?.requestAdapter();
@@ -16,9 +16,10 @@ async function load() {
     const { buffers, persistent } = await loadSkyWeights(
       new URL(`${import.meta.env.BASE_URL}models/${SKY_DEPLOYMENT}/`, self.location.origin),
       (progress) => post({ type: 'progress', ...progress }),
+      { cachedOnly },
     );
     post({ type: 'initializing' });
-    // Load the runtime only after the user explicitly requests Transformer weights.
+    // Load the runtime for selected Transformer weights, cached or explicitly requested.
     const [ort, { default: wasmUrl }, { default: mjsUrl }] = await Promise.all([
       import('onnxruntime-web/webgpu'),
       import('onnxruntime-web/ort-wasm-simd-threaded.asyncify.wasm?url'),
