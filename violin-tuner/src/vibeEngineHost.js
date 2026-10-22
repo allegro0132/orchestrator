@@ -1,6 +1,6 @@
 import { RULE_MODEL_ID } from './vibeRules.js';
 import { SKY_DEPLOYMENT } from './skyWeights.js';
-export const VIBE_ENGINE_PROTOCOL = 'arco-vibe-engine-v2';
+export const VIBE_ENGINE_PROTOCOL = 'arco-vibe-engine-v3';
 export class VibeEngineError extends Error {
   constructor(code, message) {
     super(message);
@@ -18,7 +18,8 @@ export function createVibeEngineHost({
   let engine = null,
     model = null,
     active = null,
-    disposed = false;
+    disposed = false,
+    verified = false;
   const emit = (message) => {
     if (!disposed) post({ ...message, engine, protocol: VIBE_ENGINE_PROTOCOL });
   };
@@ -45,6 +46,7 @@ export function createVibeEngineHost({
         const previous = model;
         engine = null;
         model = null;
+        verified = false;
         await previous?.dispose?.();
         if (data.engine === RULE_MODEL_ID) engine = RULE_MODEL_ID;
         else if (data.engine === SKY_DEPLOYMENT) {
@@ -67,32 +69,64 @@ export function createVibeEngineHost({
             'UNKNOWN_ENGINE',
             'Unknown continuation engine. Reload this page.',
           );
-        emit({ type: 'ready', persistent: model?.persistent !== false });
-      } else if (data.type === 'predict') {
+        verified = engine === RULE_MODEL_ID;
+        emit(verified ? { type: 'ready', persistent: true } : { type: 'loaded' });
+      } else if (data.type === 'predict' || data.type === 'verify') {
         if (!engine || (engine === SKY_DEPLOYMENT && typeof model?.generate !== 'function'))
           throw new VibeEngineError(
             'MODEL_NOT_READY',
             'The selected model is not ready. Reload it before predicting.',
           );
-        if (data.request.predictor !== engine)
+        const verifying = data.type === 'verify';
+        if (!verifying && !verified)
+          throw new VibeEngineError(
+            'MODEL_NOT_READY',
+            'The model has not passed cross-message inference verification. Reload it before predicting.',
+          );
+        if (verifying && (engine !== SKY_DEPLOYMENT || verified))
+          throw new VibeEngineError(
+            'ENGINE_MISMATCH',
+            'Unexpected model verification request. Reload the selected engine.',
+          );
+        const request = verifying
+          ? {
+              predictor: SKY_DEPLOYMENT,
+              notes: [
+                { midi: 62, start: 0, duration: 0.5 },
+                { midi: 64, start: 0.5, duration: 0.5 },
+              ],
+              bpm: 120,
+              count: 4,
+              fromBar: 1,
+              seed: 17,
+            }
+          : data.request;
+        if (request.predictor !== engine)
           throw new VibeEngineError(
             'ENGINE_MISMATCH',
             'The prediction engine changed before this request. Reload the selected model and resume Vibe.',
           );
         const started = now();
         const publish = (bars) => {
-          if (!job.canceled)
+          if (!job.canceled && !verifying)
             emit({ type: 'bars', id: data.id, bars, milliseconds: now() - started });
         };
         let bars;
         if (engine === RULE_MODEL_ID) {
-          bars = generateRules(data.request);
+          bars = generateRules(request);
           for (const bar of bars) publish([bar]);
         } else
-          bars = await generateTransformer(model, data.request, {
+          bars = await generateTransformer(model, request, {
             shouldCancel: () => job.canceled,
             publish,
           });
+        if (verifying) {
+          if (!bars?.length || job.canceled)
+            throw new Error('The inference self-test produced no score.');
+          verified = true;
+          emit({ type: 'ready', persistent: model.persistent !== false });
+          return;
+        }
         emit({
           type: job.canceled ? 'canceled' : 'result',
           id: data.id,
@@ -101,6 +135,7 @@ export function createVibeEngineHost({
         });
       }
     } catch (error) {
+      if (data.type === 'verify') verified = false;
       if (data.type === 'load') {
         engine = null;
         model = null;
@@ -108,7 +143,7 @@ export function createVibeEngineHost({
       emit({
         type: job.canceled ? 'canceled' : 'error',
         id: data.id,
-        code: error.code || 'INFERENCE_FAILED',
+        code: data.type === 'verify' ? 'MODEL_PREFLIGHT_FAILED' : error.code || 'INFERENCE_FAILED',
         message: error.message || String(error),
         stack: error.stack,
         stage: data.type,
@@ -125,6 +160,7 @@ export function createVibeEngineHost({
       const loaded = model;
       model = null;
       engine = null;
+      verified = false;
       return loaded?.dispose?.();
     },
   };

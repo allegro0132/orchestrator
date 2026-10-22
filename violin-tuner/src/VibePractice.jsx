@@ -266,6 +266,19 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
           setProgress(result);
           return;
         }
+        if (result.type === 'loaded') {
+          if (result.engine !== state.engine || engine !== SKY_DEPLOYMENT) {
+            fail({
+              code: 'ENGINE_MISMATCH',
+              message: 'The loaded model changed. Reload the selected engine.',
+            });
+            return;
+          }
+          watchdog();
+          setProgress({ type: 'initializing', stage: 'warmup' });
+          worker.postMessage({ type: 'verify' });
+          return;
+        }
         if (result.type === 'ready') {
           if (!acceptEngineReady(state, worker, result)) {
             fail({

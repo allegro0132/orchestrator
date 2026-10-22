@@ -1,7 +1,9 @@
+// Keep decoder/tokenizer code in the entry; a lazy back-import reevaluates this Worker in Safari.
+import { SkyDecoder } from './skyDecoder.js';
 import { generateVibeBars, RULE_MODEL_ID } from './vibeRules.js';
 import { skyPrompt, skyCompletedBars } from './skytnt.js';
 import { SKY_DEPLOYMENT, loadSkyWeights } from './skyWeights.js';
-import { createVibeEngineHost, VIBE_ENGINE_PROTOCOL, VibeEngineError } from './vibeEngineHost.js';
+import { createVibeEngineHost, VIBE_ENGINE_PROTOCOL } from './vibeEngineHost.js';
 const post = (value) => self.postMessage({ ...value, protocol: VIBE_ENGINE_PROTOCOL });
 async function load() {
   let base, token, device;
@@ -17,11 +19,10 @@ async function load() {
     );
     post({ type: 'initializing' });
     // Load the runtime only after the user explicitly requests Transformer weights.
-    const [ort, { default: wasmUrl }, { default: mjsUrl }, { SkyDecoder }] = await Promise.all([
+    const [ort, { default: wasmUrl }, { default: mjsUrl }] = await Promise.all([
       import('onnxruntime-web/webgpu'),
       import('onnxruntime-web/ort-wasm-simd-threaded.asyncify.wasm?url'),
       import('onnxruntime-web/ort-wasm-simd-threaded.asyncify.mjs?url'),
-      import('./skyDecoder.js'),
     ]);
     device = await adapter.requestDevice({ requiredFeatures: ['shader-f16'] });
     device.lost.then((info) => {
@@ -57,25 +58,6 @@ async function load() {
     });
     delete buffers.token;
     const decoder = new SkyDecoder(ort, base, token);
-    post({ type: 'initializing', stage: 'warmup' });
-    // Session creation does not compile every mobile GPU kernel. Exercise the exact inference path.
-    try {
-      await decoder.generate(
-        skyPrompt(
-          [
-            { midi: 62, start: 0, duration: 0.5 },
-            { midi: 64, start: 0.5, duration: 0.5 },
-          ],
-          { bpm: 120, count: 1 },
-        ),
-        { seed: 17 },
-      );
-    } catch (error) {
-      throw new VibeEngineError(
-        'MODEL_PREFLIGHT_FAILED',
-        `SkyTNT inference self-test failed on this GPU: ${error.message || error}`,
-      );
-    }
     decoder.persistent = persistent;
     decoder.dispose = async () => {
       try {

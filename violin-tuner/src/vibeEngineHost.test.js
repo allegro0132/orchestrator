@@ -36,6 +36,10 @@ function fixture(overrides = {}) {
   });
   return { host, messages, calls };
 }
+async function loadReady(host) {
+  await host.handle({ type: 'load', engine: SKY_DEPLOYMENT });
+  await host.handle({ type: 'verify' });
+}
 const predict = (id = 1, predictor = SKY_DEPLOYMENT) => ({
   type: 'predict',
   id,
@@ -57,22 +61,81 @@ test('prediction before initialization never dereferences an absent decoder', as
   assert.equal(messages[0].code, 'MODEL_NOT_READY');
   assert.equal(calls.sky, 0);
 });
-test('Transformer readiness waits for successful model initialization and preflight', async () => {
+test('Ready requires a separate Worker message to exercise a full-horizon prediction', async () => {
   const loading = deferred(),
-    { host, messages } = fixture({ loadTransformer: () => loading.promise });
+    { host, messages, calls } = fixture({ loadTransformer: () => loading.promise });
   const pending = host.handle({ type: 'load', engine: SKY_DEPLOYMENT });
+  await Promise.resolve();
   assert.equal(messages.length, 0);
   loading.resolve({ generate() {}, persistent: false });
   await pending;
   assert.deepEqual(messages, [
-    { type: 'ready', engine: SKY_DEPLOYMENT, protocol: VIBE_ENGINE_PROTOCOL, persistent: false },
+    { type: 'loaded', engine: SKY_DEPLOYMENT, protocol: VIBE_ENGINE_PROTOCOL },
   ]);
   await host.handle(predict());
+  assert.equal(messages.at(-1).code, 'MODEL_NOT_READY');
+  await host.handle({ type: 'verify' });
+  assert.equal(messages.at(-1).type, 'ready');
+  assert.equal(messages.at(-1).persistent, false);
+  assert.equal(calls.sky, 1);
+  const before = messages.length;
+  await host.handle(predict());
   assert.deepEqual(
-    messages.slice(1).map((m) => m.type),
+    messages.slice(before).map((m) => m.type),
     ['bars', 'result'],
   );
+  assert.equal(calls.sky, 2);
   assert.ok(messages.every((m) => m.engine === SKY_DEPLOYMENT));
+});
+test('preflight uses the production generation callback and suppresses test score streaming', async () => {
+  const model = { generate() {} };
+  const { host, messages } = fixture({
+    loadTransformer: () => Promise.resolve(model),
+    generateTransformer: (loaded, request, { publish }) => {
+      assert.equal(loaded, model);
+      assert.equal(request.count, 4);
+      assert.equal(request.predictor, SKY_DEPLOYMENT);
+      assert.equal(request.notes.length, 2);
+      publish([{ bar: 1 }]);
+      return Promise.resolve([{ bar: 1 }]);
+    },
+  });
+  await loadReady(host);
+  assert.deepEqual(
+    messages.map((m) => m.type),
+    ['loaded', 'ready'],
+  );
+});
+test('a failed post-load self-test never enables recording', async () => {
+  const { host, messages } = fixture({
+    generateTransformer: () => Promise.reject(Error('GPU kernel failed')),
+  });
+  await loadReady(host);
+  assert.equal(messages.at(-1).code, 'MODEL_PREFLIGHT_FAILED');
+  assert.equal(messages.at(-1).stage, 'verify');
+  assert.ok(!messages.some((m) => m.type === 'ready'));
+  await host.handle(predict());
+  assert.equal(messages.at(-1).code, 'MODEL_NOT_READY');
+});
+test('loaded model survives separate message turns and repeated predictions', async () => {
+  const model = { generate() {} };
+  let predictions = 0;
+  const { host, messages } = fixture({
+    loadTransformer: () => Promise.resolve(model),
+    generateTransformer: (loaded, request, { publish }) => {
+      assert.equal(loaded, model);
+      predictions++;
+      publish([{ bar: predictions }]);
+      return Promise.resolve([{ bar: predictions }]);
+    },
+  });
+  await loadReady(host);
+  for (let id = 1; id <= 20; id++) {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await host.handle(predict(id));
+    assert.equal(messages.at(-1).type, 'result');
+  }
+  assert.equal(predictions, 21);
 });
 test('failed or incomplete mobile initialization cannot publish Ready and a retry can recover', async () => {
   let attempts = 0;
@@ -87,7 +150,7 @@ test('failed or incomplete mobile initialization cannot publish Ready and a retr
   assert.equal(messages[0].stage, 'load');
   await host.handle(predict());
   assert.equal(messages.at(-1).code, 'MODEL_NOT_READY');
-  await host.handle({ type: 'load', engine: SKY_DEPLOYMENT });
+  await loadReady(host);
   assert.equal(messages.at(-1).type, 'ready');
   await host.handle(predict(2));
   assert.equal(messages.at(-1).type, 'result');
@@ -100,13 +163,14 @@ test('canceling streamed inference rejects late bars while preserving the loaded
   const wait = deferred();
   const { host, messages } = fixture({
     generateTransformer: async (_, request, { publish, shouldCancel }) => {
+      if (request.count === 4) return [{ bar: 1 }];
       await wait.promise;
       publish([{ bar: 1 }]);
       assert.equal(shouldCancel(), request.cancelExpected);
       return [{ bar: 1 }];
     },
   });
-  await host.handle({ type: 'load', engine: SKY_DEPLOYMENT });
+  await loadReady(host);
   const request = predict(7);
   request.request.cancelExpected = true;
   const run = host.handle(request);
@@ -115,7 +179,7 @@ test('canceling streamed inference rejects late bars while preserving the loaded
   await run;
   assert.deepEqual(
     messages.map((m) => m.type),
-    ['ready', 'canceled'],
+    ['loaded', 'ready', 'canceled'],
   );
   const next = predict(8);
   next.request.cancelExpected = false;
