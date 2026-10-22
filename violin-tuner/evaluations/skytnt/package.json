@@ -1,0 +1,11 @@
+{
+  "name": "arco-skytnt-evaluation",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "evaluate": "node evaluate.mjs"
+  },
+  "dependencies": {
+    "onnxruntime-node": "1.30.0"
+  }
+}

@@ -4,6 +4,8 @@ A responsive React violin tuner with English and Chinese support, faster pitch t
 
 Vibe mode listens to an improvised melody, continually extends the score ahead using a small on-device Music Transformer, and saves performed notes and generated revisions for review and export. The experimental relative-attention decoder is trained on five public-domain score editions; see the [model card, limitations and reproduction instructions](violin-tuner/public/models/README.md).
 
+A separate [SkyTNT pretrained-model evaluation](violin-tuner/evaluations/skytnt/README.md) includes verified native inference measurements, constrained violin decoding, and MIDI/MusicXML examples.
+
 Score practice includes a graded library of nine openly licensed or public-domain practice editions. See the [score credits and licenses](violin-tuner/public/scores/SOURCES.md).
 
 ## Development
