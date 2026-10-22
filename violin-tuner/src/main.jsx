@@ -16,7 +16,7 @@ import {
   Sprout,
   Sparkles,
 } from 'lucide-react';
-import { STRINGS, PATTERNS, frequency, centsOff, noteName, detectPitch } from './pitch';
+import { PATTERNS, frequency, centsOff, noteName, detectPitch } from './pitch';
 import { emptyTracking, trackPitch } from './tuning.js';
 import { ACCURACY_OPTIONS, readAccuracy, saveAccuracy } from './tuningSettings.js';
 import PitchHistory from './PitchHistory.jsx';
@@ -32,13 +32,19 @@ import {
 } from './audioConfig.js';
 import useViolinPlayback from './useViolinPlayback.js';
 import './style.css';
+import { InstrumentProvider, useInstrument } from './InstrumentContext.jsx';
+import { targetMidiFor } from './instruments.js';
 const ScorePractice = React.lazy(() => import('./ScorePractice.jsx'));
 const BeginnerPractice = React.lazy(() => import('./BeginnerPractice.jsx'));
 const VibePractice = React.lazy(() => import('./VibePractice.jsx'));
 function App() {
+  const { instrument, setInstrument } = useInstrument();
+  const STRINGS = instrument.strings,
+    guitar = instrument.id === 'guitar';
+  const text = (zh, en) => (lang === 'zh' ? zh : en);
   const { lang, setLang, t } = useLanguage();
   const [mode, setMode] = useState('open'),
-    [string, setString] = useState(2),
+    [string, setString] = useState(guitar ? 0 : 2),
     [pattern, setPattern] = useState(0),
     [position, setPosition] = useState(0),
     [finger, setFinger] = useState(1),
@@ -59,6 +65,7 @@ function App() {
     pitchBuffer = useRef([]),
     feedbackUntil = useRef(0),
     pendingTarget = useRef(null);
+  const mounted = useRef(true);
   const audio = useRef(null),
     stream = useRef(null),
     frame = useRef(null),
@@ -73,13 +80,15 @@ function App() {
     targetMidi =
       mode === 'open' || finger === 0
         ? base
-        : base + [0, 2, 4, 5, 7][position] + PATTERNS[pattern].steps[finger - 1],
+        : targetMidiFor(instrument.id, string, finger, position, pattern),
     target = frequency(targetMidi, reference),
     note = noteName(targetMidi),
     cents = hz ? centsOff(hz, target) : 0,
     inTune = hz && Math.abs(cents) <= accuracyCents + 1e-6;
-  const trackingKey = `${mode}:${string}:${position}:${pattern}:${finger}:${reference}:${accuracyCents}`;
+  const trackingKey = `${instrument.id}:${mode}:${string}:${position}:${pattern}:${finger}:${reference}:${accuracyCents}`;
   config.current = {
+    instrument: instrument.id,
+    minHz: instrument.minHz,
     mode,
     auto: mode === 'open' ? auto : fingerAuto,
     reference,
@@ -117,6 +126,7 @@ function App() {
   }
   useEffect(
     () => () => {
+      mounted.current = false;
       running.current = false;
       cancelAnimationFrame(frame.current);
       stream.current?.getTracks().forEach((t) => t.stop());
@@ -158,7 +168,10 @@ function App() {
           autoGainControl: false,
         },
       });
-      if (['metronome', 'score', 'beginner', 'vibe'].includes(config.current.mode)) {
+      if (
+        !mounted.current ||
+        ['metronome', 'score', 'beginner', 'vibe'].includes(config.current.mode)
+      ) {
         media.getTracks().forEach((track) => track.stop());
         return;
       }
@@ -177,7 +190,7 @@ function App() {
         if (analysisTime !== null) {
           last = analysisTime;
           analyser.getFloatTimeDomainData(buffer);
-          const raw = detectPitch(buffer, ctx.sampleRate);
+          const raw = detectPitch(buffer, ctx.sampleRate, config.current.minHz);
           let f = raw;
           const current = config.current;
           const feedbackPlaying = time < feedbackUntil.current;
@@ -260,9 +273,20 @@ function App() {
           </span>
           <b>
             {t('弦准')}
-            <span>{lang === 'en' ? 'VIOLIN' : 'ARCO'}</span>
+            <span>{lang === 'en' ? instrument.en.toUpperCase() : 'ARCO'}</span>
           </b>
         </a>
+        <label className="instrument-picker">
+          <span>{text('乐器', 'Instrument')}</span>
+          <select
+            aria-label={text('选择乐器', 'Choose instrument')}
+            value={instrument.id}
+            onChange={(e) => setInstrument(e.target.value)}
+          >
+            <option value="violin">{text('小提琴', 'Violin')}</option>
+            <option value="guitar">{text('吉他', 'Guitar')}</option>
+          </select>
+        </label>
         <nav>
           <button className="nav-active" onClick={() => setHelp(false)}>
             {t('调音室')}
@@ -290,12 +314,14 @@ function App() {
         <div className="intro">
           <div>
             <div className="eyebrow">
-              <span /> YOUR DAILY VIOLIN COMPANION
+              <span /> YOUR DAILY {instrument.en.toUpperCase()} COMPANION
             </div>
             <h1>
               {t(
                 mode === 'beginner'
-                  ? '从慢练开始，打好基础'
+                  ? guitar
+                    ? text('从慢练开始，打好基础', 'Build a foundation, one note at a time')
+                    : '从慢练开始，打好基础'
                   : mode === 'metronome'
                     ? '让每一拍，都稳稳落下'
                     : '从每一根弦，找到好声音',
@@ -307,9 +333,13 @@ function App() {
           <div className="intro-note">
             <Music2 size={24} />
             <span>
-              {t('为你的小提琴')}
+              {text(`为你的${instrument.zh}`, `For your ${instrument.en.toLowerCase()}`)}
               <br />
-              <strong>{t('留一点专注的时间')}</strong>
+              <strong>
+                {guitar
+                  ? text('留一点专注的时间', 'make time for your sound')
+                  : t('留一点专注的时间')}
+              </strong>
             </span>
           </div>
         </div>
@@ -328,7 +358,11 @@ function App() {
               </span>
               <span>
                 <b>{t('空弦调音')}</b>
-                <small>{t('四根弦，回到标准音')}</small>
+                <small>
+                  {guitar
+                    ? text('六根弦，回到标准音', 'Six strings, standard tuning')
+                    : t('四根弦，回到标准音')}
+                </small>
               </span>
               {mode === 'open' && <span className="active-dot" />}
             </button>
@@ -340,7 +374,7 @@ function App() {
                 <Music2 size={21} />
               </span>
               <span>
-                <b>{t('手型练习')}</b>
+                <b>{guitar ? text('品位练习', 'Fret practice') : t('手型练习')}</b>
                 <small>{t('指位与音准，一起掌握')}</small>
               </span>
               {mode === 'finger' && <span className="active-dot" />}
@@ -367,7 +401,11 @@ function App() {
               </span>
               <span>
                 <b>{t('初学者练习')}</b>
-                <small>{t('长弓、换弦与左手入门')}</small>
+                <small>
+                  {guitar
+                    ? text('拨弦、换弦与按品入门', 'Plucking, strings and frets')
+                    : t('长弓、换弦与左手入门')}
+                </small>
               </span>
               {mode === 'beginner' && <span className="active-dot" />}
             </button>
@@ -408,7 +446,7 @@ function App() {
                 <div className="strings">
                   {STRINGS.map((s, i) => (
                     <button
-                      key={s.name}
+                      key={s.midi}
                       className={string === i ? 'selected' : ''}
                       onClick={() => {
                         setString(i);
@@ -420,7 +458,14 @@ function App() {
                         {s.name}
                         <sub>{noteName(s.midi).octave}</sub>
                       </span>
-                      <small>{t(s.label)}</small>
+                      <small>
+                        {guitar
+                          ? text(
+                              s.label,
+                              `${6 - i}${['th', 'th', 'th', 'rd', 'nd', 'st'][i]} string`,
+                            )
+                          : t(s.label)}
+                      </small>
                       {string === i ? <Check size={16} /> : <span className="tiny-line" />}
                     </button>
                   ))}
@@ -433,11 +478,16 @@ function App() {
               </span>
               <b>{t(mode === 'metronome' ? '从慢速开始练习' : '给自己一点安静')}</b>
               <p>
-                {t(
-                  mode === 'metronome'
-                    ? '先把速度放慢，准确完成每个节奏，再逐渐提速。'
-                    : '在安静的环境中，持续拉奏一根弦，音准读数会更稳定。',
-                )}
+                {guitar && mode !== 'metronome'
+                  ? text(
+                      '轻拨一根弦，让声音延续；换弦前先让其他弦静音。',
+                      'Pluck one string and let it ring. Mute other strings before changing strings.',
+                    )
+                  : t(
+                      mode === 'metronome'
+                        ? '先把速度放慢，准确完成每个节奏，再逐渐提速。'
+                        : '在安静的环境中，持续拉奏一根弦，音准读数会更稳定。',
+                    )}
               </p>
               <div>
                 {t(mode === 'metronome' ? '声音在设备本地生成' : '声音仅在设备本地分析')}
@@ -500,7 +550,7 @@ function App() {
               {mode === 'finger' && (
                 <div className="finger-controls">
                   <label>
-                    {t('把位')}
+                    {guitar ? text('起始品位', 'Starting fret') : t('把位')}
                     <select
                       value={position}
                       onChange={(e) => {
@@ -508,29 +558,36 @@ function App() {
                         setFingerAuto(true);
                       }}
                     >
-                      {['第一把位', '第二把位', '第三把位', '第四把位', '第五把位'].map((p, i) => (
+                      {(guitar
+                        ? Array.from({ length: 12 }, (_, i) =>
+                            text(`第 ${i + 1} 品`, `Fret ${i + 1}`),
+                          )
+                        : ['第一把位', '第二把位', '第三把位', '第四把位', '第五把位']
+                      ).map((p, i) => (
                         <option value={i} key={p}>
                           {t(p)}
                         </option>
                       ))}
                     </select>
                   </label>
-                  <label>
-                    {t('手型')}
-                    <select
-                      value={pattern}
-                      onChange={(e) => {
-                        setPattern(+e.target.value);
-                        setFingerAuto(true);
-                      }}
-                    >
-                      {PATTERNS.map((p, i) => (
-                        <option value={i} key={t(p.name)}>
-                          {t(p.name)}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                  {!guitar && (
+                    <label>
+                      {t('手型')}
+                      <select
+                        value={pattern}
+                        onChange={(e) => {
+                          setPattern(+e.target.value);
+                          setFingerAuto(true);
+                        }}
+                      >
+                        {PATTERNS.map((p, i) => (
+                          <option value={i} key={t(p.name)}>
+                            {t(p.name)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
                   <div className="fingers">
                     {[1, 2, 3, 4].map((f) => (
                       <button
@@ -542,14 +599,23 @@ function App() {
                         }}
                         key={f}
                       >
-                        {lang === 'zh' ? `${f} 指` : `Finger ${f}`}
+                        {guitar
+                          ? text(`${position + f} 品`, `Fret ${position + f}`)
+                          : lang === 'zh'
+                            ? `${f} 指`
+                            : `Finger ${f}`}
                       </button>
                     ))}
                   </div>
                   <p className="auto-hint">
-                    {t(
-                      '自动识别保持当前把位与手型，同音优先保留当前琴弦。手动选择会锁定目标，可用下方开关恢复自动。',
-                    )}
+                    {guitar
+                      ? text(
+                          '自动识别当前四品范围内的音符；同音优先保留当前弦。手动选择会锁定目标。',
+                          'Auto-detect notes in the selected four-fret range. Unisons prefer the current string. Manual selection locks the target.',
+                        )
+                      : t(
+                          '自动识别保持当前把位与手型，同音优先保留当前琴弦。手动选择会锁定目标，可用下方开关恢复自动。',
+                        )}
                   </p>
                 </div>
               )}
@@ -576,9 +642,11 @@ function App() {
                   {STRINGS[string].name} {lang === 'zh' ? '弦' : 'string'} ·{' '}
                   {mode === 'open' || finger === 0
                     ? t('空弦')
-                    : lang === 'zh'
-                      ? `${position + 1} 把位 · ${finger} 指`
-                      : `Position ${position + 1} · Finger ${finger}`}
+                    : guitar
+                      ? text(`${position + finger} 品`, `Fret ${position + finger}`)
+                      : lang === 'zh'
+                        ? `${position + 1} 把位 · ${finger} 指`
+                        : `Position ${position + 1} · Finger ${finger}`}
                   <span>
                     {lang === 'zh' ? '目标' : 'Target'} {target.toFixed(2)} Hz
                   </span>
@@ -659,7 +727,7 @@ function App() {
                 <button className="play-tone" disabled={starting} onClick={playTone}>
                   {playing ? <Square size={15} /> : <Volume2 size={17} />}{' '}
                   {playing ? t('停止标准音') : t('聆听标准音')} ·{' '}
-                  {lang === 'zh' ? '小提琴' : 'Violin'}
+                  {text(instrument.zh, instrument.en)}
                   <span>
                     {note.name}
                     {note.octave}
@@ -702,13 +770,19 @@ function App() {
               <span className="eyebrow">FINGERBOARD STUDY</span>
               <h2>{t('让音准，成为手指的记忆。')}</h2>
               <p>
-                {t(PATTERNS[pattern].sub)} · {t('选择指位查看目标音')}
+                {guitar
+                  ? text(
+                      '每品一个半音，指尖靠近品丝',
+                      'One semitone per fret; place fingers just behind the fret',
+                    )
+                  : t(PATTERNS[pattern].sub)}{' '}
+                · {t('选择指位查看目标音')}
               </p>
             </div>
             <div className="fingerboard">
               <div className="fingerboard-line" />
-              {[0, ...PATTERNS[pattern].steps].map((step, i) => {
-                const n = noteName(base + (i ? [0, 2, 4, 5, 7][position] + step : 0));
+              {(guitar ? [0, 1, 2, 3, 4] : [0, ...PATTERNS[pattern].steps]).map((step, i) => {
+                const n = noteName(targetMidiFor(instrument.id, string, i, position, pattern));
                 return (
                   <button
                     key={i}
@@ -719,13 +793,17 @@ function App() {
                       setFingerAuto(false);
                     }}
                   >
-                    <span>{i === 0 ? t('空') : i}</span>
+                    <span>{i === 0 ? t('空') : guitar ? position + i : i}</span>
                     <b>
                       {n.name}
                       <sub>{n.octave}</sub>
                     </b>
                     <small>
-                      {i ? `${step} ${lang === 'zh' ? '半音' : 'semitones'}` : t('空弦')}
+                      {i
+                        ? guitar
+                          ? text(`${position + i} 品`, `Fret ${position + i}`)
+                          : `${step} ${lang === 'zh' ? '半音' : 'semitones'}`
+                        : t('空弦')}
                     </small>
                   </button>
                 );
@@ -739,17 +817,37 @@ function App() {
             <div>
               <b>{t('每一次准确，都是进步。')}</b>
               <p>
-                {mode === 'beginner'
-                  ? t('先练准确，再练连续。对镜观察弓直和接触点。')
-                  : mode === 'score'
-                    ? t('导入曲谱，选择声部和速度，跟随预备拍开始演奏。')
-                    : mode === 'metronome'
-                      ? t('先把速度放慢，准确完成每个节奏，再逐渐提速。')
-                      : mode === 'open'
-                        ? t('建议按 A → D → G → E 的顺序调弦，再复查一次。')
-                        : t(
-                            '相邻手指相距 1 个半音时靠拢，2 个半音时分开。各手型以当前把位为基准。',
-                          )}
+                {mode === 'vibe'
+                  ? text(
+                      '演奏单音旋律，让续写跟随你的音高与节奏。',
+                      'Play a single-note melody and let the continuation follow your pitch and rhythm.',
+                    )
+                  : guitar && mode === 'beginner'
+                    ? text(
+                        '放松手腕，轻拨单弦，再慢慢练习换弦与按品。',
+                        'Relax your wrists. Pluck one string, then practice string changes and fretting slowly.',
+                      )
+                    : guitar && mode === 'finger'
+                      ? text(
+                          '每品相差一个半音。指尖放在品丝后方，用最小的力度按出清晰音。',
+                          'Each fret is one semitone. Place the fingertip just behind the fret, with only enough pressure for a clear note.',
+                        )
+                      : mode === 'beginner'
+                        ? t('先练准确，再练连续。对镜观察弓直和接触点。')
+                        : mode === 'score'
+                          ? t('导入曲谱，选择声部和速度，跟随预备拍开始演奏。')
+                          : mode === 'metronome'
+                            ? t('先把速度放慢，准确完成每个节奏，再逐渐提速。')
+                            : mode === 'open'
+                              ? guitar
+                                ? text(
+                                    '按 E2 → A2 → D3 → G3 → B3 → E4 调弦，轻拨单弦并让声音延续。',
+                                    'Tune E2 → A2 → D3 → G3 → B3 → E4. Pluck one string gently and let it ring.',
+                                  )
+                                : t('建议按 A → D → G → E 的顺序调弦，再复查一次。')
+                              : t(
+                                  '相邻手指相距 1 个半音时靠拢，2 个半音时分开。各手型以当前把位为基准。',
+                                )}
               </p>
             </div>
           </div>
@@ -761,7 +859,7 @@ function App() {
       </main>
       <footer>
         <span>
-          {lang === 'zh' ? '弦准 ARCO' : 'ARCO VIOLIN'} <i> / </i>
+          {lang === 'zh' ? '弦准 ARCO' : `ARCO ${instrument.en.toUpperCase()}`} <i> / </i>
           {t('为每一个认真练琴的你')}
         </span>
         <span>
@@ -794,7 +892,44 @@ function App() {
             >
               <X size={20} />
             </button>
-            {help ? (
+            {help && guitar ? (
+              <>
+                <BookOpen size={28} />
+                <h2>{text('吉他调音与练习', 'Guitar tuning and practice')}</h2>
+                <ol>
+                  <li>
+                    {text(
+                      '标准调弦：六弦至一弦 E2–A2–D3–G3–B3–E4。轻拨单弦，让余音自然延续。',
+                      'Standard tuning, string 6 to 1: E2–A2–D3–G3–B3–E4. Pluck one string and let it ring.',
+                    )}
+                  </li>
+                  <li>
+                    {text(
+                      `在 ±${accuracyCents} 音分范围内稳定保持约 0.5 秒，获得调音成功反馈。`,
+                      `Hold within ±${accuracyCents} cents for about 0.5 seconds to receive tuning feedback.`,
+                    )}
+                  </li>
+                  <li>
+                    {text(
+                      '品位练习可选择起始品位，练习连续四品或空弦；自动模式优先保留当前弦。',
+                      'Fret practice covers four consecutive frets plus open strings. Auto mode prefers the current string for unisons.',
+                    )}
+                  </li>
+                  <li>
+                    {text(
+                      '初学者课程包括空弦、换弦和半音练习。曲谱练习与 Vibe 支持单音演奏，暂不分析和弦。',
+                      'Beginner lessons cover open strings, string changes and chromatic fretting. Score practice and Vibe follow single notes; chord analysis is not supported.',
+                    )}
+                  </li>
+                </ol>
+                <p>
+                  {text(
+                    '曲谱以实际音高展示。吉他试听使用本机合成的拨弦音色。切换乐器会停止当前练习与播放。',
+                    'Scores show concert pitch. Guitar playback uses a locally synthesized plucked-string voice. Switching instruments stops practice and playback.',
+                  )}
+                </p>
+              </>
+            ) : help ? (
               <>
                 <BookOpen size={28} />
                 <h2>{t('开始你的调音练习')}</h2>
@@ -889,7 +1024,9 @@ function App() {
   );
 }
 createRoot(document.getElementById('root')).render(
-  <LanguageProvider>
-    <App />
-  </LanguageProvider>,
+  <InstrumentProvider>
+    <LanguageProvider>
+      <App />
+    </LanguageProvider>
+  </InstrumentProvider>,
 );

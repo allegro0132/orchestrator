@@ -248,7 +248,7 @@ export function lessonScore(lesson) {
     body = '';
   const flush = () => {
     bars.push(
-      `<measure number="${bars.length + 1}">${bars.length ? '' : `<attributes><divisions>1</divisions><key><fifths>2</fifths></key><time><beats>4</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes><direction><direction-type><metronome><beat-unit>quarter</beat-unit><per-minute>${lesson.bpm}</per-minute></metronome></direction-type><sound tempo="${lesson.bpm}"/></direction>`}${body}</measure>`,
+      `<measure number="${bars.length + 1}">${bars.length ? '' : `<attributes><divisions>1</divisions><key><fifths>${lesson.instrument === 'guitar' ? 0 : 2}</fifths></key><time><beats>4</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes><direction><direction-type><metronome><beat-unit>quarter</beat-unit><per-minute>${lesson.bpm}</per-minute></metronome></direction-type><sound tempo="${lesson.bpm}"/></direction>`}${body}</measure>`,
     );
     body = '';
     beat = 0;
@@ -270,6 +270,6 @@ export function lessonScore(lesson) {
   });
   if (body) flush();
   return parseMusicXml(
-    `<?xml version="1.0"?><score-partwise version="4.0"><work><work-title>${escapeXml(lesson.title.en)}</work-title></work><part-list><score-part id="P1"><part-name>Violin</part-name></score-part></part-list><part id="P1">${bars.join('')}</part></score-partwise>`,
+    `<?xml version="1.0"?><score-partwise version="4.0"><work><work-title>${escapeXml(lesson.title.en)}</work-title></work><part-list><score-part id="P1"><part-name>${lesson.instrument === 'guitar' ? 'Guitar (concert pitch)' : 'Violin'}</part-name></score-part></part-list><part id="P1">${bars.join('')}</part></score-partwise>`,
   );
 }

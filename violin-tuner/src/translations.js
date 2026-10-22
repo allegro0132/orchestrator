@@ -1,4 +1,6 @@
 export const english = {
+  六弦: '6th string',
+  五弦: '5th string',
   音准容差: 'Pitch tolerance',
   '（默认）': ' (default)',
   '用于空弦与指位调音。数值越小，判定越严格；设置自动保存在本机。':

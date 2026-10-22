@@ -14,6 +14,17 @@ Vibe with actual **SkyTNT W4A16 / WebGPU** continuation:
 
 Input is synthesized; the Vibe output comes from real SkyTNT inference. See [capture details and provenance](../docs/demos/README.md).
 
+## Instrument switching
+
+Use the instrument selector in the header to switch between violin and guitar. The choice is remembered locally. Switching stops active microphones, playback and practice; saved Vibe takes remain in the history for their instrument.
+
+- Guitar standard tuning: E2–A2–D3–G3–B3–E4, with low-frequency detection down to 65 Hz and the same 60 Hz analysis cadence.
+- Fret practice covers open strings and four consecutive frets, starting at frets 1–12. Auto-detection prefers the current string for unisons.
+- Three guitar beginner lessons cover open-string plucking, high-string changes, and chromatic fretting. Score practice, hit/combo feedback, fullscreen notation, metronome and Vibe work with either instrument.
+- Guitar reference tones and score/Vibe previews use a locally synthesized plucked-string voice; violin retains its sampled voice. Guitar voices are prepared before playback to keep note scheduling responsive.
+- Guitar Vibe captures E2–E6 and constrains continuations to E2–E5, using the acoustic-guitar program for SkyTNT. Violin defaults remain unchanged. New takes record the instrument; older takes are treated as violin.
+- Scores use concert pitch, including guitar exercises; this version follows single notes rather than chords and does not generate guitar tablature. Microphone accuracy still depends on the instrument, room and device.
+
 ## Development
 
 ```sh

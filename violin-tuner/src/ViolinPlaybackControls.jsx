@@ -1,6 +1,7 @@
 import React from 'react';
 import { Headphones, Pause, Square } from 'lucide-react';
 import { useLanguage } from './i18n.jsx';
+import { useInstrument } from './InstrumentContext.jsx';
 export default function ViolinPlaybackControls({
   player,
   onPlay,
@@ -8,10 +9,14 @@ export default function ViolinPlaybackControls({
   disabled = false,
   label,
 }) {
+  const { instrument } = useInstrument();
   const { lang } = useLanguage(),
     text = (zh, en) => (lang === 'zh' ? zh : en);
   return (
-    <div className="violin-playback" aria-label={text('小提琴试听', 'Violin playback')}>
+    <div
+      className="violin-playback"
+      aria-label={text(`${instrument.zh}试听`, `${instrument.en} playback`)}
+    >
       <button
         className="secondary-button"
         disabled={disabled}
@@ -36,12 +41,12 @@ export default function ViolinPlaybackControls({
           {text('停止', 'Stop')}
         </button>
       )}
-      <small>{text('小提琴音色', 'Violin sound')}</small>
+      <small>{text(`${instrument.zh}音色`, `${instrument.en} sound`)}</small>
       {player.error && (
         <span className="error" role="alert">
           {text(
             '音色加载或播放失败，请检查网络后重试。',
-            'Violin audio could not load or play. Check your connection and retry.',
+            'Instrument audio could not load or play. Check your connection and retry.',
           )}
         </span>
       )}

@@ -3854,3 +3854,86 @@ header {
     transition: none;
   }
 }
+
+.instrument-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 24px;
+  color: var(--muted, #858b75);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.instrument-picker > span {
+  white-space: nowrap;
+}
+.instrument-picker select {
+  width: auto;
+  background: #f0f1e7;
+  border: 1px solid #d9ddca;
+  border-radius: 12px;
+  color: #5c6648;
+  padding: 10px 30px 10px 12px;
+  font: inherit;
+  font-weight: 600;
+  max-width: 160px;
+}
+@media (max-width: 900px) {
+  .instrument-picker {
+    margin-left: 0;
+  }
+  .instrument-picker > span {
+    display: none;
+  }
+}
+@media (max-width: 600px) {
+  header {
+    flex-wrap: wrap;
+  }
+  .instrument-picker {
+    order: 5;
+    width: 100%;
+    justify-content: center;
+    padding-bottom: 8px;
+  }
+  .instrument-picker select {
+    width: 100%;
+    max-width: none;
+    text-align: center;
+  }
+}
+@media (max-width: 600px) {
+  header {
+    height: auto;
+    min-height: 70px;
+    padding-top: 12px;
+    padding-bottom: 4px;
+    row-gap: 10px;
+  }
+}
+header {
+  gap: 24px;
+}
+.instrument-picker {
+  margin-left: 0;
+}
+@media (max-width: 1000px) {
+  header {
+    gap: 16px;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+  nav button:not(.nav-active) {
+    display: none;
+  }
+}
+@media (max-width: 800px) {
+  header nav {
+    display: none;
+  }
+}
+@media (max-width: 600px) {
+  header {
+    gap: 10px;
+  }
+}

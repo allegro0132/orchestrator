@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { violinInstrument, createViolinTransport } from './violinAudio.js';
+import { useInstrument } from './InstrumentContext.jsx';
+import { guitarInstrument } from './guitarAudio.js';
 export default function useViolinPlayback(getAudioContext, { onTime, onEnd } = {}) {
+  const { instrument: selected } = useInstrument();
   const [status, setStatus] = useState('idle'),
     [error, setError] = useState(false),
     [time, setTime] = useState(0);
   const state = useRef({ token: 0 }),
     latest = useRef(null);
-  latest.current = { getAudioContext, onTime, onEnd };
+  latest.current = { getAudioContext, onTime, onEnd, instrument: selected.id };
   const publish = (value) => {
     setTime(value);
     latest.current.onTime?.(value);
@@ -37,8 +40,14 @@ export default function useViolinPlayback(getAudioContext, { onTime, onEnd } = {
     setStatus('loading');
     try {
       const context = await latest.current.getAudioContext();
-      const instrument = violinInstrument(context);
-      await instrument.prepare(events.filter((e) => e.end > at).map((e) => e.midi));
+      const instrument =
+        latest.current.instrument === 'guitar'
+          ? guitarInstrument(context)
+          : violinInstrument(context);
+      await instrument.prepare(
+        events.filter((e) => e.end > at).map((e) => e.midi),
+        reference,
+      );
       if (token !== run.token) return;
       const transport = createViolinTransport(context, instrument, events, duration, reference, {
         onEnd: () => {

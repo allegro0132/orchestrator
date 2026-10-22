@@ -80,10 +80,20 @@ export function skyDecode(tokens) {
 }
 export function skyPrompt(
   notes,
-  { bpm = 60, count = 4, fromBar, minMidi = 55, maxMidi = 83, maxGapBeats = 1, key = null } = {},
+  {
+    bpm = 60,
+    count = 4,
+    fromBar,
+    minMidi = 55,
+    maxMidi = 83,
+    maxGapBeats = 1,
+    key = null,
+    program = 40,
+  } = {},
 ) {
   if (
     !notes.length ||
+    ![24, 40].includes(program) ||
     !Number.isFinite(maxGapBeats) ||
     maxGapBeats < 0 ||
     maxGapBeats > 4 ||
@@ -122,7 +132,7 @@ export function skyPrompt(
   if (key) rows.push(skyEncode('key_signature', [0, 0, 0, key.fifths + 7, key.minor ? 1 : 0]));
   rows.push(
     skyEncode('set_tempo', [0, 0, 0, Math.round(bpm)]),
-    skyEncode('patch_change', [0, 0, 1, 0, 40]),
+    skyEncode('patch_change', [0, 0, 1, 0, program]),
   );
   let lastT1 = 0,
     end = 0;

@@ -1,3 +1,4 @@
+import { useInstrument } from './InstrumentContext.jsx';
 import React from 'react';
 import { useLanguage } from './i18n.jsx';
 import { Check, RotateCcw } from 'lucide-react';
@@ -10,7 +11,18 @@ export default function PitchHistory({
   onReset,
   accuracyCents = ACCURACY_CENTS,
 }) {
+  const { instrument } = useInstrument();
+  const guitar = instrument.id === 'guitar';
   const { lang, t } = useLanguage();
+  const displayText = (value) =>
+    guitar
+      ? t(value)
+          .replaceAll('换弓', '换弦')
+          .replaceAll('bow changes', 'string changes')
+          .replaceAll('停弓', '停奏')
+          .replaceAll('bowing', 'playing')
+          .replaceAll('拉奏', '演奏')
+      : t(value);
   const { samples, now, progress, stats, success } = tracking;
   const { range, segments, y, current: currentPoint } = historyPlot(samples, now);
   const signed = (value) => `${value > 0 ? '+' : ''}${value.toFixed(1)}`;
@@ -106,7 +118,13 @@ export default function PitchHistory({
           )}
         </svg>
         {!samples.some((s) => s.cents !== null) && (
-          <div className="history-empty">{t('拉奏后，这里会记录音准变化')}</div>
+          <div className="history-empty">
+            {guitar
+              ? lang === 'zh'
+                ? '拨弦后，这里会记录音准变化'
+                : 'Your pitch will appear here as you play'
+              : t('拉奏后，这里会记录音准变化')}
+          </div>
         )}
       </div>
       <div className="history-axis">
@@ -139,7 +157,10 @@ export default function PitchHistory({
               ? lang === 'zh'
                 ? `已稳定保持 0.5 秒 · 平均 ${signed(success.mean)} 音分`
                 : `Steady for 0.5s · Average ${signed(success.mean)} cents`
-              : t('平均在 ±{cents} 音分内，稳定拉奏约 0.5 秒').replaceAll('{cents}', accuracyCents)}
+              : displayText('平均在 ±{cents} 音分内，稳定拉奏约 0.5 秒').replaceAll(
+                  '{cents}',
+                  accuracyCents,
+                )}
           </p>
         </div>
         {success && (
@@ -160,7 +181,7 @@ export default function PitchHistory({
         <span style={{ width: `${(success ? 1 : progress) * 100}%` }} />
       </div>
       <p className="history-footnote">
-        {t(
+        {displayText(
           '短暂换弓可容忍；断音超过 0.3 秒重新累计。绿色带为 ±{cents} 音分准确区，量程固定 ±50 音分，超出部分在边缘用棕色标记。',
         ).replaceAll('{cents}', accuracyCents)}
       </p>

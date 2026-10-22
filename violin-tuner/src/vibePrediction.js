@@ -1,3 +1,4 @@
+import { INSTRUMENTS } from './instruments.js';
 import { VIBE_KEYS, estimateVibeKey } from './vibe.js';
 import { MODEL_ID, encodeNote, performanceTokens } from './musicTransformer.js';
 export function clearVibeContext(session) {
@@ -39,6 +40,9 @@ export function predictionRequest(session, notes, beat, engine = MODEL_ID) {
     .slice(-1)
     .flatMap((b) => b.events);
   return {
+    minMidi: INSTRUMENTS[session.instrument || 'violin'].minMidi,
+    maxMidi: INSTRUMENTS[session.instrument || 'violin'].maxMidi,
+    program: session.instrument === 'guitar' ? 24 : 40,
     predictor: engine,
     bpm: session.bpm,
     notes: [
@@ -80,7 +84,10 @@ export function commitPrediction(session, request, bars, beat, milliseconds) {
       if (
         e.beat !== cursor ||
         !(e.duration > 0) ||
-        (e.midi !== null && (!Number.isInteger(e.midi) || e.midi < 55 || e.midi > 83))
+        (e.midi !== null &&
+          (!Number.isInteger(e.midi) ||
+            e.midi < (request.minMidi ?? 55) ||
+            e.midi > (request.maxMidi ?? 83)))
       )
         return false;
       cursor += e.duration;

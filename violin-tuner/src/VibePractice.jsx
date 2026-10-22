@@ -1,3 +1,4 @@
+import { useInstrument } from './InstrumentContext.jsx';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AudioLines, Mic, Square, Plus, Download, Trash2, History, Eraser } from 'lucide-react';
 import { useLanguage } from './i18n.jsx';
@@ -15,7 +16,7 @@ import {
   vibeXml,
   vibeTrack,
 } from './vibe.js';
-import { saveVibe, listVibes, deleteVibe } from './vibeStore.js';
+import { saveVibe, listVibes as listAllVibes, deleteVibe } from './vibeStore.js';
 import {
   predictionRequest,
   commitPrediction,
@@ -42,8 +43,11 @@ const nameOf = (midi) => {
 };
 
 export default function VibePractice({ getAudioContext, reference, draft, onDraft }) {
+  const { instrument } = useInstrument();
   const { lang } = useLanguage(),
     text = (zh, en) => (lang === 'zh' ? zh : en);
+  const listVibes = async () =>
+    (await listAllVibes()).filter((take) => (take.instrument || 'violin') === instrument.id);
   const [preferences, setPreferences] = useState(readVibePreferences);
   const [preferencesError, setPreferencesError] = useState(false);
   function remember(patch) {
@@ -52,7 +56,8 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
     setPreferencesError(!writeVibePreferences(next));
   }
   const data = useRef(null);
-  if (!data.current) data.current = draft || newVibeSession(preferences.bpm, preferences.key);
+  if (!data.current)
+    data.current = draft || newVibeSession(preferences.bpm, preferences.key, instrument.id);
   const capture = useRef(null);
   if (!capture.current) capture.current = createCapture(data.current.notes);
   const run = useRef({ token: 0 });
@@ -435,8 +440,15 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
           lastAnalysis = analysisTime;
           data.current.elapsed = elapsed;
           analyser.getFloatTimeDomainData(buffer);
-          const detected = detectPitch(buffer, ctx.sampleRate);
-          capturePitch(capture.current, elapsed, detected, data.current.reference);
+          const detected = detectPitch(buffer, ctx.sampleRate, instrument.minHz);
+          capturePitch(
+            capture.current,
+            elapsed,
+            detected,
+            data.current.reference,
+            instrument.minMidi,
+            instrument.id === 'guitar' ? 88 : 98,
+          );
           const notes = captureNotes(capture.current, elapsed);
           predict(notes, (elapsed * data.current.bpm) / 60, token);
           data.current.notes = notes;
@@ -474,7 +486,7 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
     stopPreview();
     if (!(await persist())) return;
     setContextNotice(false);
-    data.current = newVibeSession(preferences.bpm, preferences.key);
+    data.current = newVibeSession(preferences.bpm, preferences.key, instrument.id);
     capture.current = createCapture();
     latest.current.onDraft?.(structuredClone(data.current));
     setTime(0);
@@ -505,7 +517,7 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
       await deleteVibe(record.id);
       setHistory(await listVibes());
       if (data.current.id === record.id) {
-        data.current = newVibeSession(preferences.bpm, preferences.key);
+        data.current = newVibeSession(preferences.bpm, preferences.key, instrument.id);
         capture.current = createCapture();
         latest.current.onDraft?.(structuredClone(data.current));
         setTrack(null);
@@ -1067,7 +1079,7 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
         <p className="score-method">
           {text(
             '默认规律式续写复用你的旋律走向和节奏；可选 SkyTNT Transformer，以实际音符和已生成的末尾小节为上下文。权重按需下载到此设备，音频不上传。生成限制为单声部、G3–B5、4/4 拍和指定小节长度。JSON 保留每次生成的引擎和版本。录入量化至八分音符，可能漏掉同音连奏及快速音符。',
-            'Rule-based continuation adapts your melodic contour and rhythm by default. Optional SkyTNT Transformer uses captured notes and the generated tail as context. Weights download to this device; audio is never uploaded. Output is constrained to monophonic G3–B5, 4/4 and the requested bar count. JSON records each prediction engine and version. Eighth-note quantization may miss repeated legato and fast notes.',
+            'Rule-based continuation adapts your melodic contour and rhythm by default. Optional SkyTNT Transformer uses captured notes and the generated tail as context. Weights download to this device; audio is never uploaded. Output is constrained to a monophonic instrument range, 4/4 and the requested bar count. JSON records each prediction engine and version. Eighth-note quantization may miss repeated legato and fast notes.',
           )}
         </p>
       </div>

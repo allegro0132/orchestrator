@@ -6,9 +6,19 @@ const inScale = (midi, key) =>
 function nearest(value, choices) {
   return choices.reduce((a, b) => (Math.abs(b - value) < Math.abs(a - value) ? b : a));
 }
-export function generateVibeBars(notes, fromBar, count, bpm, key, seed = 1) {
+export function generateVibeBars(
+  notes,
+  fromBar,
+  count,
+  bpm,
+  key,
+  seed = 1,
+  { minMidi = 55, maxMidi = 83 } = {},
+) {
   if (!notes.length) return [];
-  const scale = Array.from({ length: 29 }, (_, i) => 55 + i).filter((m) => inScale(m, key));
+  const scale = Array.from({ length: maxMidi - minMidi + 1 }, (_, i) => minMidi + i).filter((m) =>
+    inScale(m, key),
+  );
   const motif = notes.slice(-16);
   const degrees = motif.map((n) => scale.indexOf(nearest(n.midi, scale)));
   const rhythms = motif.map((n) => nearest((n.duration * bpm) / 60, [0.5, 1, 2, 4]));

@@ -1,3 +1,5 @@
+import { useInstrument } from './InstrumentContext.jsx';
+import { GUITAR_LESSONS } from './guitarLessons.js';
 import React, { useMemo, useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Sprout } from 'lucide-react';
 import ScorePractice from './ScorePractice.jsx';
@@ -60,34 +62,42 @@ function BeginnerGuide({ lesson }) {
           ))}
         </div>
         <p className="beginner-observation">
-          {text(
-            '麦克风提供音准与节奏参考；弓直、接触点、右臂高度和手型请对镜自检。',
-            'The microphone provides pitch and timing feedback. Use a mirror to check straight bow travel, contact point, arm level, and hand shape.',
-          )}
+          {lesson.instrument === 'guitar'
+            ? text(
+                '麦克风提供单音音准与节奏参考，请自行检查拨弦与按品动作。',
+                'The microphone checks single-note pitch and timing. Review picking and fretting technique yourself.',
+              )
+            : text(
+                '麦克风提供音准与节奏参考；弓直、接触点、右臂高度和手型请对镜自检。',
+                'The microphone provides pitch and timing feedback. Use a mirror to check straight bow travel, contact point, arm level, and hand shape.',
+              )}
         </p>
       </details>
     </div>
   );
 }
-function savedLesson() {
+function savedLesson(lessons, instrument) {
   try {
-    const id = localStorage.getItem('arco-beginner-lesson');
-    return BEGINNER_LESSONS.findIndex((l) => l.id === id) >= 0 ? id : BEGINNER_LESSONS[0].id;
+    const id = localStorage.getItem(`arco-beginner-lesson-${instrument}`);
+    return lessons.findIndex((l) => l.id === id) >= 0 ? id : lessons[0].id;
   } catch {
-    return BEGINNER_LESSONS[0].id;
+    return lessons[0].id;
   }
 }
 export default function BeginnerPractice({ getAudioContext, reference }) {
   const { lang } = useLanguage(),
     text = (zh, en) => (lang === 'zh' ? zh : en);
-  const [id, setId] = useState(savedLesson),
+  const { instrument } = useInstrument();
+  const guitar = instrument.id === 'guitar';
+  const lessons = guitar ? GUITAR_LESSONS : BEGINNER_LESSONS;
+  const [id, setId] = useState(() => savedLesson(lessons, instrument.id)),
     [active, setActive] = useState(false);
-  const index = BEGINNER_LESSONS.findIndex((l) => l.id === id),
-    lesson = BEGINNER_LESSONS[index];
+  const index = lessons.findIndex((l) => l.id === id),
+    lesson = lessons[index];
   const score = useMemo(() => lessonScore(lesson), [lesson]);
   useEffect(() => {
     try {
-      localStorage.setItem('arco-beginner-lesson', id);
+      localStorage.setItem(`arco-beginner-lesson-${instrument.id}`, id);
     } catch {}
   }, [id]);
   return (
@@ -100,10 +110,15 @@ export default function BeginnerPractice({ getAudioContext, reference }) {
           </span>
           <h2>{text('初学者练习', 'Beginner practice')}</h2>
           <p>
-            {text(
-              '长弓 4 分钟 → 四弦 4 分钟 → 换弦 3 分钟；再按需要练左手。',
-              'Long bows 4 min → open strings 4 min → crossings 3 min; then explore the left hand.',
-            )}
+            {guitar
+              ? text(
+                  '先练空弦拨弦，再练换弦与半音按品。',
+                  'Start with open strings, then explore string changes and fretting.',
+                )
+              : text(
+                  '长弓 4 分钟 → 四弦 4 分钟 → 换弦 3 分钟；再按需要练左手。',
+                  'Long bows 4 min → open strings 4 min → crossings 3 min; then explore the left hand.',
+                )}
           </p>
         </div>
         <label>
@@ -118,11 +133,13 @@ export default function BeginnerPractice({ getAudioContext, reference }) {
                     : text('左手指法', 'Left-hand fingering')
                 }
               >
-                {BEGINNER_LESSONS.filter((l) => l.category === category).map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {localize(l.title, lang)}
-                  </option>
-                ))}
+                {lessons
+                  .filter((l) => l.category === category)
+                  .map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {localize(l.title, lang)}
+                    </option>
+                  ))}
               </optgroup>
             ))}
           </select>
@@ -131,17 +148,17 @@ export default function BeginnerPractice({ getAudioContext, reference }) {
           <button
             aria-label={text('上一项练习', 'Previous exercise')}
             disabled={active || index === 0}
-            onClick={() => setId(BEGINNER_LESSONS[index - 1].id)}
+            onClick={() => setId(lessons[index - 1].id)}
           >
             <ChevronLeft size={17} />
           </button>
           <span>
-            {index + 1} / {BEGINNER_LESSONS.length}
+            {index + 1} / {lessons.length}
           </span>
           <button
             aria-label={text('下一项练习', 'Next exercise')}
-            disabled={active || index === BEGINNER_LESSONS.length - 1}
-            onClick={() => setId(BEGINNER_LESSONS[index + 1].id)}
+            disabled={active || index === lessons.length - 1}
+            onClick={() => setId(lessons[index + 1].id)}
           >
             <ChevronRight size={17} />
           </button>

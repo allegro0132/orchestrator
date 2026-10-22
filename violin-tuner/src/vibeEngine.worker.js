@@ -93,6 +93,7 @@ const host = createVibeEngineHost({
       request.bpm,
       request.key,
       request.seed,
+      request,
     ),
   generateTransformer: async (decoder, request, { shouldCancel, publish }) => {
     const prompt = skyPrompt(request.notes, request),

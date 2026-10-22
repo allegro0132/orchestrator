@@ -1,3 +1,4 @@
+import { useInstrument } from './InstrumentContext.jsx';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Upload, Play, Square, RotateCcw, Music2 } from 'lucide-react';
 import { useLanguage } from './i18n.jsx';
@@ -35,6 +36,7 @@ export default function ScorePractice({
   renderAction,
   onActivityChange,
 }) {
+  const { instrument } = useInstrument();
   const { lang } = useLanguage(),
     text = (zh, en) => (lang === 'zh' ? zh : en);
   const [showResults, setShowResults] = useState(false);
@@ -291,7 +293,7 @@ export default function ScorePractice({
           last = analysisTime;
           position.current = elapsed;
           analyser.getFloatTimeDomainData(buffer);
-          const pitch = detectPitch(buffer, ctx.sampleRate);
+          const pitch = detectPitch(buffer, ctx.sampleRate, instrument.minHz);
           if (elapsed >= Math.max(run.startAt, model.current.from)) {
             const beforeJudgment = model.current.feedback.serial;
             analyseScore(model.current, elapsed, pitch, reference);
@@ -702,7 +704,9 @@ export default function ScorePractice({
           <span className="secure-dot" />
           {text('曲谱与声音仅在本地分析', 'Scores and audio stay on your device')}
         </span>
-        <span>{text('单音小提琴练习', 'Monophonic violin practice')}</span>
+        <span>
+          {text(`单音${instrument.zh}练习`, `Monophonic ${instrument.en.toLowerCase()} practice`)}
+        </span>
       </div>
     </section>
   );

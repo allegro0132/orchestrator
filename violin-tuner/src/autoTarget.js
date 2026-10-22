@@ -1,13 +1,21 @@
-import { STRINGS, PATTERNS, frequency, centsOff } from './pitch.js';
-const OFFSETS = [0, 2, 4, 5, 7];
+import { frequency, centsOff } from './pitch.js';
+import { INSTRUMENTS, targetMidiFor } from './instruments.js';
 export function findTarget(
   hz,
-  { mode, reference = 440, string = 2, finger = 0, position = 0, pattern = 0 },
+  {
+    mode,
+    reference = 440,
+    string = 2,
+    finger = 0,
+    position = 0,
+    pattern = 0,
+    instrument = 'violin',
+  },
 ) {
   if (!Number.isFinite(hz) || hz <= 0) return null;
-  const candidates = STRINGS.flatMap((s, i) =>
+  const candidates = INSTRUMENTS[instrument].strings.flatMap((s, i) =>
     (mode === 'finger' ? [0, 1, 2, 3, 4] : [0]).map((f) => {
-      const midi = s.midi + (f ? OFFSETS[position] + PATTERNS[pattern].steps[f - 1] : 0);
+      const midi = targetMidiFor(instrument, i, f, position, pattern);
       return { string: i, finger: f, distance: Math.abs(centsOff(hz, frequency(midi, reference))) };
     }),
   );

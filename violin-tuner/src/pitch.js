@@ -17,12 +17,12 @@ export function noteName(midi) {
   return { name: names[((midi % 12) + 12) % 12], octave: Math.floor(midi / 12) - 1 };
 }
 // Normalized square difference, with the first strong minimum selected to avoid octave errors.
-export function detectPitch(buffer, sampleRate) {
+export function detectPitch(buffer, sampleRate, minHz = 170) {
   let power = 0;
   for (const x of buffer) power += x * x;
   if (Math.sqrt(power / buffer.length) < 0.002) return null;
   const min = Math.floor(sampleRate / 2400),
-    max = Math.min(Math.floor(sampleRate / 170), Math.floor(buffer.length / 2) - 1);
+    max = Math.min(Math.floor(sampleRate / minHz), Math.floor(buffer.length / 2) - 1);
   const values = new Float32Array(max + 1);
   let best = 0,
     bestScore = 0;

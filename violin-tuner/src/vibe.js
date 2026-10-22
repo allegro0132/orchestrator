@@ -43,10 +43,10 @@ function finish(capture, end) {
     });
   capture.active = null;
 }
-export function capturePitch(capture, time, hz, reference = 440) {
+export function capturePitch(capture, time, hz, reference = 440, minMidi = 55, maxMidi = 98) {
   if (!Number.isFinite(time) || time < 0) return;
   const pitch = hz > 0 ? 69 + 12 * Math.log2(hz / reference) : NaN;
-  if (!Number.isFinite(pitch) || pitch < 54.5 || pitch > 98.5) {
+  if (!Number.isFinite(pitch) || pitch < minMidi - 0.5 || pitch > maxMidi + 0.5) {
     capture.candidate = null;
     if (capture.active && time - capture.lastVoiced > 0.18)
       finish(capture, capture.lastVoiced + 0.04);
@@ -55,7 +55,7 @@ export function capturePitch(capture, time, hz, reference = 440) {
   if (capture.active && time - capture.lastVoiced > 0.18)
     finish(capture, capture.lastVoiced + 0.04);
   capture.lastVoiced = time;
-  const midi = Math.max(55, Math.min(98, Math.round(pitch)));
+  const midi = Math.max(minMidi, Math.min(maxMidi, Math.round(pitch)));
   if (capture.active && Math.abs(pitch - capture.active.midi) < 0.68) {
     capture.active.sum += hz;
     capture.active.samples++;
@@ -161,9 +161,10 @@ export function vibeXml(events, bpm, title = 'Vibe', keyId = 'D', endBeat = 0, n
 }
 export const vibeTrack = (events, bpm, title, key, end, numberOffset = 0) =>
   parseMusicXml(vibeXml(events, bpm, title, key, end, numberOffset)).tracks[0];
-export function newVibeSession(bpm = 60, key = 'auto') {
+export function newVibeSession(bpm = 60, key = 'auto', instrument = 'violin') {
   return {
     version: 1,
+    instrument,
     id: crypto.randomUUID(),
     created: new Date().toISOString(),
     bpm,
