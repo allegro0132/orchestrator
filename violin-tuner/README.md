@@ -25,6 +25,7 @@ See the [repository README](../README.md) for GitHub Pages deployment instructio
 - Local microphone pitch detection, automatic open-string recognition, a cents meter, and reference tones.
 - All four violin strings, first through fifth positions, four common finger patterns, and targets for fingers 1–4.
 - An A4 reference from 430 to 450 Hz, saved on the device.
+- Tuner settings offer a pitch tolerance from ±5 to ±50 cents in five-cent steps (default ±20), saved on the device. It applies to open-string and finger tuning: needle highlighting, the history accuracy band, stable success and rearming all use the selected value. Changing it restarts confirmation; the hold remains 0.5 seconds and the history range remains fixed at ±50 cents. Score and beginner practice retain their separate ±20-cent analysis metric.
 - Equal temperament. Positions 2–5 shift the first-position pattern up by 2, 4, 5, and 7 semitones, respectively. The fingerboard labels show intervals relative to the selected position.
 
 Microphone input requires HTTPS or localhost. Bow a single note in a quiet environment, and keep the browser in the foreground on mobile. Synthetic pitch tests do not guarantee performance with every real violin, microphone, or room.
@@ -50,13 +51,13 @@ The app keeps six seconds of raw pitch measurements in memory and displays a pit
 Success requires readings spanning at least 0.5 seconds within a rolling 0.7-second window, with:
 
 - At least five valid readings and 85% valid sample coverage.
-- An average deviation within ±20 cents.
-- At least 80% of readings within ±20 cents.
-- A standard deviation no greater than 20 cents.
+- An average deviation within the selected tolerance (default ±20 cents).
+- At least 80% of readings within that tolerance.
+- A standard deviation no greater than the selected tolerance.
 
 A gap greater than 300 ms between valid readings restarts accumulation, so silence or background pauses cannot count toward a sustained note.
 
-Success remains visible after releasing a note. After 0.3 seconds of silence or off-target pitch, the next note starts a new check. Restarting the microphone, changing the target, or choosing **Try again** also clears the result. History stays in the current page's memory; the app does not record audio or combine measurements from different targets.
+Success remains visible after releasing a note. After 0.3 seconds of silence or off-target pitch, the next note starts a new check. Restarting the microphone, changing the target or tolerance, or choosing **Try again** also clears the result. History stays in the current page's memory; the app does not record audio or combine measurements from different targets.
 
 Quiet-sound detection uses an RMS threshold of 0.002. Measurements must also pass a periodic-correlation check to reduce false detections from random background noise.
 

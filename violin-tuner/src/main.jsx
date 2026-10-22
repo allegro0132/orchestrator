@@ -17,7 +17,8 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { STRINGS, PATTERNS, frequency, centsOff, noteName, detectPitch } from './pitch';
-import { emptyTracking, trackPitch, ACCURACY_CENTS } from './tuning.js';
+import { emptyTracking, trackPitch } from './tuning.js';
+import { ACCURACY_OPTIONS, readAccuracy, saveAccuracy } from './tuningSettings.js';
 import PitchHistory from './PitchHistory.jsx';
 import { findTarget, advanceTarget } from './autoTarget.js';
 import { playSuccessSound } from './successSound.js';
@@ -50,6 +51,7 @@ function App() {
     [error, setError] = useState(''),
     [help, setHelp] = useState(false),
     [settings, setSettings] = useState(false);
+  const [accuracyCents, setAccuracyCents] = useState(readAccuracy);
   const [importedScore, setImportedScore] = useState(null);
   const [vibeDraft, setVibeDraft] = useState(null);
   const [tracking, setTracking] = useState(() => emptyTracking());
@@ -75,8 +77,8 @@ function App() {
     target = frequency(targetMidi, reference),
     note = noteName(targetMidi),
     cents = hz ? centsOff(hz, target) : 0,
-    inTune = hz && Math.abs(cents) <= ACCURACY_CENTS + 1e-6;
-  const trackingKey = `${mode}:${string}:${position}:${pattern}:${finger}:${reference}`;
+    inTune = hz && Math.abs(cents) <= accuracyCents + 1e-6;
+  const trackingKey = `${mode}:${string}:${position}:${pattern}:${finger}:${reference}:${accuracyCents}`;
   config.current = {
     mode,
     auto: mode === 'open' ? auto : fingerAuto,
@@ -86,17 +88,22 @@ function App() {
     position,
     pattern,
     target,
+    accuracyCents,
     key: trackingKey,
   };
   function resetTracking() {
     pendingTarget.current = null;
-    tracker.current = emptyTracking(config.current.key);
+    tracker.current = emptyTracking(config.current.key, config.current.accuracyCents);
     pitchBuffer.current = [];
     setTracking(tracker.current);
   }
   useEffect(() => {
     localStorage.setItem('arco-a', reference);
   }, [reference]);
+  useEffect(() => {
+    saveAccuracy(accuracyCents);
+    resetTracking();
+  }, [accuracyCents]);
   function stopTone() {
     tonePlayer.stop();
   }
@@ -209,6 +216,7 @@ function App() {
           const previousSuccess = tracker.current.success;
           tracker.current = trackPitch(tracker.current, time, raw, current.target, current.key, {
             feedbackPlaying,
+            accuracyCents: current.accuracyCents,
           });
           if (tracker.current.success && tracker.current.success.time !== previousSuccess?.time) {
             const duration = playSuccessSound(ctx);
@@ -591,8 +599,8 @@ function App() {
                     <div
                       className="sweet-spot"
                       style={{
-                        left: `${50 - ACCURACY_CENTS * 0.9}%`,
-                        width: `${ACCURACY_CENTS * 1.8}%`,
+                        left: `${50 - accuracyCents * 0.9}%`,
+                        width: `${accuracyCents * 1.8}%`,
                       }}
                     />
                     {Array.from({ length: 41 }, (_, i) => (
@@ -657,7 +665,12 @@ function App() {
                     {note.octave}
                   </span>
                 </button>
-                <PitchHistory tracking={tracking} listening={listening} onReset={resetTracking} />
+                <PitchHistory
+                  accuracyCents={accuracyCents}
+                  tracking={tracking}
+                  listening={listening}
+                  onReset={resetTracking}
+                />
               </div>
               <div className="panel-bottom">
                 <label className="switch-label">
@@ -794,8 +807,8 @@ function App() {
                     <b>{t('读懂音准')}</b>
                     <p>
                       {t(
-                        '指针左偏表示音低，右偏表示音高，进入中央 ±20 音分的绿色区域表示当前接近标准音。查看最近 6 秒曲线，平均偏差在 ±20 音分内，至少 80% 读数在 ±20 音分内、标准差不超过 20 音分，持续约 0.5 秒后会显示“调音成功”。短暂换弓可容忍，断音超过 0.3 秒会重新累计。成功结果在停弓后保留；断音或偏离准确区持续 0.3 秒后，下次拉奏会自动重新检测并再次提示。',
-                      )}
+                        '指针左偏表示音低，右偏表示音高，进入中央 ±{cents} 音分的绿色区域表示当前接近标准音。查看最近 6 秒曲线，平均偏差在 ±{cents} 音分内，至少 80% 读数在 ±{cents} 音分内、标准差不超过 {cents} 音分，持续约 0.5 秒后会显示“调音成功”。短暂换弓可容忍，断音超过 0.3 秒会重新累计。成功结果在停弓后保留；断音或偏离准确区持续 0.3 秒后，下次拉奏会自动重新检测并再次提示。',
+                      ).replaceAll('{cents}', accuracyCents)}
                     </p>
                   </li>
                   <li>
@@ -846,6 +859,22 @@ function App() {
                   </select>
                 </label>
                 <p>{t('默认 440 Hz。合奏时，可根据乐团的标准音调整。')}</p>
+                <label className="setting-label">
+                  {t('音准容差')}
+                  <select
+                    aria-label={t('音准容差')}
+                    value={accuracyCents}
+                    onChange={(e) => setAccuracyCents(+e.target.value)}
+                  >
+                    {ACCURACY_OPTIONS.map((cents) => (
+                      <option key={cents} value={cents}>
+                        ±{cents} {t('音分')}
+                        {cents === 20 ? t('（默认）') : ''}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <p>{t('用于空弦与指位调音。数值越小，判定越严格；设置自动保存在本机。')}</p>
                 <div className="modal-info">
                   {t(
                     '麦克风声音只在当前设备处理，不会录制或上传。手机请使用 HTTPS 地址，并保持页面在前台。',

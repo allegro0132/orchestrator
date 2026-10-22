@@ -1,4 +1,9 @@
 export const english = {
+  音准容差: 'Pitch tolerance',
+  '（默认）': ' (default)',
+  '用于空弦与指位调音。数值越小，判定越严格；设置自动保存在本机。':
+    'Applies to open-string and finger tuning. Smaller values are stricter. Saved automatically on this device.',
+
   初学者练习: 'Beginner practice',
   '长弓、换弦与左手入门': 'Bowing, crossings, and first fingers',
   '正在加载初学者练习…': 'Loading beginner practice…',
@@ -109,7 +114,7 @@ export const english = {
   停止标准音: 'Stop reference tone',
   聆听标准音: 'Play reference tone',
   自动识别琴弦: 'Auto-detect string',
-  '音准容差 ±20 音分': 'Tolerance ±20 cents',
+  '音准容差 ±{cents} 音分': 'Tolerance ±{cents} cents',
   '音频不上传，安心练习': 'Audio stays on your device',
   '让音准，成为手指的记忆。': 'Let your fingers remember the pitch.',
   选择指位查看目标音: 'Choose a finger to see its target note',
@@ -129,8 +134,8 @@ export const english = {
   '选择琴弦并开启麦克风，允许浏览器访问。持续拉奏单弦，观察指针。':
     'Choose a string, enable your microphone, and allow browser access. Bow a single string steadily and watch the needle.',
   读懂音准: 'Read your pitch',
-  '指针左偏表示音低，右偏表示音高，进入中央 ±20 音分的绿色区域表示当前接近标准音。查看最近 6 秒曲线，平均偏差在 ±20 音分内，至少 80% 读数在 ±20 音分内、标准差不超过 20 音分，持续约 0.5 秒后会显示“调音成功”。短暂换弓可容忍，断音超过 0.3 秒会重新累计。成功结果在停弓后保留；断音或偏离准确区持续 0.3 秒后，下次拉奏会自动重新检测并再次提示。':
-    'Left means flat; right means sharp. The green zone marks ±20 cents. Success requires about 0.5 seconds with an average within ±20 cents, at least 80% of readings within that range, and a standard deviation of no more than 20 cents. Brief bow changes are allowed; gaps longer than 0.3 seconds restart the hold. Success stays visible after release. After 0.3 seconds of silence or off-target pitch, the next sustained note is checked again and can trigger another chime.',
+  '指针左偏表示音低，右偏表示音高，进入中央 ±{cents} 音分的绿色区域表示当前接近标准音。查看最近 6 秒曲线，平均偏差在 ±{cents} 音分内，至少 80% 读数在 ±{cents} 音分内、标准差不超过 {cents} 音分，持续约 0.5 秒后会显示“调音成功”。短暂换弓可容忍，断音超过 0.3 秒会重新累计。成功结果在停弓后保留；断音或偏离准确区持续 0.3 秒后，下次拉奏会自动重新检测并再次提示。':
+    'Left means flat; right means sharp. The green zone marks ±{cents} cents. Success requires about 0.5 seconds with an average within ±{cents} cents, at least 80% of readings within that range, and a standard deviation of no more than {cents} cents. Brief bow changes are allowed; gaps longer than 0.3 seconds restart the hold. Success stays visible after release. After 0.3 seconds of silence or off-target pitch, the next sustained note is checked again and can trigger another chime.',
   练习手型: 'Practice finger placement',
   '切换手型练习，选择琴弦、把位、手型和手指。对照指板按弦，可先播放标准音再练习。':
     'Choose Finger practice, then a string, position, pattern, and finger. Use the fingerboard as a guide and listen to the reference tone first. Tap the selected finger again, or O below, to tune the open string without leaving this page.',
@@ -164,8 +169,8 @@ export const english = {
   音分: 'cents',
   固定量程: 'fixed range',
   自动识别琴弦与指位: 'Auto-detect string & finger',
-  '最近六秒的音准波动曲线，绿色区域为正负二十音分':
-    'Pitch over the last six seconds. The green zone marks plus or minus 20 cents.',
+  '最近六秒的音准波动曲线，绿色区域为正负 {cents} 音分':
+    'Pitch over the last six seconds. The green zone marks plus or minus {cents} cents.',
   '拉奏后，这里会记录音准变化': 'Your pitch will appear here as you bow',
   '6 秒前': '6s ago',
   '3 秒前': '3s ago',
@@ -173,11 +178,11 @@ export const english = {
   最后记录: 'Last reading',
   '近 0.5 秒平均': '0.5s average',
   波动: 'Variation',
-  '平均在 ±20 音分内，稳定拉奏约 0.5 秒': 'Hold within ±20 cents for about 0.5 seconds',
+  '平均在 ±{cents} 音分内，稳定拉奏约 0.5 秒': 'Hold within ±{cents} cents for about 0.5 seconds',
   重新检测: 'Try again',
   音准稳定进度: 'Pitch stability progress',
-  '短暂换弓可容忍；断音超过 0.3 秒重新累计。绿色带为 ±20 音分准确区，量程固定 ±50 音分，超出部分在边缘用棕色标记。':
-    'Brief bow changes are fine. Gaps over 0.3s restart the hold. Green marks ±20 cents. The range stays at ±50 cents; out-of-range readings appear in brown at the edge.',
+  '短暂换弓可容忍；断音超过 0.3 秒重新累计。绿色带为 ±{cents} 音分准确区，量程固定 ±50 音分，超出部分在边缘用棕色标记。':
+    'Brief bow changes are fine. Gaps over 0.3s restart the hold. Green marks ±{cents} cents. The range stays at ±50 cents; out-of-range readings appear in brown at the edge.',
 };
 export const initialLanguage = (saved) => (saved === 'zh' ? 'zh' : 'en');
 export const translate = (language, text) => (language === 'zh' ? text : (english[text] ?? text));

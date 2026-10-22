@@ -4,7 +4,12 @@ import { Check, RotateCcw } from 'lucide-react';
 import { ACCURACY_CENTS } from './tuning.js';
 import { historyPlot } from './historyPlot.js';
 
-export default function PitchHistory({ tracking, listening, onReset }) {
+export default function PitchHistory({
+  tracking,
+  listening,
+  onReset,
+  accuracyCents = ACCURACY_CENTS,
+}) {
   const { lang, t } = useLanguage();
   const { samples, now, progress, stats, success } = tracking;
   const { range, segments, y, current: currentPoint } = historyPlot(samples, now);
@@ -42,14 +47,17 @@ export default function PitchHistory({ tracking, listening, onReset }) {
         <svg
           viewBox="0 0 480 108"
           role="img"
-          aria-label={t('最近六秒的音准波动曲线，绿色区域为正负二十音分')}
+          aria-label={t('最近六秒的音准波动曲线，绿色区域为正负 {cents} 音分').replaceAll(
+            '{cents}',
+            accuracyCents,
+          )}
           preserveAspectRatio="none"
         >
           <rect
             x="12"
-            y={y(ACCURACY_CENTS)}
+            y={y(accuracyCents)}
             width="456"
-            height={y(-ACCURACY_CENTS) - y(ACCURACY_CENTS)}
+            height={y(-accuracyCents) - y(accuracyCents)}
             rx="3"
             fill="#dfe9d3"
           />
@@ -131,7 +139,7 @@ export default function PitchHistory({ tracking, listening, onReset }) {
               ? lang === 'zh'
                 ? `已稳定保持 0.5 秒 · 平均 ${signed(success.mean)} 音分`
                 : `Steady for 0.5s · Average ${signed(success.mean)} cents`
-              : t('平均在 ±20 音分内，稳定拉奏约 0.5 秒')}
+              : t('平均在 ±{cents} 音分内，稳定拉奏约 0.5 秒').replaceAll('{cents}', accuracyCents)}
           </p>
         </div>
         {success && (
@@ -153,8 +161,8 @@ export default function PitchHistory({ tracking, listening, onReset }) {
       </div>
       <p className="history-footnote">
         {t(
-          '短暂换弓可容忍；断音超过 0.3 秒重新累计。绿色带为 ±20 音分准确区，量程固定 ±50 音分，超出部分在边缘用棕色标记。',
-        )}
+          '短暂换弓可容忍；断音超过 0.3 秒重新累计。绿色带为 ±{cents} 音分准确区，量程固定 ±50 音分，超出部分在边缘用棕色标记。',
+        ).replaceAll('{cents}', accuracyCents)}
       </p>
     </section>
   );
