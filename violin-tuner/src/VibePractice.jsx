@@ -1078,7 +1078,7 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
         )}
         <p className="score-method">
           {text(
-            '默认规律式续写复用你的旋律走向和节奏；可选 SkyTNT Transformer，以实际音符和已生成的末尾小节为上下文。权重按需下载到此设备，音频不上传。生成限制为单声部、G3–B5、4/4 拍和指定小节长度。JSON 保留每次生成的引擎和版本。录入量化至八分音符，可能漏掉同音连奏及快速音符。',
+            '默认规律式续写复用你的旋律走向和节奏；可选 SkyTNT Transformer，以实际音符和已生成的末尾小节为上下文。权重按需下载到此设备，音频不上传。生成限制为单声部、所选乐器音域、4/4 拍和指定小节长度。JSON 保留每次生成的引擎和版本。录入量化至八分音符，可能漏掉同音连奏及快速音符。',
             'Rule-based continuation adapts your melodic contour and rhythm by default. Optional SkyTNT Transformer uses captured notes and the generated tail as context. Weights download to this device; audio is never uploaded. Output is constrained to a monophonic instrument range, 4/4 and the requested bar count. JSON records each prediction engine and version. Eighth-note quantization may miss repeated legato and fast notes.',
           )}
         </p>

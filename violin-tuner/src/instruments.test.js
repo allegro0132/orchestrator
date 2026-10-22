@@ -21,6 +21,7 @@ test('guitar strings and frets use concert pitch, including both E strings', () 
   assert.equal(targetMidiFor('violin', 1, 2, 0, 0), 66);
   assert.equal(readInstrument({ getItem: () => 'guitar' }), 'guitar');
   assert.equal(readInstrument({ getItem: () => 'unknown' }), 'violin');
+  assert.equal(readInstrument({ getItem: () => 'toString' }), 'violin');
   assert.equal(
     readInstrument({
       getItem: () => {

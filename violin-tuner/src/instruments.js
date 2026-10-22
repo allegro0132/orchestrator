@@ -25,7 +25,7 @@ export const INSTRUMENTS = {
 };
 export function readInstrument(storage = globalThis.localStorage) {
   try {
-    return INSTRUMENTS[storage?.getItem('arco-instrument')]
+    return Object.hasOwn(INSTRUMENTS, storage?.getItem('arco-instrument'))
       ? storage.getItem('arco-instrument')
       : 'violin';
   } catch {
