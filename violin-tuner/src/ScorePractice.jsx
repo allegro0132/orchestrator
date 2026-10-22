@@ -14,6 +14,7 @@ import { detectPitch, frequency, centsOff } from './pitch.js';
 import { AUDIO_SAMPLE_RATE, ANALYSIS_BUFFER_SIZE, nextAnalysisTime } from './audioConfig.js';
 import ScoreNotation from './ScoreNotation.jsx';
 import ScoreHUD from './ScoreHUD.jsx';
+import ScoreAnalysisTable from './ScoreAnalysisTable.jsx';
 import ScoreLibrary, { ScoreAttribution } from './ScoreLibrary.jsx';
 import useViolinPlayback from './useViolinPlayback.js';
 import ViolinPlaybackControls from './ViolinPlaybackControls.jsx';
@@ -641,56 +642,14 @@ export default function ScorePractice({
                   {text('逐音分析', 'Note-by-note analysis')} · {summary.completed} /{' '}
                   {summary.total}
                 </summary>
-                <div className="score-table-scroll">
-                  <table>
-                    <thead>
-                      <tr>
-                        {[
-                          text('小节', 'Bar'),
-                          text('音符', 'Note'),
-                          text('音准', 'Pitch'),
-                          text('覆盖', 'Coverage'),
-                          text('起音', 'Onset'),
-                        ].map((s) => (
-                          <th key={s}>{s}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {showResults &&
-                        events
-                          .filter(
-                            (e) => e.midi !== null && e.end <= time && e.end > model.current.from,
-                          )
-                          .map((e) => {
-                            const r = model.current.results[e.index];
-                            return (
-                              <tr key={e.index}>
-                                <td>{e.bar}</td>
-                                <td>{nameOf(e)}</td>
-                                <td>
-                                  {r.samples
-                                    ? `${Math.round((100 * r.accurate) / r.samples)}%`
-                                    : '—'}
-                                </td>
-                                <td>
-                                  {Math.min(
-                                    100,
-                                    Math.round((100 * r.voicedSeconds) / (e.end - e.start)),
-                                  )}
-                                  %
-                                </td>
-                                <td>
-                                  {r.onset === null
-                                    ? text('未检测到', 'Not detected')
-                                    : `${Math.round(r.onset * 1000)} ms`}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                    </tbody>
-                  </table>
-                </div>
+                {showResults && (
+                  <ScoreAnalysisTable
+                    events={events}
+                    analysis={model.current}
+                    time={time}
+                    text={text}
+                  />
+                )}
               </details>
             )}
           </>
