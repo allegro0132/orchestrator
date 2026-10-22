@@ -25,6 +25,12 @@ import {
 import { RULE_MODEL_ID } from './vibeRules.js';
 import { SKY_DEPLOYMENT, SKY_CACHE, SKY_BYTES } from './skyWeights.js';
 import { readVibePreferences, writeVibePreferences, VIBE_TEMPOS } from './vibePreferences.js';
+import {
+  VIBE_ENGINE_PROTOCOL,
+  isCurrentEngineWorker,
+  acceptEngineReady,
+  engineForPrediction,
+} from './vibeEngineHost.js';
 import useViolinPlayback from './useViolinPlayback.js';
 import ViolinPlaybackControls from './ViolinPlaybackControls.jsx';
 import ScoreNotation from './ScoreNotation.jsx';
@@ -201,6 +207,9 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
   useEffect(() => {
     const state = predictor.current;
     state.ready = false;
+    state.closed = false;
+    state.engine = engine;
+    state.worker = null;
     setModelLatency(null);
     setModelError('');
     setProgress(null);
@@ -220,12 +229,19 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
     };
     watchdog();
     const fail = (error) => {
+      if (state.closed || (worker && state.worker !== worker)) return;
       setModelError(
-        error?.message || 'Prediction failed. Retry or choose rule-based continuation.',
+        (error?.code ? `[${error.code}] ` : '') +
+          (error?.message || 'Prediction failed. Retry or choose rule-based continuation.'),
       );
       clearTimeout(loadingTimer);
       clearTimeout(state.timer);
-      worker?.terminate();
+      if (worker) {
+        worker.onmessage = null;
+        worker.onerror = null;
+        worker.terminate();
+      }
+      state.worker = null;
       state.ready = false;
       state.pending = null;
       setModelStatus('error');
@@ -237,12 +253,27 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
       });
       state.worker = worker;
       worker.onmessage = ({ data: result }) => {
+        if (!isCurrentEngineWorker(state, worker)) return;
+        if (result.protocol !== VIBE_ENGINE_PROTOCOL) {
+          fail({
+            code: 'OUTDATED_WORKER',
+            message: 'The prediction worker is outdated. Refresh this page and reload the model.',
+          });
+          return;
+        }
         if (result.type === 'progress' || result.type === 'initializing') {
           watchdog();
           setProgress(result);
           return;
         }
         if (result.type === 'ready') {
+          if (!acceptEngineReady(state, worker, result)) {
+            fail({
+              code: 'ENGINE_MISMATCH',
+              message: 'The loaded engine does not match your selection. Reload the model.',
+            });
+            return;
+          }
           setPersistent(result.persistent !== false);
           clearTimeout(loadingTimer);
           state.ready = true;
@@ -271,6 +302,13 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
           (pending.request.contextEpoch || 0) !== (data.current.contextEpoch || 0)
         )
           return;
+        if (result.engine !== state.engine) {
+          fail({
+            code: 'ENGINE_MISMATCH',
+            message: 'The prediction came from a different engine. Reload the model.',
+          });
+          return;
+        }
         if (result.type === 'bars') {
           clearTimeout(state.timer);
           state.timer = setTimeout(() => state.fail(), 10000);
@@ -299,15 +337,22 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
     return () => {
       clearTimeout(loadingTimer);
       clearTimeout(state.timer);
-      worker?.terminate();
+      state.closed = true;
+      if (worker) {
+        worker.onmessage = null;
+        worker.onerror = null;
+        worker.terminate();
+      }
+      state.worker = null;
       state.ready = false;
       state.pending = null;
     };
   }, [modelAttempt, engine, modelEnabled]);
   function predict(notes, beat, token) {
     const state = predictor.current;
-    if (!state.ready || state.pending) return;
-    const request = predictionRequest(data.current, notes, beat, engine);
+    const loadedEngine = engineForPrediction(state);
+    if (!loadedEngine || state.pending) return;
+    const request = predictionRequest(data.current, notes, beat, loadedEngine);
     if (!request) return;
     const id = ++state.serial;
     state.pending = { id, request, session: data.current.id, token };
@@ -688,7 +733,12 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
                         'Model unavailable. Retry or choose rule-based continuation.',
                       )
                     : progress?.type === 'initializing'
-                      ? text('权重校验完成，正在初始化 GPU…', 'Weights verified. Initializing GPU…')
+                      ? progress.stage === 'warmup'
+                        ? text('正在验证本机模型推理…', 'Verifying model inference on this device…')
+                        : text(
+                            '权重校验完成，正在初始化 GPU…',
+                            'Weights verified. Initializing GPU…',
+                          )
                       : text('正在下载并校验权重…', 'Downloading and verifying weights…')}
               {modelStatus === 'ready' && modelLatency !== null && ` · ${modelLatency} ms`}
             </p>
@@ -722,8 +772,9 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
               {['idle', 'error'].includes(modelStatus) && (
                 <button
                   className="secondary-button"
-                  disabled={recording || busy}
+                  disabled={busy}
                   onClick={() => {
+                    if (recording) stop();
                     setModelEnabled(true);
                     setModelAttempt((n) => n + 1);
                   }}

@@ -3596,3 +3596,7 @@ header {
   background: #887255;
   pointer-events: none;
 }
+
+.vibe-model-status .error {
+  overflow-wrap: anywhere;
+}
