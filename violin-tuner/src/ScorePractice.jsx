@@ -451,6 +451,7 @@ export default function ScorePractice({
             </div>
             <ScoreNotation
               track={track}
+              action={renderAction?.({ event, index, time, counting, done, playing })}
               renderOverlay={({ expanded }) => (
                 <ScoreHUD
                   event={event || events.find((e) => e.start >= time)}
@@ -476,7 +477,6 @@ export default function ScorePractice({
                             ?.bpm ||
                           80)),
                   )}
-                  action={renderAction?.({ event, index, time, counting, done, playing })}
                   transport={
                     <div className="score-actions">
                       <button

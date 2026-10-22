@@ -2575,6 +2575,13 @@ header {
   opacity: 0.4;
   cursor: default;
 }
+.notation-action {
+  padding: 0 16px;
+  flex-shrink: 0;
+}
+.notation-action .beginner-cue {
+  margin: 10px 0 0;
+}
 .notation-stage {
   position: relative;
   padding-bottom: calc(var(--hud-height, 200px) + 28px);
@@ -2767,32 +2774,32 @@ header {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
-.score-hud .beginner-cue {
+.notation-action .beginner-cue {
   background: #eeebdb80;
   border: 1px solid #e0d7bd;
   margin: 10px 0 0;
   padding: 10px 12px;
   gap: 10px;
 }
-.score-hud .beginner-bow {
+.notation-action .beginner-bow {
   width: 36px;
   height: 38px;
   font-size: 25px;
   flex-shrink: 0;
 }
-.score-hud .beginner-cue strong {
+.notation-action .beginner-cue strong {
   font-size: 13px;
 }
-.score-hud .beginner-cue small {
+.notation-action .beginner-cue small {
   font-size: 8px;
 }
-.score-hud .beginner-cue span {
+.notation-action .beginner-cue span {
   font-size: 10px;
 }
-.score-hud .beginner-beats {
+.notation-action .beginner-beats {
   gap: 4px;
 }
-.score-hud .beginner-beats span {
+.notation-action .beginner-beats span {
   width: 23px;
   height: 23px;
 }
@@ -2865,13 +2872,13 @@ header {
   .hud-footer {
     gap: 10px;
   }
-  .score-hud .beginner-cue {
+  .notation-action .beginner-cue {
     flex-wrap: wrap;
   }
-  .score-hud .beginner-cue > div:nth-child(2) {
+  .notation-action .beginner-cue > div:nth-child(2) {
     flex: 1;
   }
-  .score-hud .beginner-beats {
+  .notation-action .beginner-beats {
     flex: 0 0 100%;
     justify-content: flex-end;
   }
@@ -2911,20 +2918,20 @@ header {
   .is-expanded .beginner-cue > div:nth-child(2) > span {
     display: none;
   }
-  .is-expanded .hud-action .beginner-cue {
+  .is-expanded .notation-action .beginner-cue {
     margin: 6px 0;
     padding: 4px 8px;
     flex-wrap: nowrap;
   }
-  .is-expanded .hud-action .beginner-bow {
+  .is-expanded .notation-action .beginner-bow {
     width: 28px;
     height: 26px;
     font-size: 20px;
   }
-  .is-expanded .hud-action .beginner-beats {
+  .is-expanded .notation-action .beginner-beats {
     flex: 0 0 auto;
   }
-  .is-expanded .hud-action .beginner-beats span {
+  .is-expanded .notation-action .beginner-beats span {
     width: 20px;
     height: 20px;
   }

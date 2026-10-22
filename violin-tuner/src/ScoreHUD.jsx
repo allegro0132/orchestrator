@@ -18,7 +18,6 @@ export default function ScoreHUD({
   hz,
   deviation,
   onset,
-  action,
   transport,
   time,
   duration,
@@ -82,7 +81,6 @@ export default function ScoreHUD({
       </div>
       {!collapsed && (
         <>
-          {action && <div className="hud-action">{action}</div>}
           <div className="hud-upcoming" aria-label={text('接下来演奏', 'Upcoming notes')}>
             <small>{done ? text('本轮完成', 'COMPLETE') : text('接下来', 'UP NEXT')}</small>
             {next.map((e) => (

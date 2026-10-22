@@ -13,6 +13,7 @@ export default function ScoreNotation({
   noteDuration = 0.5,
   playing = false,
   renderOverlay,
+  action,
 }) {
   const frame = useRef(null);
   const overlay = useRef(null);
@@ -287,6 +288,7 @@ export default function ScoreNotation({
           {t('谱面排版失败，仍可使用下方音符和实时分析。')}
         </p>
       )}
+      {action && <div className="notation-action">{action}</div>}
       <div className="notation-stage">
         <div
           ref={viewport}
