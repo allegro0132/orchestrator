@@ -50,6 +50,18 @@ test('recording retains high violin notes even when suggested phrases use a comf
   for (let i = 0; i < 20; i++) capturePitch(capture, i / 30, frequency(90));
   assert.equal(captureNotes(capture, 1, true)[0].midi, 90);
 });
+test('pause discards an unconfirmed transition so resuming cannot backdate a new note', () => {
+  const capture = createCapture();
+  for (let i = 0; i < 30; i++) capturePitch(capture, i / 30, frequency(62));
+  capturePitch(capture, 1, frequency(64));
+  capturePitch(capture, 1.03, frequency(64));
+  captureNotes(capture, 1.05, true);
+  assert.equal(capture.candidate, null);
+  for (let i = 0; i < 20; i++) capturePitch(capture, 1.1 + i / 30, frequency(64));
+  const notes = captureNotes(capture, 1.8, true);
+  assert.equal(notes.length, 2);
+  assert.ok(notes[1].start >= notes[0].start + notes[0].duration);
+});
 test('continuation yields playable complete bars in the chosen key with reproducible variation', () => {
   for (const key of VIBE_KEYS) {
     const bars = generateVibeBars(melody, 3, 4, 60, key, 42);

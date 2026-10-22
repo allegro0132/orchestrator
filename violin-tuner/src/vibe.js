@@ -74,7 +74,10 @@ export function capturePitch(capture, time, hz, reference = 440) {
   }
 }
 export function captureNotes(capture, time, final = false) {
-  if (final) finish(capture, Math.min(time, capture.lastVoiced + 0.04));
+  if (final) {
+    finish(capture, Math.min(time, capture.lastVoiced + 0.04));
+    capture.candidate = null;
+  }
   const notes = [...capture.notes];
   const n = capture.active;
   if (n && time - n.start >= 0.1)
