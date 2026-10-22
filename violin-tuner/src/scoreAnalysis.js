@@ -1,8 +1,14 @@
 import { centsOff, frequency } from './pitch.js';
+import {
+  createPracticeFeedback,
+  advancePracticeFeedback,
+  SCORE_ACCURACY_CENTS,
+} from './practiceFeedback.js';
 export function createScoreAnalysis(events, from = 0) {
   return {
     events,
     from,
+    feedback: createPracticeFeedback(events, from),
     index: 0,
     results: events.map(() => ({
       samples: 0,
@@ -63,7 +69,7 @@ export function analyseScore(state, time, hz, reference = 440) {
       cents = centsOff(hz, frequency(event.midi, reference));
       result.samples++;
       result.centsSum += cents;
-      if (Math.abs(cents) <= 20 + 1e-6) result.accurate++;
+      if (Math.abs(cents) <= SCORE_ACCURACY_CENTS + 1e-6) result.accurate++;
     }
   }
   state.trace.push({ time, cents });
@@ -74,6 +80,7 @@ export function analyseScore(state, time, hz, reference = 440) {
     state.lastVoiced = time;
     state.lastHz = hz;
   } else if (gap > 0.12) state.lastHz = null;
+  advancePracticeFeedback(state.feedback, events, time, hz, reference);
   return state;
 }
 export function scoreSummary(state, until = Infinity) {

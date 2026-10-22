@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useLanguage } from './i18n.jsx';
 import { frequency, noteName } from './pitch.js';
+import { SCORE_ACCURACY_CENTS } from './practiceFeedback.js';
 
 const nameOf = (event) => {
   if (!event || event.midi === null) return '𝄽';
@@ -22,10 +23,21 @@ export default function ScoreHUD({
   time,
   duration,
   error,
+  feedback = null,
+  personalBest = 0,
+  playing = false,
 }) {
   const { lang } = useLanguage(),
     text = (zh, en) => (lang === 'zh' ? zh : en);
   const [collapsed, setCollapsed] = useState(false);
+  const judgment = feedback?.last;
+  const fresh = judgment && time - judgment.time <= 0.85;
+  const matching =
+    playing &&
+    event?.midi != null &&
+    deviation !== null &&
+    Math.abs(deviation) <= SCORE_ACCURACY_CENTS + 1e-6;
+  const verdict = fresh ? judgment.type : null;
   return (
     <section
       className={'score-hud' + (collapsed ? ' collapsed' : '')}
@@ -33,7 +45,7 @@ export default function ScoreHUD({
       aria-live="off"
     >
       <div className="hud-readout">
-        <div className="hud-note">
+        <div className={'hud-note' + (matching ? ' is-on-pitch' : '')}>
           <small>
             {counting
               ? text('预备拍', 'COUNT IN')
@@ -53,7 +65,10 @@ export default function ScoreHUD({
         {!collapsed && (
           <div
             className={
-              'hud-pitch' + (deviation !== null && Math.abs(deviation) <= 20 ? ' score-good' : '')
+              'hud-pitch' +
+              (deviation !== null && Math.abs(deviation) <= SCORE_ACCURACY_CENTS
+                ? ' score-good'
+                : '')
             }
           >
             <small>{text('实际音高', 'DETECTED PITCH')}</small>
@@ -79,6 +94,76 @@ export default function ScoreHUD({
           {collapsed ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
       </div>
+      {feedback && (
+        <div
+          className={'hud-feedback' + (matching ? ' is-matching' : '')}
+          aria-label={text('命中与连击', 'Pitch hits and combo')}
+        >
+          <div className="hud-judgment-slot">
+            {verdict ? (
+              <div
+                key={`${judgment.id}:${judgment.time}`}
+                className={`hud-judgment-burst is-${verdict}`}
+              >
+                <span className="hit-emblem" aria-hidden="true">
+                  {verdict === 'miss' ? '−' : '✦'}
+                  <i />
+                  <i />
+                  <i />
+                </span>
+                <div>
+                  <b>
+                    {verdict === 'perfect'
+                      ? 'PERFECT'
+                      : verdict === 'good'
+                        ? 'GOOD'
+                        : text('漏音', 'MISS')}
+                  </b>
+                  <small>
+                    {verdict === 'miss'
+                      ? text('跟上下一音', 'Catch the next note')
+                      : text('音高命中', 'Pitch hit')}
+                  </small>
+                </div>
+              </div>
+            ) : (
+              <span className={'hud-live-judgment' + (matching ? ' is-correct' : '')}>
+                <i aria-hidden="true" />
+                {counting
+                  ? text('准备好', 'Get ready')
+                  : done
+                    ? text('本轮完成', 'Run complete')
+                    : !playing
+                      ? text('准备演奏', 'Ready to play')
+                      : event?.midi == null
+                        ? text('休止', 'Rest')
+                        : matching
+                          ? text('拉准了，保持', 'On pitch · hold')
+                          : hz
+                            ? deviation < 0
+                              ? text('偏低，稍抬高', 'Flat · raise pitch')
+                              : text('偏高，稍降低', 'Sharp · lower pitch')
+                            : text('等待琴声', 'Listening for your note')}
+              </span>
+            )}
+          </div>
+          <div className="hud-combo" aria-label={text('当前连击', 'Current combo')}>
+            <strong
+              key={`${feedback.serial}:${feedback.combo}`}
+              className={verdict && verdict !== 'miss' ? 'combo-pop' : ''}
+            >
+              {feedback.combo}
+            </strong>
+            <span>
+              COMBO
+              <small>
+                {text('本轮', 'RUN')} {feedback.maxCombo} · {text('最高', 'BEST')}{' '}
+                {Math.max(personalBest, feedback.maxCombo)}
+              </small>
+            </span>
+          </div>
+        </div>
+      )}
       {!collapsed && (
         <>
           <div className="hud-upcoming" aria-label={text('接下来演奏', 'Upcoming notes')}>

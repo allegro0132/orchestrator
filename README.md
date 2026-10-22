@@ -10,6 +10,18 @@ A separate [SkyTNT pretrained-model evaluation](violin-tuner/evaluations/skytnt/
 
 Score practice includes a graded library of nine openly licensed or public-domain practice editions. See the [score credits and licenses](violin-tuner/public/scores/SOURCES.md).
 
+## Demos
+
+Pitch hits, missed notes and combo feedback in score practice:
+
+![Live pitch judgment and combo animation](docs/demos/pitch-combo.gif)
+
+Vibe extending a melody with **SkyTNT W4A16 + WebGPU**:
+
+![SkyTNT Vibe streaming continuation](docs/demos/vibe-skytnt.gif)
+
+Both demos use synthesized input and the application's score/HUD components. The Vibe clip uses actual on-device SkyTNT inference, not rule-based output; see the [capture details and inference log](docs/demos/README.md).
+
 ## Development
 
 ```sh

@@ -23,6 +23,9 @@ test('records accurate pitch, coverage, rests, and separated note attacks', () =
   assert.equal(summary.rhythm, 100);
   assert.equal(summary.onsets, 3);
   assert.equal(summary.restNoise, 0);
+  assert.equal(state.feedback.hits, 3);
+  assert.equal(state.feedback.maxCombo, 3);
+  assert.equal(state.feedback.misses, 0);
 });
 test('wrong notes lower pitch accuracy while timing is measured independently', () => {
   const state = createScoreAnalysis(events);

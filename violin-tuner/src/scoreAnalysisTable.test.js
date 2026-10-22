@@ -27,6 +27,8 @@ test('expanded note analysis renders completed notes, missing readings and seek 
   ];
   const analysis = createScoreAnalysis(events);
   Object.assign(analysis.results[2], { samples: 4, accurate: 3, voicedSeconds: 0.5, onset: -0.1 });
+  analysis.feedback.outcomes[2] = { type: 'good' };
+  analysis.feedback.outcomes[3] = { type: 'miss' };
   for (const lang of ['en', 'zh']) {
     const text = (zh, en) => (lang === 'zh' ? zh : en);
     const render = () =>
@@ -38,6 +40,8 @@ test('expanded note analysis renders completed notes, missing readings and seek 
     assert.match(markup, /F♯4/);
     assert.match(markup, /A4/);
     assert.doesNotMatch(markup, /B4/);
+    assert.match(markup, /Good/);
+    assert.match(markup, lang === 'zh' ? /漏音/ : /Miss/);
     assert.match(markup, /75%/);
     assert.match(markup, /50%/);
     assert.match(markup, /-100 ms/);

@@ -12,6 +12,7 @@ export default function ScoreAnalysisTable({ events, analysis, time, text }) {
             {[
               text('小节', 'Bar'),
               text('音符', 'Note'),
+              text('判定', 'Hit'),
               text('音准', 'Pitch'),
               text('覆盖', 'Coverage'),
               text('起音', 'Onset'),
@@ -26,12 +27,22 @@ export default function ScoreAnalysisTable({ events, analysis, time, text }) {
             .map((e) => {
               const r = analysis.results[e.index];
               const note = noteName(e.midi);
+              const judgment = analysis.feedback?.outcomes[e.index]?.type;
               return (
                 <tr key={e.index}>
                   <td>{e.bar}</td>
                   <td>
                     {note.name}
                     {note.octave}
+                  </td>
+                  <td>
+                    {judgment === 'perfect'
+                      ? 'Perfect'
+                      : judgment === 'good'
+                        ? 'Good'
+                        : judgment === 'miss'
+                          ? text('漏音', 'Miss')
+                          : '—'}
                   </td>
                   <td>{r.samples ? `${Math.round((100 * r.accurate) / r.samples)}%` : '—'}</td>
                   <td>{Math.min(100, Math.round((100 * r.voicedSeconds) / (e.end - e.start)))}%</td>

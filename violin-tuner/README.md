@@ -2,6 +2,18 @@
 
 A responsive violin tuner built with React and Vite for desktop and mobile browsers.
 
+## Demos
+
+Live pitch hits and combo feedback:
+
+![Pitch judgment and combo animation](../docs/demos/pitch-combo.gif)
+
+Vibe with actual **SkyTNT W4A16 / WebGPU** continuation:
+
+![SkyTNT streaming Vibe demonstration](../docs/demos/vibe-skytnt.gif)
+
+Input is synthesized; the Vibe output comes from real SkyTNT inference. See [capture details and provenance](../docs/demos/README.md).
+
 ## Development
 
 ```sh
@@ -80,6 +92,12 @@ Manually selecting a string or finger locks the target. The switch below the tun
 The interface supports English and Chinese, with English as the default. The header language menu switches immediately and saves the preference under `arco-language`. Switching languages preserves the selected string, finger, and pitch history.
 
 The page title, HTML language attribute, practice guide, error messages, and tuning feedback switch together. Chinese translation strings are intentionally retained in the source to support the Chinese interface.
+
+## Live pitch hits and combos
+
+Score and beginner practice show a reserved feedback lane in the score HUD, including fullscreen and collapsed cues. Pitch within ±20 cents for about 80 ms produces one **Perfect** (average within ±10 cents) or **Good** hit per note. Very short notes use 35% of their remaining duration, capped at 80 ms, with at least two readings. The current note turns green while pitch matches; a hit plays a lightweight CSS ring/spark animation and a combo-number pulse. Misses are finalized when the note ends without a hit, and reset the current combo. Rests preserve it. These are pitch judgments, not bow-attack or rhythm grades; a sustained repeated pitch may count across repeated written notes.
+
+Judgments update the HUD immediately instead of waiting for the normal numeric display throttle. Only transform and opacity animate, the feedback lane keeps a fixed layout, and reduced-motion preferences disable motion. Preview playback never awards hits. Pause preserves earned hits but clears an unfinished hold; seek, restart, score/part/tempo changes start a new run. Each note’s verdict appears in the note-by-note table. The HUD and summary show current combo, run maximum, hits, misses and personal best. Personal best and the latest run counters are saved locally per melody/part in `arco-practice-combos-v1` (up to 50 records); different practice tempos share that best. Updates are deferred from the detection callback and flushed on pause/exit. Storage failures do not interrupt practice. No audio is recorded.
 
 ## Score practice and live analysis
 

@@ -1,0 +1,733 @@
+{
+  "model": "skytnt-tv2o-medium-w4a16-stable-v2",
+  "input": "synthesized monophonic D-major phrase",
+  "events": [
+    {
+      "type": "request",
+      "id": 1,
+      "request": {
+        "predictor": "skytnt-tv2o-medium-w4a16-stable-v2",
+        "bpm": 120,
+        "notes": [
+          {
+            "midi": 62,
+            "start": 0,
+            "duration": 0.5
+          },
+          {
+            "midi": 64,
+            "start": 0.5,
+            "duration": 0.5
+          }
+        ],
+        "tokens": [0, 44, 56],
+        "fromBar": 1,
+        "count": 4,
+        "key": {
+          "id": "D",
+          "tonic": 2,
+          "minor": false,
+          "fifths": 2
+        },
+        "seed": 5404,
+        "requestedBar": 0,
+        "contextEpoch": 0
+      }
+    },
+    {
+      "type": "bars",
+      "at": 21588.399999976158,
+      "engine": "skytnt-tv2o-medium-w4a16-stable-v2",
+      "bars": [
+        {
+          "bar": 1,
+          "key": "D",
+          "events": [
+            {
+              "midi": 66,
+              "beat": 4,
+              "duration": 1
+            },
+            {
+              "midi": 64,
+              "beat": 5,
+              "duration": 1
+            },
+            {
+              "midi": 62,
+              "beat": 6,
+              "duration": 1
+            },
+            {
+              "midi": 64,
+              "beat": 7,
+              "duration": 1
+            }
+          ]
+        }
+      ],
+      "ms": 201.5
+    },
+    {
+      "type": "bars",
+      "at": 21774.100000023842,
+      "engine": "skytnt-tv2o-medium-w4a16-stable-v2",
+      "bars": [
+        {
+          "bar": 2,
+          "key": "D",
+          "events": [
+            {
+              "midi": 66,
+              "beat": 8,
+              "duration": 1
+            },
+            {
+              "midi": 64,
+              "beat": 9,
+              "duration": 1
+            },
+            {
+              "midi": 62,
+              "beat": 10,
+              "duration": 1
+            },
+            {
+              "midi": null,
+              "beat": 11,
+              "duration": 0.5
+            },
+            {
+              "midi": 62,
+              "beat": 11.5,
+              "duration": 0.5
+            }
+          ]
+        }
+      ],
+      "ms": 397.7999999523163
+    },
+    {
+      "type": "bars",
+      "at": 22007.200000047684,
+      "engine": "skytnt-tv2o-medium-w4a16-stable-v2",
+      "bars": [
+        {
+          "bar": 3,
+          "key": "D",
+          "events": [
+            {
+              "midi": 64,
+              "beat": 12,
+              "duration": 1
+            },
+            {
+              "midi": 62,
+              "beat": 13,
+              "duration": 1
+            },
+            {
+              "midi": 59,
+              "beat": 14,
+              "duration": 1
+            },
+            {
+              "midi": 62,
+              "beat": 15,
+              "duration": 1
+            }
+          ]
+        }
+      ],
+      "ms": 608
+    },
+    {
+      "type": "bars",
+      "at": 22190.299999952316,
+      "engine": "skytnt-tv2o-medium-w4a16-stable-v2",
+      "bars": [
+        {
+          "bar": 4,
+          "key": "D",
+          "events": [
+            {
+              "midi": 64,
+              "beat": 16,
+              "duration": 1
+            },
+            {
+              "midi": 62,
+              "beat": 17,
+              "duration": 1
+            },
+            {
+              "midi": 59,
+              "beat": 18,
+              "duration": 1
+            },
+            {
+              "midi": 57,
+              "beat": 19,
+              "duration": 1
+            }
+          ]
+        }
+      ],
+      "ms": 809.3999999761581
+    },
+    {
+      "type": "result",
+      "engine": "skytnt-tv2o-medium-w4a16-stable-v2",
+      "ms": 809.3999999761581
+    },
+    {
+      "type": "request",
+      "id": 2,
+      "request": {
+        "predictor": "skytnt-tv2o-medium-w4a16-stable-v2",
+        "bpm": 120,
+        "notes": [
+          {
+            "midi": 62,
+            "start": 0,
+            "duration": 0.5
+          },
+          {
+            "midi": 64,
+            "start": 0.5,
+            "duration": 0.5
+          },
+          {
+            "midi": 66,
+            "start": 1,
+            "duration": 0.5
+          },
+          {
+            "midi": 67,
+            "start": 1.5,
+            "duration": 0.5
+          },
+          {
+            "midi": 69,
+            "start": 2,
+            "duration": 0.5
+          },
+          {
+            "midi": 64,
+            "start": 8,
+            "duration": 0.5
+          },
+          {
+            "midi": 62,
+            "start": 8.5,
+            "duration": 0.5
+          },
+          {
+            "midi": 59,
+            "start": 9,
+            "duration": 0.5
+          },
+          {
+            "midi": 57,
+            "start": 9.5,
+            "duration": 0.5
+          }
+        ],
+        "tokens": [0, 44, 56, 68, 74, 86, 56, 44, 26, 14],
+        "fromBar": 5,
+        "count": 1,
+        "key": {
+          "id": "D",
+          "tonic": 2,
+          "minor": false,
+          "fifths": 2
+        },
+        "seed": 5405,
+        "requestedBar": 1,
+        "contextEpoch": 0
+      }
+    },
+    {
+      "type": "bars",
+      "at": 22983.799999952316,
+      "engine": "skytnt-tv2o-medium-w4a16-stable-v2",
+      "bars": [
+        {
+          "bar": 5,
+          "key": "D",
+          "events": [
+            {
+              "midi": 68,
+              "beat": 20,
+              "duration": 1
+            },
+            {
+              "midi": 69,
+              "beat": 21,
+              "duration": 1
+            },
+            {
+              "midi": 68,
+              "beat": 22,
+              "duration": 1
+            },
+            {
+              "midi": 66,
+              "beat": 23,
+              "duration": 1
+            }
+          ]
+        }
+      ],
+      "ms": 207.69999992847443
+    },
+    {
+      "type": "result",
+      "engine": "skytnt-tv2o-medium-w4a16-stable-v2",
+      "ms": 207.69999992847443
+    },
+    {
+      "type": "request",
+      "id": 3,
+      "request": {
+        "predictor": "skytnt-tv2o-medium-w4a16-stable-v2",
+        "bpm": 120,
+        "notes": [
+          {
+            "midi": 62,
+            "start": 0,
+            "duration": 0.5
+          },
+          {
+            "midi": 64,
+            "start": 0.5,
+            "duration": 0.5
+          },
+          {
+            "midi": 66,
+            "start": 1,
+            "duration": 0.5
+          },
+          {
+            "midi": 67,
+            "start": 1.5,
+            "duration": 0.5
+          },
+          {
+            "midi": 69,
+            "start": 2,
+            "duration": 0.5
+          },
+          {
+            "midi": 67,
+            "start": 2.5,
+            "duration": 0.5
+          },
+          {
+            "midi": 66,
+            "start": 3,
+            "duration": 0.5
+          },
+          {
+            "midi": 64,
+            "start": 3.5,
+            "duration": 0.5
+          },
+          {
+            "midi": 62,
+            "start": 4,
+            "duration": 0.5
+          },
+          {
+            "midi": 68,
+            "start": 10,
+            "duration": 0.5
+          },
+          {
+            "midi": 69,
+            "start": 10.5,
+            "duration": 0.5
+          },
+          {
+            "midi": 68,
+            "start": 11,
+            "duration": 0.5
+          },
+          {
+            "midi": 66,
+            "start": 11.5,
+            "duration": 0.5
+          }
+        ],
+        "tokens": [0, 44, 56, 68, 74, 86, 74, 68, 56, 44, 80, 86, 80, 68],
+        "fromBar": 6,
+        "count": 1,
+        "key": {
+          "id": "D",
+          "tonic": 2,
+          "minor": false,
+          "fifths": 2
+        },
+        "seed": 5406,
+        "requestedBar": 2,
+        "contextEpoch": 0
+      }
+    },
+    {
+      "type": "bars",
+      "at": 25020,
+      "engine": "skytnt-tv2o-medium-w4a16-stable-v2",
+      "bars": [
+        {
+          "bar": 6,
+          "key": "D",
+          "events": [
+            {
+              "midi": 65,
+              "beat": 24,
+              "duration": 1
+            },
+            {
+              "midi": 66,
+              "beat": 25,
+              "duration": 1
+            },
+            {
+              "midi": 68,
+              "beat": 26,
+              "duration": 1
+            },
+            {
+              "midi": 69,
+              "beat": 27,
+              "duration": 1
+            }
+          ]
+        }
+      ],
+      "ms": 204.5
+    },
+    {
+      "type": "result",
+      "engine": "skytnt-tv2o-medium-w4a16-stable-v2",
+      "ms": 204.60000002384186
+    },
+    {
+      "type": "request",
+      "id": 4,
+      "request": {
+        "predictor": "skytnt-tv2o-medium-w4a16-stable-v2",
+        "bpm": 120,
+        "notes": [
+          {
+            "midi": 62,
+            "start": 0,
+            "duration": 0.5
+          },
+          {
+            "midi": 64,
+            "start": 0.5,
+            "duration": 0.5
+          },
+          {
+            "midi": 66,
+            "start": 1,
+            "duration": 0.5
+          },
+          {
+            "midi": 67,
+            "start": 1.5,
+            "duration": 0.5
+          },
+          {
+            "midi": 69,
+            "start": 2,
+            "duration": 0.5
+          },
+          {
+            "midi": 67,
+            "start": 2.5,
+            "duration": 0.5
+          },
+          {
+            "midi": 66,
+            "start": 3,
+            "duration": 0.5
+          },
+          {
+            "midi": 64,
+            "start": 3.5,
+            "duration": 0.5
+          },
+          {
+            "midi": 62,
+            "start": 4,
+            "duration": 0.5
+          },
+          {
+            "midi": 64,
+            "start": 4.5,
+            "duration": 0.5
+          },
+          {
+            "midi": 66,
+            "start": 5,
+            "duration": 0.5
+          },
+          {
+            "midi": 67,
+            "start": 5.5,
+            "duration": 0.5
+          },
+          {
+            "midi": 69,
+            "start": 6,
+            "duration": 0.5
+          },
+          {
+            "midi": 65,
+            "start": 12,
+            "duration": 0.5
+          },
+          {
+            "midi": 66,
+            "start": 12.5,
+            "duration": 0.5
+          },
+          {
+            "midi": 68,
+            "start": 13,
+            "duration": 0.5
+          },
+          {
+            "midi": 69,
+            "start": 13.5,
+            "duration": 0.5
+          }
+        ],
+        "tokens": [
+          0, 44, 56, 68, 74, 86, 74, 68, 56, 44, 56, 68, 74, 86, 62, 68, 80, 86
+        ],
+        "fromBar": 7,
+        "count": 1,
+        "key": {
+          "id": "D",
+          "tonic": 2,
+          "minor": false,
+          "fifths": 2
+        },
+        "seed": 5407,
+        "requestedBar": 3,
+        "contextEpoch": 0
+      }
+    },
+    {
+      "type": "bars",
+      "at": 26971.899999976158,
+      "engine": "skytnt-tv2o-medium-w4a16-stable-v2",
+      "bars": [
+        {
+          "bar": 7,
+          "key": "D",
+          "events": [
+            {
+              "midi": 71,
+              "beat": 28,
+              "duration": 1
+            },
+            {
+              "midi": 69,
+              "beat": 29,
+              "duration": 1
+            },
+            {
+              "midi": 68,
+              "beat": 30,
+              "duration": 1
+            },
+            {
+              "midi": 66,
+              "beat": 31,
+              "duration": 1
+            }
+          ]
+        }
+      ],
+      "ms": 195.59999990463257
+    },
+    {
+      "type": "result",
+      "engine": "skytnt-tv2o-medium-w4a16-stable-v2",
+      "ms": 195.59999990463257
+    },
+    {
+      "type": "request",
+      "id": 5,
+      "request": {
+        "predictor": "skytnt-tv2o-medium-w4a16-stable-v2",
+        "bpm": 120,
+        "notes": [
+          {
+            "midi": 62,
+            "start": 0,
+            "duration": 0.5
+          },
+          {
+            "midi": 64,
+            "start": 0.5,
+            "duration": 0.5
+          },
+          {
+            "midi": 66,
+            "start": 1,
+            "duration": 0.5
+          },
+          {
+            "midi": 67,
+            "start": 1.5,
+            "duration": 0.5
+          },
+          {
+            "midi": 69,
+            "start": 2,
+            "duration": 0.5
+          },
+          {
+            "midi": 67,
+            "start": 2.5,
+            "duration": 0.5
+          },
+          {
+            "midi": 66,
+            "start": 3,
+            "duration": 0.5
+          },
+          {
+            "midi": 64,
+            "start": 3.5,
+            "duration": 0.5
+          },
+          {
+            "midi": 62,
+            "start": 4,
+            "duration": 0.5
+          },
+          {
+            "midi": 64,
+            "start": 4.5,
+            "duration": 0.5
+          },
+          {
+            "midi": 66,
+            "start": 5,
+            "duration": 0.5
+          },
+          {
+            "midi": 67,
+            "start": 5.5,
+            "duration": 0.5
+          },
+          {
+            "midi": 69,
+            "start": 6,
+            "duration": 0.5
+          },
+          {
+            "midi": 67,
+            "start": 6.5,
+            "duration": 0.5
+          },
+          {
+            "midi": 66,
+            "start": 7,
+            "duration": 0.5
+          },
+          {
+            "midi": 64,
+            "start": 7.5,
+            "duration": 0.5
+          },
+          {
+            "midi": 62,
+            "start": 8,
+            "duration": 0.5
+          },
+          {
+            "midi": 71,
+            "start": 14,
+            "duration": 0.5
+          },
+          {
+            "midi": 69,
+            "start": 14.5,
+            "duration": 0.5
+          },
+          {
+            "midi": 68,
+            "start": 15,
+            "duration": 0.5
+          },
+          {
+            "midi": 66,
+            "start": 15.5,
+            "duration": 0.5
+          }
+        ],
+        "tokens": [
+          0, 44, 56, 68, 74, 86, 74, 68, 56, 44, 56, 68, 74, 86, 74, 68, 56, 44,
+          98, 86, 80, 68
+        ],
+        "fromBar": 8,
+        "count": 1,
+        "key": {
+          "id": "D",
+          "tonic": 2,
+          "minor": false,
+          "fifths": 2
+        },
+        "seed": 5408,
+        "requestedBar": 4,
+        "contextEpoch": 0
+      }
+    },
+    {
+      "type": "bars",
+      "at": 29046,
+      "engine": "skytnt-tv2o-medium-w4a16-stable-v2",
+      "bars": [
+        {
+          "bar": 8,
+          "key": "D",
+          "events": [
+            {
+              "midi": 64,
+              "beat": 32,
+              "duration": 1
+            },
+            {
+              "midi": 62,
+              "beat": 33,
+              "duration": 1
+            },
+            {
+              "midi": 61,
+              "beat": 34,
+              "duration": 1
+            },
+            {
+              "midi": 59,
+              "beat": 35,
+              "duration": 1
+            }
+          ]
+        }
+      ],
+      "ms": 196.20000004768372
+    },
+    {
+      "type": "result",
+      "engine": "skytnt-tv2o-medium-w4a16-stable-v2",
+      "ms": 196.20000004768372
+    }
+  ]
+}

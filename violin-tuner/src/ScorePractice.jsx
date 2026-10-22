@@ -14,6 +14,12 @@ import { detectPitch, frequency, centsOff } from './pitch.js';
 import { AUDIO_SAMPLE_RATE, ANALYSIS_BUFFER_SIZE, nextAnalysisTime } from './audioConfig.js';
 import ScoreNotation from './ScoreNotation.jsx';
 import ScoreHUD from './ScoreHUD.jsx';
+import {
+  practiceRecordKey,
+  readPracticeRecord,
+  savePracticeRecord,
+  pausePracticeFeedback,
+} from './practiceFeedback.js';
 import ScoreAnalysisTable from './ScoreAnalysisTable.jsx';
 import ScoreLibrary, { ScoreAttribution } from './ScoreLibrary.jsx';
 import useViolinPlayback from './useViolinPlayback.js';
@@ -48,6 +54,9 @@ export default function ScorePractice({
     [startBar, setStartBar] = useState(0);
   const track = score?.tracks[trackId],
     events = useMemo(() => (track ? timedEvents(track, tempo || null) : []), [track, tempo]);
+  const recordKey = useMemo(() => practiceRecordKey(track), [track]);
+  const recordContext = useRef({ key: recordKey });
+  const [personalBest, setPersonalBest] = useState(0);
   const duration = track ? secondsAt(track, track.duration, tempo || null) : 0;
   const model = useRef(createScoreAnalysis([])),
     session = useRef({ token: 0 }),
@@ -89,6 +98,11 @@ export default function ScorePractice({
     setAuditionMode(true);
     void preview.play(events, duration, reference, from);
   }
+  function persistFeedback() {
+    if (!model.current.feedback.serial) return;
+    const record = savePracticeRecord(recordContext.current.key, model.current.feedback);
+    if (mounted.current) setPersonalBest(record.best);
+  }
   function stop(update = true) {
     const run = session.current;
     run.token++;
@@ -97,6 +111,8 @@ export default function ScorePractice({
     run.source?.disconnect();
     run.analyser?.disconnect();
     run.stream = null;
+    pausePracticeFeedback(model.current.feedback);
+    persistFeedback();
     if (update && mounted.current) {
       setPlaying(false);
       setBusy(false);
@@ -115,6 +131,8 @@ export default function ScorePractice({
   }
   useEffect(() => {
     reset(0);
+    recordContext.current.key = recordKey;
+    setPersonalBest(readPracticeRecord(recordKey).best);
     setStartBar(0);
     setStartBeat(0);
   }, [events]);
@@ -203,6 +221,7 @@ export default function ScorePractice({
       setStartBar(selected.bar);
       setStartBeat(selected.beat);
       position.current = selected.time;
+      persistFeedback();
       model.current = createScoreAnalysis(events, selected.time);
       initial.current = false;
       setTime(selected.time);
@@ -274,8 +293,9 @@ export default function ScorePractice({
           analyser.getFloatTimeDomainData(buffer);
           const pitch = detectPitch(buffer, ctx.sampleRate);
           if (elapsed >= Math.max(run.startAt, model.current.from)) {
+            const beforeJudgment = model.current.feedback.serial;
             analyseScore(model.current, elapsed, pitch, reference);
-            if (stamp - lastPaint >= 65) {
+            if (model.current.feedback.serial !== beforeJudgment || stamp - lastPaint >= 65) {
               setHz(pitch);
               setTime(elapsed);
               setRevision((n) => n + 1);
@@ -326,6 +346,12 @@ export default function ScorePractice({
     done = time >= duration && !!score;
   const result = index >= 0 ? model.current.results[index] : null,
     summary = scoreSummary(model.current, time);
+  const feedback = model.current.feedback;
+  useEffect(() => {
+    if (!feedback.serial) return;
+    const timer = setTimeout(persistFeedback, 200);
+    return () => clearTimeout(timer);
+  }, [feedback.serial, recordKey]);
   const deviation =
     event?.midi != null && hz ? centsOff(hz, frequency(event.midi, reference)) : null;
   const nextIndex = done
@@ -552,6 +578,9 @@ export default function ScorePractice({
                         )
                   }
                   reference={reference}
+                  feedback={auditionMode ? null : feedback}
+                  personalBest={personalBest}
+                  playing={playing && !auditionMode}
                   counting={counting}
                   done={done}
                   hz={auditionMode ? null : hz}
@@ -626,6 +655,19 @@ export default function ScorePractice({
                   </span>
                 </div>
               </div>
+            )}
+            {!auditionMode && (
+              <p className="practice-combo-summary">
+                {text('本轮最高连击', 'Run best')} <b>{feedback.maxCombo}</b> ·{' '}
+                {text('命中', 'Hits')} {feedback.hits} · {text('漏音', 'Misses')} {feedback.misses}{' '}
+                · {text('历史最高', 'Personal best')} {Math.max(personalBest, feedback.maxCombo)}
+                <small>
+                  {text(
+                    '音高在 ±20 音分内连续保持约 80 ms 即命中；每音只计一次，休止不打断连击。Perfect 表示平均偏差在 ±10 音分内，不代表节奏或弓法评分。',
+                    'Hold pitch within ±20 cents for about 80 ms to hit. Each note counts once; rests preserve the combo. Perfect means average pitch within ±10 cents, not a rhythm or bowing grade.',
+                  )}
+                </small>
+              </p>
             )}
             <p className="score-method">
               {text(
