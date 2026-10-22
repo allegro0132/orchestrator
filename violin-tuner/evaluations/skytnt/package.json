@@ -3,9 +3,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "evaluate": "node evaluate.mjs"
+    "evaluate": "node evaluate.mjs",
+    "webgpu": "vite --config vite.webgpu.config.mjs",
+    "reference": "node reference_w4a16.mjs"
   },
   "dependencies": {
-    "onnxruntime-node": "1.30.0"
+    "onnxruntime-node": "1.30.0",
+    "onnxruntime-web": "1.30.0"
   }
 }

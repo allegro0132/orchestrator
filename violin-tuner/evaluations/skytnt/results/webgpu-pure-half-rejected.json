@@ -1,0 +1,1776 @@
+{
+  "type": "done",
+  "manifest": {
+    "id": "skytnt-tv2o-medium-w4a16-rtn32-v1",
+    "sourceRevision": "0f8f265d4330f4e46527ac2313200254c5757f5f",
+    "recipe": {
+      "weightBits": 4,
+      "activationType": "float16",
+      "kvType": "float16",
+      "algorithm": "RTN",
+      "blockSize": 32,
+      "symmetric": true,
+      "quantizedOps": ["constant-input MatMul"],
+      "unquantizedWeights": "FP16 embeddings and normalization weights",
+      "accuracyLevel": 0,
+      "lastOutputOnly": true
+    },
+    "tools": {
+      "onnx": "1.23.2",
+      "onnxruntime": "1.31.0"
+    },
+    "files": {
+      "base": {
+        "name": "model_base.w4a16.onnx",
+        "bytes": 122422870,
+        "sha256": "1f0df8b84cb768548f0bf6b2890fa9d60625300e770cbf60c9ceb64373b2d919",
+        "sourceBytes": 821713887,
+        "matMulNBits": 84,
+        "scaleTypes": ["FLOAT16"],
+        "initializerTypes": {
+          "FLOAT16": 115,
+          "INT64": 19,
+          "UINT8": 84
+        },
+        "floatingIO": [
+          "past_key_values.0.key",
+          "past_key_values.0.value",
+          "past_key_values.1.key",
+          "past_key_values.1.value",
+          "past_key_values.2.key",
+          "past_key_values.2.value",
+          "past_key_values.3.key",
+          "past_key_values.3.value",
+          "past_key_values.4.key",
+          "past_key_values.4.value",
+          "past_key_values.5.key",
+          "past_key_values.5.value",
+          "past_key_values.6.key",
+          "past_key_values.6.value",
+          "past_key_values.7.key",
+          "past_key_values.7.value",
+          "past_key_values.8.key",
+          "past_key_values.8.value",
+          "past_key_values.9.key",
+          "past_key_values.9.value",
+          "past_key_values.10.key",
+          "past_key_values.10.value",
+          "past_key_values.11.key",
+          "past_key_values.11.value",
+          "hidden",
+          "present.0.key",
+          "present.0.value",
+          "present.1.key",
+          "present.1.value",
+          "present.2.key",
+          "present.2.value",
+          "present.3.key",
+          "present.3.value",
+          "present.4.key",
+          "present.4.value",
+          "present.5.key",
+          "present.5.value",
+          "present.6.key",
+          "present.6.value",
+          "present.7.key",
+          "present.7.value",
+          "present.8.key",
+          "present.8.value",
+          "present.9.key",
+          "present.9.value",
+          "present.10.key",
+          "present.10.value",
+          "present.11.key",
+          "present.11.value"
+        ],
+        "seconds": 2.9746646659914404
+      },
+      "token": {
+        "name": "model_token.w4a16.onnx",
+        "bytes": 21935573,
+        "sha256": "52af6293b16e83bd6630101f932e4585dd399a7863cb3eebbdc65bc99bbcc99b",
+        "sourceBytes": 116661381,
+        "matMulNBits": 22,
+        "scaleTypes": ["FLOAT16"],
+        "initializerTypes": {
+          "FLOAT16": 35,
+          "INT64": 18,
+          "UINT8": 22
+        },
+        "floatingIO": [
+          "hidden",
+          "past_key_values.0.key",
+          "past_key_values.0.value",
+          "past_key_values.1.key",
+          "past_key_values.1.value",
+          "past_key_values.2.key",
+          "past_key_values.2.value",
+          "y",
+          "present.0.key",
+          "present.0.value",
+          "present.1.key",
+          "present.1.value",
+          "present.2.key",
+          "present.2.value"
+        ],
+        "seconds": 0.39855074998922646
+      }
+    },
+    "bytes": 144358443
+  },
+  "runtime": {
+    "common": "1.30.0",
+    "web": "1.30.0"
+  },
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+  "shaderF16": true,
+  "downloadMs": 199,
+  "loadMs": 577.8000000715256,
+  "tensorEvidence": {
+    "hiddenType": "float16",
+    "hiddenLocation": "gpu-buffer",
+    "cacheType": "float16",
+    "cacheLocation": "gpu-buffer"
+  },
+  "precision": [
+    {
+      "fixture": "ode",
+      "seed": 17,
+      "all": {
+        "decisions": 50,
+        "top1Agreement": 0.6,
+        "meanKl": 0.7619413127820646,
+        "maxKl": 2.4558481039188695
+      },
+      "pitch": {
+        "decisions": 13,
+        "top1Agreement": 0.38461538461538464,
+        "meanKl": 1.505172761918923,
+        "maxKl": 2.4558481039188695
+      },
+      "duration": {
+        "decisions": 13,
+        "top1Agreement": 0.07692307692307693,
+        "meanKl": 1.3043717350135808,
+        "maxKl": 1.6630039071534977
+      }
+    },
+    {
+      "fixture": "ode",
+      "seed": 29,
+      "all": {
+        "decisions": 60,
+        "top1Agreement": 0.6333333333333333,
+        "meanKl": 0.6286262889134571,
+        "maxKl": 2.4558481039188695
+      },
+      "pitch": {
+        "decisions": 16,
+        "top1Agreement": 0.3125,
+        "meanKl": 1.3930058776370648,
+        "maxKl": 2.4558481039188695
+      },
+      "duration": {
+        "decisions": 15,
+        "top1Agreement": 0.26666666666666666,
+        "meanKl": 0.8723436958483696,
+        "maxKl": 1.655811410486442
+      }
+    },
+    {
+      "fixture": "minuet",
+      "seed": 17,
+      "all": {
+        "decisions": 70,
+        "top1Agreement": 0.6428571428571429,
+        "meanKl": 0.6024953269003627,
+        "maxKl": 2.9866951355220066
+      },
+      "pitch": {
+        "decisions": 20,
+        "top1Agreement": 0.05,
+        "meanKl": 1.7178684402232711,
+        "maxKl": 2.9866951355220066
+      },
+      "duration": {
+        "decisions": 18,
+        "top1Agreement": 0.6666666666666666,
+        "meanKl": 0.28986132536503306,
+        "maxKl": 1.182105655375982
+      }
+    },
+    {
+      "fixture": "minuet",
+      "seed": 29,
+      "all": {
+        "decisions": 72,
+        "top1Agreement": 0.625,
+        "meanKl": 0.7397928051281725,
+        "maxKl": 3.6885182484218983
+      },
+      "pitch": {
+        "decisions": 21,
+        "top1Agreement": 0,
+        "meanKl": 2.216422441724112,
+        "maxKl": 3.6885182484218983
+      },
+      "duration": {
+        "decisions": 18,
+        "top1Agreement": 0.6666666666666666,
+        "meanKl": 0.22447474357849867,
+        "maxKl": 0.8125522355559807
+      }
+    },
+    {
+      "fixture": "detected-d-melody",
+      "seed": 17,
+      "all": {
+        "decisions": 72,
+        "top1Agreement": 0.5694444444444444,
+        "meanKl": 0.7666628309282634,
+        "maxKl": 2.6386414464325436
+      },
+      "pitch": {
+        "decisions": 19,
+        "top1Agreement": 0.15789473684210525,
+        "meanKl": 1.7148420961570046,
+        "maxKl": 2.6386414464325436
+      },
+      "duration": {
+        "decisions": 19,
+        "top1Agreement": 0.21052631578947367,
+        "meanKl": 1.0779949107564133,
+        "maxKl": 1.985556833136664
+      }
+    },
+    {
+      "fixture": "detected-d-melody",
+      "seed": 29,
+      "all": {
+        "decisions": 55,
+        "top1Agreement": 0.5818181818181818,
+        "meanKl": 0.6771467179196144,
+        "maxKl": 2.17846062638861
+      },
+      "pitch": {
+        "decisions": 14,
+        "top1Agreement": 0.21428571428571427,
+        "meanKl": 1.3229993357478687,
+        "maxKl": 2.17846062638861
+      },
+      "duration": {
+        "decisions": 14,
+        "top1Agreement": 0.14285714285714285,
+        "meanKl": 1.190016729579236,
+        "maxKl": 1.77961682581113
+      }
+    }
+  ],
+  "precisionSummary": {
+    "all": {
+      "decisions": 379,
+      "top1Agreement": 0.6094986807387863,
+      "meanKl": 0.6957709528722371,
+      "maxKl": 3.6885182484218983
+    },
+    "pitch": {
+      "decisions": 103,
+      "top1Agreement": 0.1650485436893204,
+      "meanKl": 1.687976413157904,
+      "maxKl": 3.6885182484218983
+    },
+    "duration": {
+      "decisions": 97,
+      "top1Agreement": 0.36082474226804123,
+      "meanKl": 0.7880636572408948,
+      "maxKl": 1.985556833136664
+    }
+  },
+  "results": [
+    {
+      "fixture": "ode",
+      "seed": 17,
+      "totalMs": 711.2000000476837,
+      "firstEventMs": 97.89999997615814,
+      "prefillMs": 59,
+      "events": [
+        {
+          "midi": 76,
+          "beat": 12,
+          "duration": 0.5
+        },
+        {
+          "midi": 66,
+          "beat": 12.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 66,
+          "beat": 13,
+          "duration": 0.5
+        },
+        {
+          "midi": 78,
+          "beat": 13.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 60,
+          "beat": 14,
+          "duration": 0.5
+        },
+        {
+          "midi": 61,
+          "beat": 14.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 65,
+          "beat": 15,
+          "duration": 0.5
+        },
+        {
+          "midi": 64,
+          "beat": 15.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 57,
+          "beat": 16,
+          "duration": 0.5
+        },
+        {
+          "midi": 59,
+          "beat": 16.5,
+          "duration": 2
+        },
+        {
+          "midi": 67,
+          "beat": 19,
+          "duration": 0.5
+        },
+        {
+          "midi": 61,
+          "beat": 19.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 66,
+          "beat": 20.5,
+          "duration": 1.5
+        },
+        {
+          "midi": 73,
+          "beat": 23,
+          "duration": 1
+        },
+        {
+          "midi": 58,
+          "beat": 24,
+          "duration": 0.5
+        },
+        {
+          "midi": 55,
+          "beat": 24.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 66,
+          "beat": 25,
+          "duration": 1.5
+        },
+        {
+          "midi": 64,
+          "beat": 26.5,
+          "duration": 1.5
+        }
+      ],
+      "rows": [
+        [3, 10, 137, 2202, 2329, 2421, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2411, 2553, 161],
+        [3, 10, 137, 2202, 2329, 2411, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2423, 2553, 161],
+        [3, 10, 137, 2202, 2329, 2405, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2406, 2553, 161],
+        [3, 10, 137, 2202, 2329, 2410, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2409, 2553, 161],
+        [3, 10, 137, 2202, 2329, 2402, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2404, 2553, 185],
+        [3, 12, 137, 2202, 2329, 2412, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2406, 2553, 161],
+        [3, 10, 145, 2202, 2329, 2411, 2553, 177],
+        [3, 12, 137, 2202, 2329, 2418, 2553, 169],
+        [3, 10, 137, 2202, 2329, 2403, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2400, 2553, 161],
+        [3, 10, 137, 2202, 2329, 2411, 2553, 177],
+        [3, 10, 145, 2202, 2329, 2409, 2553, 177]
+      ],
+      "bars": [
+        {
+          "bar": 3,
+          "key": "D",
+          "events": [
+            {
+              "midi": 76,
+              "beat": 12,
+              "duration": 0.5
+            },
+            {
+              "midi": 66,
+              "beat": 12.5,
+              "duration": 0.5
+            },
+            {
+              "midi": 66,
+              "beat": 13,
+              "duration": 0.5
+            },
+            {
+              "midi": 78,
+              "beat": 13.5,
+              "duration": 0.5
+            },
+            {
+              "midi": 60,
+              "beat": 14,
+              "duration": 0.5
+            },
+            {
+              "midi": 61,
+              "beat": 14.5,
+              "duration": 0.5
+            },
+            {
+              "midi": 65,
+              "beat": 15,
+              "duration": 0.5
+            },
+            {
+              "midi": 64,
+              "beat": 15.5,
+              "duration": 0.5
+            }
+          ]
+        },
+        {
+          "bar": 4,
+          "key": "D",
+          "events": [
+            {
+              "midi": 57,
+              "beat": 16,
+              "duration": 0.5
+            },
+            {
+              "midi": 59,
+              "beat": 16.5,
+              "duration": 2
+            },
+            {
+              "midi": null,
+              "beat": 18.5,
+              "duration": 0.5
+            },
+            {
+              "midi": 67,
+              "beat": 19,
+              "duration": 0.5
+            },
+            {
+              "midi": 61,
+              "beat": 19.5,
+              "duration": 0.5
+            }
+          ]
+        },
+        {
+          "bar": 5,
+          "key": "D",
+          "events": [
+            {
+              "midi": null,
+              "beat": 20,
+              "duration": 0.5
+            },
+            {
+              "midi": 66,
+              "beat": 20.5,
+              "duration": 1.5
+            },
+            {
+              "midi": null,
+              "beat": 22,
+              "duration": 1
+            },
+            {
+              "midi": 73,
+              "beat": 23,
+              "duration": 1
+            }
+          ]
+        },
+        {
+          "bar": 6,
+          "key": "D",
+          "events": [
+            {
+              "midi": 58,
+              "beat": 24,
+              "duration": 0.5
+            },
+            {
+              "midi": 55,
+              "beat": 24.5,
+              "duration": 0.5
+            },
+            {
+              "midi": 66,
+              "beat": 25,
+              "duration": 1.5
+            },
+            {
+              "midi": 64,
+              "beat": 26.5,
+              "duration": 1.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "fixture": "ode",
+      "seed": 29,
+      "totalMs": 740.7000000476837,
+      "firstEventMs": 39.799999952316284,
+      "prefillMs": 7.799999952316284,
+      "events": [
+        {
+          "midi": 64,
+          "beat": 12,
+          "duration": 0.5
+        },
+        {
+          "midi": 76,
+          "beat": 12.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 59,
+          "beat": 13,
+          "duration": 0.5
+        },
+        {
+          "midi": 66,
+          "beat": 13.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 66,
+          "beat": 14,
+          "duration": 1
+        },
+        {
+          "midi": 60,
+          "beat": 15,
+          "duration": 1
+        },
+        {
+          "midi": 66,
+          "beat": 16,
+          "duration": 0.5
+        },
+        {
+          "midi": 66,
+          "beat": 16.5,
+          "duration": 1
+        },
+        {
+          "midi": 66,
+          "beat": 17.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 66,
+          "beat": 18,
+          "duration": 1.5
+        },
+        {
+          "midi": 73,
+          "beat": 19.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 69,
+          "beat": 20.5,
+          "duration": 1.5
+        },
+        {
+          "midi": 72,
+          "beat": 22,
+          "duration": 2
+        },
+        {
+          "midi": 57,
+          "beat": 24,
+          "duration": 0.5
+        },
+        {
+          "midi": 66,
+          "beat": 24.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 58,
+          "beat": 25,
+          "duration": 0.5
+        },
+        {
+          "midi": 69,
+          "beat": 25.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 67,
+          "beat": 26,
+          "duration": 0.5
+        },
+        {
+          "midi": 78,
+          "beat": 26.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 55,
+          "beat": 27,
+          "duration": 0.5
+        },
+        {
+          "midi": 60,
+          "beat": 27.5,
+          "duration": 0.5
+        }
+      ],
+      "rows": [
+        [3, 10, 137, 2202, 2329, 2409, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2421, 2553, 161],
+        [3, 10, 137, 2202, 2329, 2404, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2411, 2553, 161],
+        [3, 10, 137, 2202, 2329, 2411, 2553, 169],
+        [3, 10, 137, 2202, 2329, 2405, 2553, 169],
+        [3, 10, 137, 2202, 2329, 2411, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2411, 2553, 169],
+        [3, 10, 145, 2202, 2329, 2411, 2553, 161],
+        [3, 10, 137, 2202, 2329, 2411, 2553, 177],
+        [3, 10, 145, 2202, 2329, 2418, 2553, 161],
+        [3, 10, 145, 2202, 2329, 2414, 2553, 177],
+        [3, 11, 137, 2202, 2329, 2417, 2553, 185],
+        [3, 11, 137, 2202, 2329, 2402, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2411, 2553, 161],
+        [3, 10, 137, 2202, 2329, 2403, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2414, 2553, 161],
+        [3, 10, 137, 2202, 2329, 2412, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2423, 2553, 161],
+        [3, 10, 137, 2202, 2329, 2400, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2405, 2553, 161]
+      ],
+      "bars": [
+        {
+          "bar": 3,
+          "key": "D",
+          "events": [
+            {
+              "midi": 64,
+              "beat": 12,
+              "duration": 0.5
+            },
+            {
+              "midi": 76,
+              "beat": 12.5,
+              "duration": 0.5
+            },
+            {
+              "midi": 59,
+              "beat": 13,
+              "duration": 0.5
+            },
+            {
+              "midi": 66,
+              "beat": 13.5,
+              "duration": 0.5
+            },
+            {
+              "midi": 66,
+              "beat": 14,
+              "duration": 1
+            },
+            {
+              "midi": 60,
+              "beat": 15,
+              "duration": 1
+            }
+          ]
+        },
+        {
+          "bar": 4,
+          "key": "D",
+          "events": [
+            {
+              "midi": 66,
+              "beat": 16,
+              "duration": 0.5
+            },
+            {
+              "midi": 66,
+              "beat": 16.5,
+              "duration": 1
+            },
+            {
+              "midi": 66,
+              "beat": 17.5,
+              "duration": 0.5
+            },
+            {
+              "midi": 66,
+              "beat": 18,
+              "duration": 1.5
+            },
+            {
+              "midi": 73,
+              "beat": 19.5,
+              "duration": 0.5
+            }
+          ]
+        },
+        {
+          "bar": 5,
+          "key": "D",
+          "events": [
+            {
+              "midi": null,
+              "beat": 20,
+              "duration": 0.5
+            },
+            {
+              "midi": 69,
+              "beat": 20.5,
+              "duration": 1.5
+            },
+            {
+              "midi": 72,
+              "beat": 22,
+              "duration": 2
+            }
+          ]
+        },
+        {
+          "bar": 6,
+          "key": "D",
+          "events": [
+            {
+              "midi": 57,
+              "beat": 24,
+              "duration": 0.5
+            },
+            {
+              "midi": 66,
+              "beat": 24.5,
+              "duration": 0.5
+            },
+            {
+              "midi": 58,
+              "beat": 25,
+              "duration": 0.5
+            },
+            {
+              "midi": 69,
+              "beat": 25.5,
+              "duration": 0.5
+            },
+            {
+              "midi": 67,
+              "beat": 26,
+              "duration": 0.5
+            },
+            {
+              "midi": 78,
+              "beat": 26.5,
+              "duration": 0.5
+            },
+            {
+              "midi": 55,
+              "beat": 27,
+              "duration": 0.5
+            },
+            {
+              "midi": 60,
+              "beat": 27.5,
+              "duration": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "fixture": "minuet",
+      "seed": 17,
+      "totalMs": 634.3999999761581,
+      "firstEventMs": 38,
+      "prefillMs": 7.5,
+      "events": [
+        {
+          "midi": 61,
+          "beat": 13,
+          "duration": 1
+        },
+        {
+          "midi": 66,
+          "beat": 14,
+          "duration": 0.5
+        },
+        {
+          "midi": 66,
+          "beat": 14.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 67,
+          "beat": 15,
+          "duration": 0.5
+        },
+        {
+          "midi": 61,
+          "beat": 15.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 60,
+          "beat": 16,
+          "duration": 0.5
+        },
+        {
+          "midi": 63,
+          "beat": 16.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 76,
+          "beat": 17,
+          "duration": 0.5
+        },
+        {
+          "midi": 57,
+          "beat": 17.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 71,
+          "beat": 18.5,
+          "duration": 1
+        },
+        {
+          "midi": 67,
+          "beat": 19.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 60,
+          "beat": 20,
+          "duration": 0.5
+        },
+        {
+          "midi": 57,
+          "beat": 20.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 74,
+          "beat": 21,
+          "duration": 0.5
+        },
+        {
+          "midi": 60,
+          "beat": 21.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 70,
+          "beat": 22.5,
+          "duration": 1.5
+        },
+        {
+          "midi": 60,
+          "beat": 24,
+          "duration": 4
+        }
+      ],
+      "rows": [
+        [3, 14, 137, 2202, 2329, 2406, 2553, 169],
+        [3, 10, 137, 2202, 2329, 2411, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2411, 2553, 161],
+        [3, 10, 137, 2202, 2329, 2412, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2406, 2553, 161],
+        [3, 10, 137, 2202, 2329, 2405, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2408, 2553, 161],
+        [3, 10, 137, 2202, 2329, 2421, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2402, 2553, 161],
+        [3, 10, 145, 2202, 2329, 2416, 2553, 169],
+        [3, 10, 145, 2202, 2329, 2412, 2553, 161],
+        [3, 10, 137, 2202, 2329, 2405, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2402, 2553, 161],
+        [3, 10, 137, 2202, 2329, 2419, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2405, 2553, 161],
+        [3, 10, 145, 2202, 2329, 2415, 2553, 177],
+        [3, 11, 137, 2202, 2329, 2405, 2553, 217]
+      ],
+      "bars": [
+        {
+          "bar": 3,
+          "key": "G",
+          "events": [
+            {
+              "midi": null,
+              "beat": 12,
+              "duration": 1
+            },
+            {
+              "midi": 61,
+              "beat": 13,
+              "duration": 1
+            },
+            {
+              "midi": 66,
+              "beat": 14,
+              "duration": 0.5
+            },
+            {
+              "midi": 66,
+              "beat": 14.5,
+              "duration": 0.5
+            },
+            {
+              "midi": 67,
+              "beat": 15,
+              "duration": 0.5
+            },
+            {
+              "midi": 61,
+              "beat": 15.5,
+              "duration": 0.5
+            }
+          ]
+        },
+        {
+          "bar": 4,
+          "key": "G",
+          "events": [
+            {
+              "midi": 60,
+              "beat": 16,
+              "duration": 0.5
+            },
+            {
+              "midi": 63,
+              "beat": 16.5,
+              "duration": 0.5
+            },
+            {
+              "midi": 76,
+              "beat": 17,
+              "duration": 0.5
+            },
+            {
+              "midi": 57,
+              "beat": 17.5,
+              "duration": 0.5
+            },
+            {
+              "midi": null,
+              "beat": 18,
+              "duration": 0.5
+            },
+            {
+              "midi": 71,
+              "beat": 18.5,
+              "duration": 1
+            },
+            {
+              "midi": 67,
+              "beat": 19.5,
+              "duration": 0.5
+            }
+          ]
+        },
+        {
+          "bar": 5,
+          "key": "G",
+          "events": [
+            {
+              "midi": 60,
+              "beat": 20,
+              "duration": 0.5
+            },
+            {
+              "midi": 57,
+              "beat": 20.5,
+              "duration": 0.5
+            },
+            {
+              "midi": 74,
+              "beat": 21,
+              "duration": 0.5
+            },
+            {
+              "midi": 60,
+              "beat": 21.5,
+              "duration": 0.5
+            },
+            {
+              "midi": null,
+              "beat": 22,
+              "duration": 0.5
+            },
+            {
+              "midi": 70,
+              "beat": 22.5,
+              "duration": 1.5
+            }
+          ]
+        },
+        {
+          "bar": 6,
+          "key": "G",
+          "events": [
+            {
+              "midi": 60,
+              "beat": 24,
+              "duration": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "fixture": "minuet",
+      "seed": 29,
+      "totalMs": 466,
+      "firstEventMs": 38.799999952316284,
+      "prefillMs": 7.399999976158142,
+      "events": [
+        {
+          "midi": 61,
+          "beat": 13,
+          "duration": 1
+        },
+        {
+          "midi": 64,
+          "beat": 14.5,
+          "duration": 1.5
+        },
+        {
+          "midi": 72,
+          "beat": 17,
+          "duration": 0.5
+        },
+        {
+          "midi": 66,
+          "beat": 17.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 66,
+          "beat": 18,
+          "duration": 1
+        },
+        {
+          "midi": 60,
+          "beat": 19,
+          "duration": 1
+        },
+        {
+          "midi": 66,
+          "beat": 20,
+          "duration": 0.5
+        },
+        {
+          "midi": 66,
+          "beat": 20.5,
+          "duration": 1
+        },
+        {
+          "midi": 66,
+          "beat": 21.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 66,
+          "beat": 22,
+          "duration": 1.5
+        },
+        {
+          "midi": 73,
+          "beat": 23.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 69,
+          "beat": 24.5,
+          "duration": 1.5
+        },
+        {
+          "midi": 72,
+          "beat": 26,
+          "duration": 2
+        }
+      ],
+      "rows": [
+        [3, 14, 137, 2202, 2329, 2406, 2553, 169],
+        [3, 10, 145, 2202, 2329, 2409, 2553, 177],
+        [3, 12, 137, 2202, 2329, 2417, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2411, 2553, 161],
+        [3, 10, 137, 2202, 2329, 2411, 2553, 169],
+        [3, 10, 137, 2202, 2329, 2405, 2553, 169],
+        [3, 10, 137, 2202, 2329, 2411, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2411, 2553, 169],
+        [3, 10, 145, 2202, 2329, 2411, 2553, 161],
+        [3, 10, 137, 2202, 2329, 2411, 2553, 177],
+        [3, 10, 145, 2202, 2329, 2418, 2553, 161],
+        [3, 10, 145, 2202, 2329, 2414, 2553, 177],
+        [3, 11, 137, 2202, 2329, 2417, 2553, 185]
+      ],
+      "bars": [
+        {
+          "bar": 3,
+          "key": "G",
+          "events": [
+            {
+              "midi": null,
+              "beat": 12,
+              "duration": 1
+            },
+            {
+              "midi": 61,
+              "beat": 13,
+              "duration": 1
+            },
+            {
+              "midi": null,
+              "beat": 14,
+              "duration": 0.5
+            },
+            {
+              "midi": 64,
+              "beat": 14.5,
+              "duration": 1.5
+            }
+          ]
+        },
+        {
+          "bar": 4,
+          "key": "G",
+          "events": [
+            {
+              "midi": null,
+              "beat": 16,
+              "duration": 1
+            },
+            {
+              "midi": 72,
+              "beat": 17,
+              "duration": 0.5
+            },
+            {
+              "midi": 66,
+              "beat": 17.5,
+              "duration": 0.5
+            },
+            {
+              "midi": 66,
+              "beat": 18,
+              "duration": 1
+            },
+            {
+              "midi": 60,
+              "beat": 19,
+              "duration": 1
+            }
+          ]
+        },
+        {
+          "bar": 5,
+          "key": "G",
+          "events": [
+            {
+              "midi": 66,
+              "beat": 20,
+              "duration": 0.5
+            },
+            {
+              "midi": 66,
+              "beat": 20.5,
+              "duration": 1
+            },
+            {
+              "midi": 66,
+              "beat": 21.5,
+              "duration": 0.5
+            },
+            {
+              "midi": 66,
+              "beat": 22,
+              "duration": 1.5
+            },
+            {
+              "midi": 73,
+              "beat": 23.5,
+              "duration": 0.5
+            }
+          ]
+        },
+        {
+          "bar": 6,
+          "key": "G",
+          "events": [
+            {
+              "midi": null,
+              "beat": 24,
+              "duration": 0.5
+            },
+            {
+              "midi": 69,
+              "beat": 24.5,
+              "duration": 1.5
+            },
+            {
+              "midi": 72,
+              "beat": 26,
+              "duration": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "fixture": "detected-d-melody",
+      "seed": 17,
+      "totalMs": 676.2999999523163,
+      "firstEventMs": 44.39999997615814,
+      "prefillMs": 7.5,
+      "events": [
+        {
+          "midi": 76,
+          "beat": 8,
+          "duration": 0.5
+        },
+        {
+          "midi": 66,
+          "beat": 8.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 66,
+          "beat": 9,
+          "duration": 0.5
+        },
+        {
+          "midi": 78,
+          "beat": 9.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 60,
+          "beat": 10,
+          "duration": 0.5
+        },
+        {
+          "midi": 61,
+          "beat": 10.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 65,
+          "beat": 11,
+          "duration": 0.5
+        },
+        {
+          "midi": 64,
+          "beat": 11.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 57,
+          "beat": 12,
+          "duration": 0.5
+        },
+        {
+          "midi": 59,
+          "beat": 12.5,
+          "duration": 2
+        },
+        {
+          "midi": 67,
+          "beat": 15,
+          "duration": 0.5
+        },
+        {
+          "midi": 61,
+          "beat": 15.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 66,
+          "beat": 16.5,
+          "duration": 1.5
+        },
+        {
+          "midi": 73,
+          "beat": 19,
+          "duration": 1
+        },
+        {
+          "midi": 58,
+          "beat": 20,
+          "duration": 0.5
+        },
+        {
+          "midi": 55,
+          "beat": 20.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 66,
+          "beat": 21,
+          "duration": 1.5
+        },
+        {
+          "midi": 64,
+          "beat": 22.5,
+          "duration": 1.5
+        }
+      ],
+      "rows": [
+        [3, 10, 137, 2202, 2329, 2421, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2411, 2553, 161],
+        [3, 10, 137, 2202, 2329, 2411, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2423, 2553, 161],
+        [3, 10, 137, 2202, 2329, 2405, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2406, 2553, 161],
+        [3, 10, 137, 2202, 2329, 2410, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2409, 2553, 161],
+        [3, 10, 137, 2202, 2329, 2402, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2404, 2553, 185],
+        [3, 12, 137, 2202, 2329, 2412, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2406, 2553, 161],
+        [3, 10, 145, 2202, 2329, 2411, 2553, 177],
+        [3, 12, 137, 2202, 2329, 2418, 2553, 169],
+        [3, 10, 137, 2202, 2329, 2403, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2400, 2553, 161],
+        [3, 10, 137, 2202, 2329, 2411, 2553, 177],
+        [3, 10, 145, 2202, 2329, 2409, 2553, 177]
+      ],
+      "bars": [
+        {
+          "bar": 2,
+          "key": "D",
+          "events": [
+            {
+              "midi": 76,
+              "beat": 8,
+              "duration": 0.5
+            },
+            {
+              "midi": 66,
+              "beat": 8.5,
+              "duration": 0.5
+            },
+            {
+              "midi": 66,
+              "beat": 9,
+              "duration": 0.5
+            },
+            {
+              "midi": 78,
+              "beat": 9.5,
+              "duration": 0.5
+            },
+            {
+              "midi": 60,
+              "beat": 10,
+              "duration": 0.5
+            },
+            {
+              "midi": 61,
+              "beat": 10.5,
+              "duration": 0.5
+            },
+            {
+              "midi": 65,
+              "beat": 11,
+              "duration": 0.5
+            },
+            {
+              "midi": 64,
+              "beat": 11.5,
+              "duration": 0.5
+            }
+          ]
+        },
+        {
+          "bar": 3,
+          "key": "D",
+          "events": [
+            {
+              "midi": 57,
+              "beat": 12,
+              "duration": 0.5
+            },
+            {
+              "midi": 59,
+              "beat": 12.5,
+              "duration": 2
+            },
+            {
+              "midi": null,
+              "beat": 14.5,
+              "duration": 0.5
+            },
+            {
+              "midi": 67,
+              "beat": 15,
+              "duration": 0.5
+            },
+            {
+              "midi": 61,
+              "beat": 15.5,
+              "duration": 0.5
+            }
+          ]
+        },
+        {
+          "bar": 4,
+          "key": "D",
+          "events": [
+            {
+              "midi": null,
+              "beat": 16,
+              "duration": 0.5
+            },
+            {
+              "midi": 66,
+              "beat": 16.5,
+              "duration": 1.5
+            },
+            {
+              "midi": null,
+              "beat": 18,
+              "duration": 1
+            },
+            {
+              "midi": 73,
+              "beat": 19,
+              "duration": 1
+            }
+          ]
+        },
+        {
+          "bar": 5,
+          "key": "D",
+          "events": [
+            {
+              "midi": 58,
+              "beat": 20,
+              "duration": 0.5
+            },
+            {
+              "midi": 55,
+              "beat": 20.5,
+              "duration": 0.5
+            },
+            {
+              "midi": 66,
+              "beat": 21,
+              "duration": 1.5
+            },
+            {
+              "midi": 64,
+              "beat": 22.5,
+              "duration": 1.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "fixture": "detected-d-melody",
+      "seed": 29,
+      "totalMs": 780.7999999523163,
+      "firstEventMs": 41.59999990463257,
+      "prefillMs": 7.399999976158142,
+      "events": [
+        {
+          "midi": 64,
+          "beat": 8,
+          "duration": 0.5
+        },
+        {
+          "midi": 76,
+          "beat": 8.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 59,
+          "beat": 9,
+          "duration": 0.5
+        },
+        {
+          "midi": 66,
+          "beat": 9.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 66,
+          "beat": 10,
+          "duration": 1
+        },
+        {
+          "midi": 60,
+          "beat": 11,
+          "duration": 1
+        },
+        {
+          "midi": 66,
+          "beat": 12,
+          "duration": 0.5
+        },
+        {
+          "midi": 66,
+          "beat": 12.5,
+          "duration": 1
+        },
+        {
+          "midi": 66,
+          "beat": 13.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 66,
+          "beat": 14,
+          "duration": 1.5
+        },
+        {
+          "midi": 73,
+          "beat": 15.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 69,
+          "beat": 16.5,
+          "duration": 1.5
+        },
+        {
+          "midi": 72,
+          "beat": 18,
+          "duration": 2
+        },
+        {
+          "midi": 57,
+          "beat": 20,
+          "duration": 0.5
+        },
+        {
+          "midi": 66,
+          "beat": 20.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 58,
+          "beat": 21,
+          "duration": 0.5
+        },
+        {
+          "midi": 69,
+          "beat": 21.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 67,
+          "beat": 22,
+          "duration": 0.5
+        },
+        {
+          "midi": 78,
+          "beat": 22.5,
+          "duration": 0.5
+        },
+        {
+          "midi": 55,
+          "beat": 23,
+          "duration": 0.5
+        },
+        {
+          "midi": 60,
+          "beat": 23.5,
+          "duration": 0.5
+        }
+      ],
+      "rows": [
+        [3, 10, 137, 2202, 2329, 2409, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2421, 2553, 161],
+        [3, 10, 137, 2202, 2329, 2404, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2411, 2553, 161],
+        [3, 10, 137, 2202, 2329, 2411, 2553, 169],
+        [3, 10, 137, 2202, 2329, 2405, 2553, 169],
+        [3, 10, 137, 2202, 2329, 2411, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2411, 2553, 169],
+        [3, 10, 145, 2202, 2329, 2411, 2553, 161],
+        [3, 10, 137, 2202, 2329, 2411, 2553, 177],
+        [3, 10, 145, 2202, 2329, 2418, 2553, 161],
+        [3, 10, 145, 2202, 2329, 2414, 2553, 177],
+        [3, 11, 137, 2202, 2329, 2417, 2553, 185],
+        [3, 11, 137, 2202, 2329, 2402, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2411, 2553, 161],
+        [3, 10, 137, 2202, 2329, 2403, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2414, 2553, 161],
+        [3, 10, 137, 2202, 2329, 2412, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2423, 2553, 161],
+        [3, 10, 137, 2202, 2329, 2400, 2553, 161],
+        [3, 9, 145, 2202, 2329, 2405, 2553, 161]
+      ],
+      "bars": [
+        {
+          "bar": 2,
+          "key": "D",
+          "events": [
+            {
+              "midi": 64,
+              "beat": 8,
+              "duration": 0.5
+            },
+            {
+              "midi": 76,
+              "beat": 8.5,
+              "duration": 0.5
+            },
+            {
+              "midi": 59,
+              "beat": 9,
+              "duration": 0.5
+            },
+            {
+              "midi": 66,
+              "beat": 9.5,
+              "duration": 0.5
+            },
+            {
+              "midi": 66,
+              "beat": 10,
+              "duration": 1
+            },
+            {
+              "midi": 60,
+              "beat": 11,
+              "duration": 1
+            }
+          ]
+        },
+        {
+          "bar": 3,
+          "key": "D",
+          "events": [
+            {
+              "midi": 66,
+              "beat": 12,
+              "duration": 0.5
+            },
+            {
+              "midi": 66,
+              "beat": 12.5,
+              "duration": 1
+            },
+            {
+              "midi": 66,
+              "beat": 13.5,
+              "duration": 0.5
+            },
+            {
+              "midi": 66,
+              "beat": 14,
+              "duration": 1.5
+            },
+            {
+              "midi": 73,
+              "beat": 15.5,
+              "duration": 0.5
+            }
+          ]
+        },
+        {
+          "bar": 4,
+          "key": "D",
+          "events": [
+            {
+              "midi": null,
+              "beat": 16,
+              "duration": 0.5
+            },
+            {
+              "midi": 69,
+              "beat": 16.5,
+              "duration": 1.5
+            },
+            {
+              "midi": 72,
+              "beat": 18,
+              "duration": 2
+            }
+          ]
+        },
+        {
+          "bar": 5,
+          "key": "D",
+          "events": [
+            {
+              "midi": 57,
+              "beat": 20,
+              "duration": 0.5
+            },
+            {
+              "midi": 66,
+              "beat": 20.5,
+              "duration": 0.5
+            },
+            {
+              "midi": 58,
+              "beat": 21,
+              "duration": 0.5
+            },
+            {
+              "midi": 69,
+              "beat": 21.5,
+              "duration": 0.5
+            },
+            {
+              "midi": 67,
+              "beat": 22,
+              "duration": 0.5
+            },
+            {
+              "midi": 78,
+              "beat": 22.5,
+              "duration": 0.5
+            },
+            {
+              "midi": 55,
+              "beat": 23,
+              "duration": 0.5
+            },
+            {
+              "midi": 60,
+              "beat": 23.5,
+              "duration": 0.5
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

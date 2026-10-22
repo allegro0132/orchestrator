@@ -2,6 +2,8 @@
 
 **Verdict:** the pinned `tv2o-medium` checkpoint can continue recognized violin-note context with enforceable single-voice, pitch-range and exact-horizon constraints. Native desktop CPU latency passed this small feasibility test. The official FP32 download and memory footprint are too large to make it the default mobile-web model without further optimization and device testing. This directory is an offline evaluation harness and reusable adapter; production Vibe still uses `arco-mt-v1`.
 
+**Browser update:** [W4A16 + WebGPU](WEBGPU.md) is now the preferred browser candidate, with real desktop inference and precision comparisons.
+
 ## Checkpoint and sources
 
 - [Official model card](https://huggingface.co/skytnt/midi-model-tv2o-medium): model license Apache-2.0; training sources listed by the author include Los Angeles MIDI, Monster MIDI and SymphonyNet. Model licensing is not a statement that every training composition is public domain.
@@ -60,9 +62,9 @@ The continuations reuse recognizable motion from the primers, but some repeat no
 
 The working native path is a reasonable candidate for a desktop optional engine or a separately configured local inference service. At 60 BPM, the current two-bar protected lookahead gives eight seconds; the measured native four-bar generation fits comfortably inside that budget. This observation does not establish equivalent speed on other hardware.
 
-For a browser implementation, use an off-main-thread provider, explicit model download/cache controls, progress, cancellation, timeout and stale-session rejection. Preserve performed notes and every accepted generated revision. Native inference latency must **not** be presented as WASM/WebGPU latency. No browser, WebGPU, iPhone or Android inference benchmark was performed in this evaluation. [ONNX Runtime's large-model guidance](https://onnxruntime.ai/docs/tutorials/web/large-models.html) explains browser buffer and WASM memory limits; being below a file-size limit alone does not prove mobile feasibility.
+For a browser implementation, use an off-main-thread provider, explicit model download/cache controls, progress, cancellation, timeout and stale-session rejection. Preserve performed notes and every accepted generated revision. Native inference latency must **not** be presented as WASM/WebGPU latency. This section reports native FP32 results. Actual desktop W4A16/WebGPU results are now available in the [browser report](WEBGPU.md); iPhone and Android inference remain untested. [ONNX Runtime's large-model guidance](https://onnxruntime.ai/docs/tutorials/web/large-models.html) explains browser buffer and WASM memory limits; being below a file-size limit alone does not prove mobile feasibility.
 
-Recommended next gate: produce and validate quantized weights, measure memory and full-generation latency in desktop WASM/WebGPU and actual iOS/Android browsers, then conduct a small listening comparison. Verify supported operators and weight licensing/attribution for the exact chosen distribution. Do not silently download the official 938 MB model when a mobile user opens Vibe. No API endpoint or remote note upload has been introduced here.
+The W4A16 conversion and desktop WebGPU gate have now been exercised. Next measure peak browser memory and latency on actual iOS/Android devices, then conduct a listening comparison. Verify supported operators and weight licensing/attribution for the exact chosen distribution. Do not silently download the official 938 MB model when a mobile user opens Vibe. No API endpoint or remote note upload has been introduced here.
 
 ## Reproduce
 

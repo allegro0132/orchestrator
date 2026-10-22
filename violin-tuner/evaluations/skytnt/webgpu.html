@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>SkyTNT WebGPU precision evaluation</title>
+    <style>
+      body {
+        font: 16px/1.6 system-ui;
+        background: #f6f0e3;
+        color: #443c30;
+        max-width: 1000px;
+        margin: 40px auto;
+        padding: 20px;
+      }
+      button {
+        padding: 12px 18px;
+        border: 1px solid #9f8b65;
+        border-radius: 8px;
+        background: #e9dbb9;
+        font: inherit;
+      }
+      pre {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        font-size: 12px;
+      }
+      #status {
+        min-height: 2em;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>SkyTNT · WebGPU precision evaluation</h1>
+    <p>Local evaluation. Models load only after Run. No microphone or remote inference.</p>
+    <p id="status" role="status">Checking WebGPU…</p>
+    <button id="run" disabled>Run WebGPU evaluation</button
+    ><button id="cancel" disabled>Cancel and release GPU</button
+    ><button id="save" disabled>Save local benchmark</button>
+    <pre id="capabilities"></pre>
+    <pre id="summary"></pre>
+    <details>
+      <summary>Raw benchmark result</summary>
+      <pre id="result"></pre>
+    </details>
+    <script type="module" src="./webgpu-page.js"></script>
+  </body>
+</html>
