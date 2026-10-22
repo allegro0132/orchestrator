@@ -19,6 +19,7 @@ import { saveVibe, listVibes, deleteVibe } from './vibeStore.js';
 import { predictionRequest, commitPrediction } from './vibePrediction.js';
 import { RULE_MODEL_ID } from './vibeRules.js';
 import { SKY_DEPLOYMENT, SKY_CACHE, SKY_BYTES } from './skyWeights.js';
+import { readVibePreferences, writeVibePreferences, VIBE_TEMPOS } from './vibePreferences.js';
 import useViolinPlayback from './useViolinPlayback.js';
 import ViolinPlaybackControls from './ViolinPlaybackControls.jsx';
 import ScoreNotation from './ScoreNotation.jsx';
@@ -32,15 +33,22 @@ const nameOf = (midi) => {
 export default function VibePractice({ getAudioContext, reference, draft, onDraft }) {
   const { lang } = useLanguage(),
     text = (zh, en) => (lang === 'zh' ? zh : en);
+  const [preferences, setPreferences] = useState(readVibePreferences);
+  const [preferencesError, setPreferencesError] = useState(false);
+  function remember(patch) {
+    const next = { ...preferences, ...patch };
+    setPreferences(next);
+    setPreferencesError(!writeVibePreferences(next));
+  }
   const data = useRef(null);
-  if (!data.current) data.current = draft || newVibeSession();
+  if (!data.current) data.current = draft || newVibeSession(preferences.bpm, preferences.key);
   const capture = useRef(null);
   if (!capture.current) capture.current = createCapture(data.current.notes);
   const run = useRef({ token: 0 });
   const mounted = useRef(true);
   const predictor = useRef({ worker: null, ready: false, pending: null, serial: 0 });
   const [modelStatus, setModelStatus] = useState('ready');
-  const [engine, setEngine] = useState(RULE_MODEL_ID);
+  const [engine, setEngine] = useState(preferences.engine);
   const [modelEnabled, setModelEnabled] = useState(false);
   const [progress, setProgress] = useState(null);
   const [modelError, setModelError] = useState('');
@@ -384,7 +392,7 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
     if (recording || busy) return;
     stopPreview();
     if (!(await persist())) return;
-    data.current = newVibeSession(session.bpm, session.key);
+    data.current = newVibeSession(preferences.bpm, preferences.key);
     capture.current = createCapture();
     latest.current.onDraft?.(structuredClone(data.current));
     setTime(0);
@@ -414,7 +422,7 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
       await deleteVibe(record.id);
       setHistory(await listVibes());
       if (data.current.id === record.id) {
-        data.current = newVibeSession(session.bpm, session.key);
+        data.current = newVibeSession(preferences.bpm, preferences.key);
         capture.current = createCapture();
         latest.current.onDraft?.(structuredClone(data.current));
         setTrack(null);
@@ -546,6 +554,7 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
               disabled={busy || recording}
               onChange={(e) => {
                 setEngine(e.target.value);
+                remember({ engine: e.target.value });
                 setModelEnabled(false);
                 data.current.lastGeneratedBar = -1;
                 data.current.engine = e.target.value;
@@ -565,10 +574,11 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
               disabled={locked}
               onChange={(e) => {
                 session.bpm = +e.target.value;
+                remember({ bpm: session.bpm });
                 redraw((n) => n + 1);
               }}
             >
-              {[40, 50, 60, 70, 80, 90, 100, 110, 120].map((bpm) => (
+              {VIBE_TEMPOS.map((bpm) => (
                 <option value={bpm} key={bpm}>
                   {bpm} BPM
                 </option>
@@ -583,6 +593,7 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
               disabled={locked}
               onChange={(e) => {
                 session.key = e.target.value;
+                remember({ key: session.key });
                 redraw((n) => n + 1);
               }}
             >
@@ -595,6 +606,17 @@ export default function VibePractice({ getAudioContext, reference, draft, onDraf
             </select>
           </label>
         </div>
+        <p className="score-method" role={preferencesError ? 'status' : undefined}>
+          {preferencesError
+            ? text(
+                '此浏览器暂时无法保存默认配置，当前选择仍然有效。',
+                'This browser could not save your defaults. Your current choices still apply.',
+              )
+            : text(
+                '引擎、速度与调性会作为新演奏的默认配置保存在此浏览器。',
+                'Engine, tempo and key are remembered as defaults for new takes in this browser.',
+              )}
+        </p>
         <div className={'vibe-status' + (recording ? ' live' : '')} role="status" aria-live="off">
           <AudioLines size={18} />
           <div>
